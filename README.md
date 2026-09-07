@@ -25,7 +25,7 @@ and the outfit-photo lightbox.
 ```sh
 cp .env.example .env
 php artisan key:generate
-createdb travel2gether            # PostgreSQL 16+
+mysql -uroot -e "CREATE DATABASE travel2gether"   # MySQL 8+
 php artisan migrate --seed        # runs Seoul2026Seeder
 php artisan serve
 ```
@@ -35,7 +35,7 @@ Deep links: `/t/seoul-2026#3` opens Day 3, `#budget` opens the worksheet.
 
 ## Stack
 
-Laravel 13 · PostgreSQL · Blade + vanilla JS · Chart.js (CDN). No build step required
+Laravel 13 · MySQL · Blade + vanilla JS · Chart.js (CDN). No build step required
 for the itinerary view. Deployed via Ploi to `travel2gether.webprvw.xyz`.
 
 ## Deploy (Ploi)
