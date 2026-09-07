@@ -1,0 +1,57 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Trip;
+use Database\Seeders\Seoul2026Seeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class TripPageTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_home_redirects_to_the_featured_trip(): void
+    {
+        $this->seed(Seoul2026Seeder::class);
+
+        $this->get('/')->assertRedirect('/t/seoul-2026');
+    }
+
+    public function test_seoul_trip_renders_entirely_from_the_database(): void
+    {
+        $this->seed(Seoul2026Seeder::class);
+
+        $this->get('/t/seoul-2026')
+            ->assertOk()
+            ->assertSee('Seoul 2026', false)
+            ->assertSee('Touchdown &amp; Sejong University', false)   // day 1 title
+            ->assertSee('Four Stones Coffee Roasters', false)         // a seeded option
+            ->assertSee('Possible hiccups', false)
+            ->assertSee('Budget worksheet', false)
+            ->assertSee('PR400', false);                              // boarding-pass segment
+    }
+
+    public function test_private_trips_are_not_reachable(): void
+    {
+        $trip = Trip::create([
+            'slug' => 'draft-trip',
+            'title' => 'Draft Trip',
+            'destination' => 'Nowhere',
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-01-03',
+            'is_public' => false,
+        ]);
+
+        $this->get("/t/{$trip->slug}")->assertNotFound();
+    }
+
+    public function test_seeder_is_idempotent(): void
+    {
+        $this->seed(Seoul2026Seeder::class);
+        $this->seed(Seoul2026Seeder::class);
+
+        $this->assertSame(1, Trip::where('slug', 'seoul-2026')->count());
+        $this->assertSame(5, Trip::first()->days()->count());
+    }
+}
