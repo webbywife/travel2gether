@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlacesController;
 use App\Http\Controllers\TripBuilderController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\TrippieController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
+Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations');
 
 // Trippie — the planning-buddy chatbot (open to guests, rate-limited).
 Route::post('/trippie', [TrippieController::class, 'chat'])->middleware('throttle:15,1')->name('trippie.chat');

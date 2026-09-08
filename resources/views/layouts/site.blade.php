@@ -150,6 +150,7 @@
     </a>
     <div class="links">
       <a href="{{ route('home') }}#how">How it works</a>
+      <a href="{{ route('destinations') }}">Destinations</a>
       @if($sampleTrip ?? null)<a href="{{ route('trips.show', $sampleTrip) }}">Sample trip</a>@endif
       @auth
         <a href="{{ route('dashboard') }}">My trips</a>

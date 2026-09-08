@@ -65,8 +65,13 @@
 
     <div class="step">
       <h2><span class="n">01</span>The trip</h2>
+      <p class="hint">Not sure where? <a href="{{ route('destinations') }}">Browse popular destinations →</a></p>
       <div class="grid g2">
-        <div><label class="f">Destination *</label><input class="in" name="destination" value="{{ old('destination') }}" placeholder="e.g. Kyoto, Japan" required></div>
+        <div>
+          <label class="f">Destination *</label>
+          <input class="in" id="destinationInput" name="destination" value="{{ old('destination', $prefillDestination ?? '') }}" placeholder="e.g. Kyoto, Japan" required>
+          <div id="visaHint" style="display:none; margin-top:7px; font-size:12px;"></div>
+        </div>
         <div><label class="f">Trip name</label><input class="in" name="title" value="{{ old('title') }}" placeholder="optional — defaults to “Kyoto trip”"></div>
         <div><label class="f">Travellers</label><input class="in" type="number" name="party_size" value="{{ old('party_size', 2) }}" min="1" max="20"></div>
         <div><label class="f">Currency</label>
@@ -250,6 +255,24 @@
   }
 
   document.querySelectorAll('[data-place]').forEach(attachPlace);
+
+  // ---- visa hint ----
+  var DESTS = @json($destinations ?? []);
+  var destInput = document.getElementById('destinationInput'), visaHint = document.getElementById('visaHint');
+  var visaColor = { visa_free: '#2f6d54', evisa: '#5a4488', required: '#9E4A6E' };
+  var visaLabel = { visa_free: 'Visa-free', evisa: 'e-Visa', required: 'Visa required' };
+  function checkVisa() {
+    var q = destInput.value.trim().toLowerCase();
+    if (!q) { visaHint.style.display = 'none'; return; }
+    var hit = DESTS.find(function (d) {
+      return q.indexOf(d.country.toLowerCase()) !== -1 || d.cities.some(function (c) { return q.indexOf(c.toLowerCase().split(' (')[0]) !== -1; });
+    });
+    if (!hit) { visaHint.style.display = 'none'; return; }
+    visaHint.style.color = visaColor[hit.visa_status] || '#6B5860';
+    visaHint.innerHTML = '🛂 <strong>' + (visaLabel[hit.visa_status] || 'Check visa') + '</strong> for a Philippine passport — ' + hit.visa_note;
+    visaHint.style.display = 'block';
+  }
+  if (destInput) { destInput.addEventListener('input', checkVisa); checkVisa(); }
 })();
 </script>
 @endsection

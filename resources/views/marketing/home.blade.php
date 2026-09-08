@@ -1,6 +1,6 @@
 @extends('layouts.site')
 
-@section('title', 'Travel2gether — plan the trip together, not in the group chat')
+@section('title', 'Travel2gether — plan the trip together, not in 200 unread messages')
 
 @push('parallax')
   @include('partials.parallax')
@@ -186,7 +186,7 @@
 @section('content')
 <header class="hero">
   <div class="kicker">AI-drafted · group-editable · shareable</div>
-  <h1 class="reveal">Plan the trip <span class="gtext">together</span>, not in the group chat.</h1>
+  <h1 class="reveal">Plan the trip <span class="gtext">together</span> — not in 200 unread messages.</h1>
   <p class="sub reveal d1">
     Tell Travel2gether where you're headed, when, and who's coming. Get a full day-by-day
     itinerary back — meals, activities, cost tags, weather backups — that your whole group

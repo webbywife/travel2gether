@@ -133,6 +133,10 @@
   h1{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:56px; line-height:1.05; margin:0 0 12px; letter-spacing:-0.01em;}
   h1 span{background:linear-gradient(102deg,#C22A66,#A5357A 46%,#6E54A6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;}
   .subhead{color:var(--text-dim); font-size:18px; max-width:560px; margin:0 0 34px; line-height:1.65;}
+  .visa-badge{display:inline-block; font-size:13px; padding:8px 14px; border-radius:999px; margin:0 0 18px; max-width:560px; line-height:1.5;}
+  .visa-badge.visa-visa_free{background:rgba(59,167,118,0.12); color:#2f6d54;}
+  .visa-badge.visa-evisa{background:rgba(113,86,168,0.12); color:#5a4488;}
+  .visa-badge.visa-required{background:rgba(194,42,102,0.08); color:var(--accent);}
 
   .pass-row{display:flex; gap:10px; margin-bottom:18px;}
   .pass{position:relative; background:var(--panel); border:1px solid var(--line); border-radius:12px; display:flex; overflow:hidden; flex:1; box-shadow:0 2px 10px rgba(58,46,56,0.05);}
@@ -432,6 +436,10 @@
 
   @if($trip->origin_label)<div class="eyebrow">Mission briefing · {{ $trip->origin_label }}</div>@endif
   <h1>{{ \Illuminate\Support\Str::beforeLast($trip->title, ' ') }} <span>{{ \Illuminate\Support\Str::afterLast($trip->title, ' ') }}</span></h1>
+  @php $visa = \App\Support\Destinations::match($trip->destination); @endphp
+  @if($visa)
+    <div class="visa-badge visa-{{ $visa['visa_status'] }}">🛂 {{ \App\Support\Destinations::visaLabel($visa['visa_status']) }} for a PH passport — {{ $visa['visa_note'] }}</div>
+  @endif
   @if($trip->subhead)<p class="subhead">{{ $trip->subhead }}</p>@endif
   <p class="opt-hint">Every time slot has 3+ options — tap a card to make it your pick. Choices save automatically.</p>
 
