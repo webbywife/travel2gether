@@ -85,7 +85,12 @@ class GenerateDayItinerary
         );
 
         if (! $response->successful()) {
-            if ($response->status() >= 500 || $response->status() === 429) {
+            if ($response->status() === 429
+                || str_contains($response->body(), 'exceeded your current quota')
+                || str_contains($response->body(), 'RESOURCE_EXHAUSTED')) {
+                throw new \RuntimeException('quota');
+            }
+            if ($response->status() >= 500) {
                 return null; // retryable
             }
             throw new \RuntimeException('Gemini request failed: ' . $response->status());

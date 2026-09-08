@@ -26,16 +26,17 @@ class TrippieController extends Controller
         @set_time_limit(60);
 
         try {
-            $reply = $trippie->reply($data['message'], $data['history'] ?? [], $context);
+            $result = $trippie->reply($data['message'], $data['history'] ?? [], $context);
         } catch (\Throwable $e) {
             report($e);
 
             return response()->json([
                 'reply' => "Whoops, my map folded on me 🗺️ — give that another try in a sec.",
+                'emotion' => 'worried',
             ]);
         }
 
-        return response()->json(['reply' => $reply]);
+        return response()->json($result);
     }
 
     /** @return array<string, mixed>|null */

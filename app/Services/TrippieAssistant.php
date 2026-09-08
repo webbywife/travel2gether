@@ -39,7 +39,23 @@ class TrippieAssistant
     instead and mention the "Draft this day with AI" button.
 
     If you're told the user's current trip details, tailor everything to it.
+
+    FORMAT: start every reply with a mood tag alone on the first line, then a
+    blank line, then your message. The tag is exactly one of:
+    [happy]    friendly, normal
+    [excited]  hyped about a place, an idea, or their plan
+    [thinking] weighing options / it depends
+    [idea]     giving a tip or a concrete suggestion
+    [confused] the question is unclear or off-topic
+    [worried]  flagging a real risk (weather, closures, tight timing, budget)
+    [sad]      apologising or giving disappointing news
+    Example:
+    [excited]
+
+    Ooh, Lisbon in spring is a great shout...
     SYS;
+
+    private const EMOTIONS = ['happy', 'excited', 'thinking', 'idea', 'confused', 'worried', 'sad'];
 
     private ?string $key;
     private string $model;
@@ -58,8 +74,9 @@ class TrippieAssistant
     /**
      * @param  array<int, array{role: string, text: string}>  $history  prior turns, oldest first
      * @param  array<string, mixed>|null  $tripContext
+     * @return array{reply: string, emotion: string}
      */
-    public function reply(string $message, array $history = [], ?array $tripContext = null): string
+    public function reply(string $message, array $history = [], ?array $tripContext = null): array
     {
         abort_unless($this->enabled(), 503, 'Trippie is not configured.');
 
@@ -91,8 +108,15 @@ class TrippieAssistant
             ],
         );
 
+        if ($this->isQuota($response)) {
+            return [
+                'reply' => "I've used up my questions for today 😅 — I'll be back tomorrow. (Your team can lift the limit by adding billing to the Gemini project.)",
+                'emotion' => 'sad',
+            ];
+        }
+
         if ($response->status() === 429) {
-            return "You're quick! 😄 Give me a few seconds and ask again.";
+            return ['reply' => "You're quick! 😄 Give me a few seconds and ask again.", 'emotion' => 'worried'];
         }
 
         if (! $response->successful()) {
@@ -101,6 +125,33 @@ class TrippieAssistant
 
         $text = trim((string) data_get($response->json(), 'candidates.0.content.parts.0.text'));
 
-        return $text !== '' ? $text : "Hmm, I blanked for a sec — ask me again? 🧭";
+        if ($text === '') {
+            return ['reply' => "Hmm, I blanked for a sec — ask me again? 🧭", 'emotion' => 'confused'];
+        }
+
+        return $this->splitEmotion($text);
+    }
+
+    private function isQuota(\Illuminate\Http\Client\Response $r): bool
+    {
+        return $r->status() === 429
+            || str_contains($r->body(), 'exceeded your current quota')
+            || str_contains($r->body(), 'RESOURCE_EXHAUSTED');
+    }
+
+    /** @return array{reply: string, emotion: string} */
+    private function splitEmotion(string $text): array
+    {
+        $emotion = 'happy';
+
+        if (preg_match('/^\s*\[([a-z]+)\]\s*/i', $text, $m)) {
+            $tag = strtolower($m[1]);
+            if (in_array($tag, self::EMOTIONS, true)) {
+                $emotion = $tag;
+            }
+            $text = trim(substr($text, strlen($m[0])));
+        }
+
+        return ['reply' => $text, 'emotion' => $emotion];
     }
 }

@@ -23,7 +23,11 @@ class TripDayController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
-            return back()->with('error', 'The AI draft didn\'t come through — try again in a moment.');
+            $msg = $e->getMessage() === 'quota'
+                ? 'The AI has hit its daily limit — try again tomorrow, or add billing to the Gemini project to lift it.'
+                : 'The AI draft didn\'t come through — try again in a moment.';
+
+            return back()->with('error', $msg);
         }
 
         DB::transaction(function () use ($day, $draft) {

@@ -13,7 +13,7 @@ class TrippieTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function fakeTrippie(string $reply = 'Base in Shinjuku — great transport links. 3-4 days is plenty. 🚅'): void
+    private function fakeTrippie(string $reply = "[idea]\n\nBase in Shinjuku — great transport links. 3-4 days is plenty. 🚅"): void
     {
         config(['services.gemini.api_key' => 'test-key']);
         Http::fake([
@@ -23,13 +23,24 @@ class TrippieTest extends TestCase
         ]);
     }
 
-    public function test_trippie_replies_to_a_guest(): void
+    public function test_trippie_replies_with_a_mood_tag_stripped_into_emotion(): void
     {
         $this->fakeTrippie();
 
         $this->postJson('/trippie', ['message' => 'How many days for Tokyo?'])
             ->assertOk()
-            ->assertJsonPath('reply', 'Base in Shinjuku — great transport links. 3-4 days is plenty. 🚅');
+            ->assertJsonPath('reply', 'Base in Shinjuku — great transport links. 3-4 days is plenty. 🚅')
+            ->assertJsonPath('emotion', 'idea');
+    }
+
+    public function test_a_missing_or_unknown_tag_falls_back_to_happy(): void
+    {
+        $this->fakeTrippie('Lisbon is lovely in spring.');
+
+        $this->postJson('/trippie', ['message' => 'thoughts on Lisbon?'])
+            ->assertOk()
+            ->assertJsonPath('reply', 'Lisbon is lovely in spring.')
+            ->assertJsonPath('emotion', 'happy');
     }
 
     public function test_it_sends_history_and_trip_context_to_the_model(): void
@@ -63,7 +74,8 @@ class TrippieTest extends TestCase
 
         $this->postJson('/trippie', ['message' => 'help'])
             ->assertOk()
-            ->assertJsonFragment(['reply' => "Whoops, my map folded on me 🗺️ — give that another try in a sec."]);
+            ->assertJsonPath('reply', "Whoops, my map folded on me 🗺️ — give that another try in a sec.")
+            ->assertJsonPath('emotion', 'worried');
     }
 
     public function test_it_503s_when_gemini_is_not_configured(): void
