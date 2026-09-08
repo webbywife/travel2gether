@@ -72,6 +72,11 @@ class TripBuilderTest extends TestCase
         $this->assertSame('Arashiyama', $days[2]->title);
         $this->assertEqualsWithDelta(35.0094, (float) $days[2]->lat, 0.001);
 
+        // every day gets a keyless "today's area" map, anchored to its own coords
+        $this->assertStringContainsString('openstreetmap.org', $days->first()->map_embed_url);
+        $this->assertStringContainsString('34.9858%2C135.7588', $days->first()->map_embed_url); // hotel
+        $this->assertStringContainsString('35.0094%2C135.6667', $days[2]->map_embed_url);        // Arashiyama
+
         // flight + hotel stops exist
         $this->assertStringContainsString('KIX', $days->first()->stops()->where('sort', 0)->value('title'));
         $this->assertStringContainsString('Granvia', $days->first()->stops()->where('sort', 1)->value('title'));

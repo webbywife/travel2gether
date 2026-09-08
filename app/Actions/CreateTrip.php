@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Trip;
 use App\Models\User;
+use App\Support\OsmMap;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -87,6 +88,7 @@ class CreateTrip
         $out = $data['segments'][0] ?? [];
         $ret = $data['segments'][1] ?? [];
         $hotel = $data['hotel_name'] ?? 'your hotel';
+        $mapFor = fn (?float $lat, ?float $lon) => ($lat && $lon) ? OsmMap::embedUrl($lat, $lon) : null;
 
         $common = [
             'day_number' => $i + 1,
@@ -98,6 +100,7 @@ class CreateTrip
             'sort' => $i,
             'lat' => $trip->lat,
             'lon' => $trip->lon,
+            'map_embed_url' => $mapFor($trip->lat, $trip->lon),
             'hiccups' => [
                 'Check opening hours and weekly closing days the morning of — plenty of sites shut one weekday.',
                 'Have an indoor fallback for this area in case the forecast turns.',
@@ -151,11 +154,15 @@ class CreateTrip
         $area = $areas->isNotEmpty() ? $areas[($i - 1) % $areas->count()] : null;
         $name = $area['name'] ?? 'Free day — revisit a favourite';
 
+        $areaLat = $area['lat'] ?? $trip->lat;
+        $areaLon = $area['lon'] ?? $trip->lon;
+
         $day = $trip->days()->create(array_merge($common, [
             'title' => $name,
             'area_label' => $name,
-            'lat' => $area['lat'] ?? $trip->lat,
-            'lon' => $area['lon'] ?? $trip->lon,
+            'lat' => $areaLat,
+            'lon' => $areaLon,
+            'map_embed_url' => $mapFor($areaLat, $areaLon),
             'summary' => "A day around {$name}. Fill the slots below, or let the draft-with-AI button suggest options.",
         ]));
 

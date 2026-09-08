@@ -82,6 +82,14 @@ class AiDayFillTest extends TestCase
         $this->assertSame(18, $day->temp_high); // round(avg(18,19,17))
         $this->assertSame(9, $day->temp_low);   // round(avg(9,10,8))
 
+        // every named option is indexed into the shared places table, deduped by name
+        $this->assertDatabaseHas('places', ['provider' => 'gemini', 'name' => 'Budget diner']);
+        $this->assertDatabaseHas('places', ['provider' => 'gemini', 'name' => 'Splurge tasting']);
+        $this->assertSame(3, \App\Models\Place::where('provider', 'gemini')->count());
+
+        // and a default keyless map gets backfilled for the day
+        $this->assertStringContainsString('openstreetmap.org', $day->map_embed_url);
+
         $lunch = $day->stops()->where('title', 'Lunch')->first();
         $this->assertTrue($lunch->has_options);
         $this->assertSame(3, $lunch->options()->count());
