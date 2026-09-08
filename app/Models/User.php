@@ -29,4 +29,16 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
         ];
     }
+
+    public function ownedTrips(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Trip::class, 'created_by');
+    }
+
+    public function trips(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Trip::class, 'trip_user')
+            ->withPivot(['role', 'invited_by'])
+            ->withTimestamps();
+    }
 }

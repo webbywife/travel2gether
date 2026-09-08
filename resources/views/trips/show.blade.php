@@ -81,6 +81,34 @@
   .viewers .av{display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
     background:var(--grad, linear-gradient(102deg,#C22A66,#6E54A6)); color:#fff; font-size:10px; font-weight:700; margin-left:-6px; border:2px solid #fff;}
   .viewers .av:first-of-type{margin-left:4px;}
+
+  /* collaboration bar */
+  .collab{max-width:860px; margin:0 auto 14px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+    padding:10px 16px; background:var(--panel); border:1px solid var(--line); border-radius:12px; font-size:13px;}
+  .collab .roster{display:flex; align-items:center;}
+  .collab .av{display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%;
+    background:linear-gradient(102deg,#C22A66,#6E54A6); color:#fff; font-size:10.5px; font-weight:700; border:2px solid #fff; margin-left:-7px;}
+  .collab .av:first-child{margin-left:0;}
+  .collab .role-tag{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--text-dim); border:1px solid var(--line); border-radius:999px; padding:2px 8px;}
+  .collab .btn-sm{font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:6px 12px; border-radius:999px;
+    border:1px solid var(--pink); color:var(--pink); background:#fff; cursor:pointer; text-decoration:none;}
+  .collab .btn-sm.solid{background:linear-gradient(135deg,#C22A66,#8E3A73); color:#fff; border-color:transparent;}
+  .collab form{display:inline;}
+  .share-panel{max-width:860px; margin:0 auto 14px; border:1px solid var(--line); border-radius:12px; background:#fff; overflow:hidden;}
+  .share-panel > summary{list-style:none; cursor:pointer; padding:12px 16px; font-weight:600; font-size:13.5px; color:var(--text);
+    background:var(--panel); display:flex; justify-content:space-between; align-items:center;}
+  .share-panel > summary::-webkit-details-marker{display:none;}
+  .share-panel .body{padding:16px; display:flex; flex-direction:column; gap:16px;}
+  .share-panel h4{margin:0 0 8px; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); font-family:'JetBrains Mono',monospace;}
+  .share-row{display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px;}
+  .share-row select, .share-row input{font-family:'Inter',sans-serif; font-size:13px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--panel);}
+  .share-row input.link{flex:1; min-width:200px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-dim);}
+  .share-list{display:flex; flex-direction:column; gap:6px;}
+  .share-list .item{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px;}
+  .share-list .item .grow{flex:1; min-width:120px;}
+  .share-list .muted{color:var(--text-dim); font-size:12px;}
+  .link-btn{background:none; border:none; color:var(--pink); font:inherit; font-size:12.5px; cursor:pointer; padding:0; text-decoration:underline;}
   .mono{font-family:'JetBrains Mono', monospace;}
 
   .gt{
@@ -266,6 +294,117 @@
 </div>
 @endif
 @endauth
+@php $role = $role ?? null; @endphp
+
+@if (session('status'))
+  <div class="collab" style="max-width:860px;background:rgba(59,167,118,0.1);border-color:#8fd3b4;color:#2f6d54;">{{ session('status') }}</div>
+@endif
+
+@auth
+  @if ($role)
+    {{-- Members: roster + leave --}}
+    <div class="collab">
+      <span class="roster">
+        @foreach ($trip->members->take(6) as $m)
+          <span class="av" title="{{ $m->name }} · {{ $m->pivot->role }}">{{ \Illuminate\Support\Str::of($m->name)->trim()->substr(0,1)->upper() }}</span>
+        @endforeach
+      </span>
+      <span>{{ $trip->members->count() }} {{ \Illuminate\Support\Str::plural('collaborator', $trip->members->count()) }}</span>
+      <span class="role-tag">you: {{ $role }}</span>
+      <span style="flex:1"></span>
+      @if ($role !== 'owner')
+        <form method="POST" action="{{ route('trips.leave', $trip) }}" onsubmit="return confirm('Leave this trip?')">@csrf
+          <button type="submit" class="btn-sm">Leave trip</button>
+        </form>
+      @endif
+    </div>
+
+    @can('manageMembers', $trip)
+      <details class="share-panel">
+        <summary>Share &amp; collaborators <span aria-hidden="true">▾</span></summary>
+        <div class="body">
+          <div>
+            <h4>Create an invite link</h4>
+            <form method="POST" action="{{ route('trips.invites.store', $trip) }}" class="share-row">
+              @csrf
+              <label>Role
+                <select name="role">
+                  <option value="editor">Editor — vote &amp; edit</option>
+                  <option value="viewer">Viewer — read only</option>
+                </select>
+              </label>
+              <label>Expires
+                <select name="expires_in_days">
+                  <option value="">never</option>
+                  <option value="7">in 7 days</option>
+                  <option value="30">in 30 days</option>
+                </select>
+              </label>
+              <button type="submit" class="btn-sm solid">Create link</button>
+            </form>
+          </div>
+
+          @if ($trip->invites->whereNull('revoked_at')->isNotEmpty())
+            <div>
+              <h4>Active links</h4>
+              <div class="share-list">
+                @foreach ($trip->invites->whereNull('revoked_at') as $invite)
+                  @continue(! $invite->isUsable())
+                  <div class="item">
+                    <input class="link grow" type="text" readonly value="{{ $invite->url() }}" onclick="this.select()">
+                    <span class="role-tag">{{ $invite->role }}</span>
+                    <button type="button" class="link-btn" data-copy="{{ $invite->url() }}">copy</button>
+                    <span class="muted">{{ $invite->expires_at ? 'expires '.$invite->expires_at->diffForHumans() : 'no expiry' }}</span>
+                    <form method="POST" action="{{ route('trips.invites.revoke', [$trip, $invite->token]) }}">
+                      @csrf @method('DELETE')
+                      <button type="submit" class="link-btn">revoke</button>
+                    </form>
+                  </div>
+                @endforeach
+              </div>
+            </div>
+          @endif
+
+          <div>
+            <h4>People on this trip</h4>
+            <div class="share-list">
+              @foreach ($trip->members as $m)
+                <div class="item">
+                  <span class="grow">{{ $m->name }} <span class="muted">{{ $m->email }}</span></span>
+                  @if ($m->id === $trip->created_by)
+                    <span class="role-tag">owner</span>
+                  @else
+                    <form method="POST" action="{{ route('trips.members.update', [$trip, $m]) }}" class="share-row" style="gap:6px">
+                      @csrf @method('PATCH')
+                      <select name="role" onchange="this.form.submit()">
+                        <option value="editor" @selected($m->pivot->role === 'editor')>editor</option>
+                        <option value="viewer" @selected($m->pivot->role === 'viewer')>viewer</option>
+                      </select>
+                    </form>
+                    <form method="POST" action="{{ route('trips.members.destroy', [$trip, $m]) }}" onsubmit="return confirm('Remove {{ $m->name }}?')">
+                      @csrf @method('DELETE')
+                      <button type="submit" class="link-btn">remove</button>
+                    </form>
+                  @endif
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </div>
+      </details>
+    @endcan
+  @elseif ($trip->canView(auth()->user()))
+    {{-- Signed in, viewing the public sample — offer a personal copy --}}
+    <div class="collab">
+      <span>Viewing the sample.</span>
+      <span style="flex:1"></span>
+      <form method="POST" action="{{ route('trips.duplicate', $trip) }}">@csrf
+        <button type="submit" class="btn-sm solid">Make my own copy</button>
+      </form>
+    </div>
+  @endif
+@endauth
+
 <div class="wrap">
 
   @if($trip->origin_label)<div class="eyebrow">Mission briefing · {{ $trip->origin_label }}</div>@endif
@@ -687,6 +826,16 @@
     img.addEventListener('click', e => e.stopPropagation());
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   })();
+
+  /* ===== Copy invite link ===== */
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = btn.getAttribute('data-copy');
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+        .then(function () { var o = btn.textContent; btn.textContent = 'copied ✓'; setTimeout(function () { btn.textContent = o; }, 1500); })
+        .catch(function () { var i = btn.closest('.item')?.querySelector('input.link'); if (i) { i.select(); document.execCommand('copy'); } });
+    });
+  });
 })();
 </script>
 @auth

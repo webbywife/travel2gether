@@ -8,21 +8,20 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 /**
- * Presence + edit stream for a single trip.
- *
- * Phase 2b will gate this by trip_user membership + role. For now the
- * trip owner and (for the shared sample) any signed-in viewer may join.
+ * Presence + edit stream for a single trip. Only members of the trip
+ * (owner / editor / viewer) may join and appear in the roster.
  */
 Broadcast::channel('trip.{slug}', function ($user, string $slug) {
     $trip = Trip::where('slug', $slug)->first();
 
-    if (! $trip) {
+    if (! $trip || ! $trip->isMember($user)) {
         return false;
     }
 
-    if ($trip->created_by === $user->id || $trip->is_public) {
-        return ['id' => $user->id, 'name' => $user->name, 'avatar' => $user->avatar ?? null];
-    }
-
-    return false;
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'avatar' => $user->avatar ?? null,
+        'role' => $trip->roleFor($user),
+    ];
 });

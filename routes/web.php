@@ -6,6 +6,8 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlacesController;
 use App\Http\Controllers\TripController;
+use App\Http\Controllers\TripJoinController;
+use App\Http\Controllers\TripMemberController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -47,5 +49,20 @@ Route::middleware(['auth', 'throttle:40,1'])->group(function () {
     Route::get('/places/{placeId}', [PlacesController::class, 'show'])->name('places.show');
 });
 
-// Public, shareable trip URL (Phase 7). Seoul 2026 is the seeded sample.
+// Public / shared trip URL. Seoul 2026 is the seeded sample.
 Route::get('/t/{trip:slug}', [TripController::class, 'show'])->name('trips.show');
+
+// Collaboration (Phase 2) — all require a signed-in user.
+Route::middleware('auth')->group(function () {
+    Route::post('/t/{trip:slug}/duplicate', [TripController::class, 'duplicate'])->name('trips.duplicate');
+
+    Route::post('/t/{trip:slug}/invites', [TripMemberController::class, 'storeInvite'])->name('trips.invites.store');
+    Route::delete('/t/{trip:slug}/invites/{invite:token}', [TripMemberController::class, 'revokeInvite'])->name('trips.invites.revoke');
+
+    Route::patch('/t/{trip:slug}/members/{user}', [TripMemberController::class, 'updateRole'])->name('trips.members.update');
+    Route::delete('/t/{trip:slug}/members/{user}', [TripMemberController::class, 'destroy'])->name('trips.members.destroy');
+    Route::post('/t/{trip:slug}/leave', [TripMemberController::class, 'leave'])->name('trips.leave');
+
+    Route::get('/join/{invite:token}', [TripJoinController::class, 'show'])->name('trips.join');
+    Route::post('/join/{invite:token}', [TripJoinController::class, 'store'])->name('trips.join.accept');
+});
