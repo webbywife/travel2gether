@@ -84,6 +84,9 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
+    // Shown on the privacy page + cookie notice for data-subject requests.
+    'privacy_contact' => env('PRIVACY_CONTACT_EMAIL'),
+
     /*
     |--------------------------------------------------------------------------
     | Encryption Key

@@ -949,6 +949,7 @@
      nowhere sensible to sit. Real (owned/shared) trips still get Trippie. --}}
 @unless($trip->is_public && $trip->created_by === null)
   @include('partials.trippie')
+  @include('partials.cookie-notice')
 @endunless
 </body>
 </html>

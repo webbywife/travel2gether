@@ -171,7 +171,7 @@
 </div>
 
 <footer class="site-foot">
-  <span>Travel2gether — AI-drafted itineraries your group shapes together.</span>
+  <span>Travel2gether — AI-drafted itineraries your group shapes together. · <a href="{{ route('privacy') }}" style="color:inherit;">Privacy &amp; cookies</a></span>
   <span class="stamp">PLAN · TOGETHER · {{ date('Y') }}</span>
 </footer>
 
@@ -196,5 +196,6 @@
 })();
 </script>
 @include('partials.trippie')
+@include('partials.cookie-notice')
 </body>
 </html>
