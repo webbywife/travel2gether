@@ -478,8 +478,9 @@
         <div class="day-date">{{ $day->date->format('D · M j') }}</div>
         <h1 class="day-title">{{ $day->title }}@if($day->title_secondary)<span class="kr">{{ $day->title_secondary }}</span>@endif</h1>
 
-        <div class="weather" data-forecast-date="{{ $day->forecast_date?->format('Y-m-d') }}">
-          <div class="temp" data-day-idx="{{ $day->day_number }}">{{ $day->temp_high }}° <span>/ {{ $day->temp_low }}°C</span></div>
+        <div class="weather" data-forecast-date="{{ $day->forecast_date?->format('Y-m-d') }}"
+             data-lat="{{ $day->lat ?? $trip->lat }}" data-lon="{{ $day->lon ?? $trip->lon }}">
+          <div class="temp" data-day-idx="{{ $day->day_number }}">{{ $day->temp_high ? $day->temp_high.'°' : '—' }} <span>@if($day->temp_low)/ {{ $day->temp_low }}°C @endif</span></div>
           <div class="wdesc">
             <b class="wcond">{{ $day->weather_note }}</b>
             @if($day->weather_tag)<span class="wtag">{{ $day->weather_tag }}</span>@endif
@@ -784,44 +785,50 @@
   document.querySelectorAll('.item, #travelers, #days, #fxrate').forEach(el => el.addEventListener('input', recalc));
   recalc();
 
-  /* ===== Live weather (Open-Meteo, no key) ===== */
+  /* ===== Live weather (Open-Meteo, no key) — per day's own area ===== */
   (function () {
-    const lat = parseFloat(document.body.dataset.lat);
-    const lon = parseFloat(document.body.dataset.lon);
-    const panels = Array.from(document.querySelectorAll('.weather[data-forecast-date]'))
-      .filter(p => p.dataset.forecastDate);
     const noteEl = document.getElementById('forecastNoteLive');
-    if (!panels.length || Number.isNaN(lat) || Number.isNaN(lon)) return;
+    const panels = Array.from(document.querySelectorAll('.weather[data-forecast-date]'))
+      .filter(p => p.dataset.forecastDate && p.dataset.lat && p.dataset.lon);
+    if (!panels.length) return;
 
     const WMO = {0:'clear skies',1:'mostly clear',2:'partly cloudy',3:'overcast',45:'foggy',48:'foggy',51:'light drizzle',53:'drizzle',55:'heavy drizzle',61:'light rain',63:'rain',65:'heavy rain',71:'light snow',73:'snow',75:'heavy snow',80:'rain showers',81:'rain showers',82:'heavy rain showers',95:'thunderstorms',96:'thunderstorms with hail',99:'thunderstorms with hail'};
     const adj = c => c >= 31 ? 'Hot' : c >= 27 ? 'Warm' : c >= 22 ? 'Mild' : 'Cool';
-    const dates = panels.map(p => p.dataset.forecastDate).sort();
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-      `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
-      `&timezone=auto&start_date=${dates[0]}&end_date=${dates[dates.length - 1]}`;
 
-    fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {
-      if (!data.daily || !Array.isArray(data.daily.time)) throw new Error('shape');
-      const by = {};
-      data.daily.time.forEach((d, i) => by[d] = {
-        max: data.daily.temperature_2m_max[i], min: data.daily.temperature_2m_min[i],
-        code: data.daily.weathercode[i], rain: data.daily.precipitation_probability_max[i],
-      });
-      let anyLive = false;
-      panels.forEach(panel => {
-        const d = by[panel.dataset.forecastDate];
-        if (!d || d.max == null) return;
-        anyLive = true;
-        panel.querySelector('.temp').innerHTML = `${Math.round(d.max)}° <span>/ ${Math.round(d.min)}°C</span>`;
-        const rain = d.rain != null ? `, ~${Math.round(d.rain)}% rain chance` : '';
-        panel.querySelector('.wcond').textContent = `${adj(d.max)}, ${WMO[d.code] || 'mixed conditions'}${rain}.`;
-        panel.querySelector('.wsource').textContent = 'Live forecast · pulled just now';
-      });
+    // group panels by rounded lat/lon so we make one call per distinct area
+    const groups = {};
+    panels.forEach(p => {
+      const key = (+p.dataset.lat).toFixed(2) + ',' + (+p.dataset.lon).toFixed(2);
+      (groups[key] = groups[key] || { lat: +p.dataset.lat, lon: +p.dataset.lon, panels: [] }).panels.push(p);
+    });
+
+    let anyLive = false;
+    Promise.all(Object.values(groups).map(g => {
+      const dates = g.panels.map(p => p.dataset.forecastDate).sort();
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}` +
+        `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+        `&timezone=auto&start_date=${dates[0]}&end_date=${dates[dates.length - 1]}`;
+      return fetch(url).then(r => r.ok ? r.json() : null).then(data => {
+        if (!data || !data.daily || !Array.isArray(data.daily.time)) return;
+        const by = {};
+        data.daily.time.forEach((d, i) => by[d] = {
+          max: data.daily.temperature_2m_max[i], min: data.daily.temperature_2m_min[i],
+          code: data.daily.weathercode[i], rain: data.daily.precipitation_probability_max[i],
+        });
+        g.panels.forEach(panel => {
+          const d = by[panel.dataset.forecastDate];
+          if (!d || d.max == null) return;
+          anyLive = true;
+          panel.querySelector('.temp').innerHTML = `${Math.round(d.max)}° <span>/ ${Math.round(d.min)}°C</span>`;
+          const rain = d.rain != null ? `, ~${Math.round(d.rain)}% rain chance` : '';
+          panel.querySelector('.wcond').textContent = `${adj(d.max)}, ${WMO[d.code] || 'mixed conditions'}${rain}.`;
+          panel.querySelector('.wsource').textContent = 'Live forecast · this day\'s area';
+        });
+      }).catch(() => {});
+    })).then(() => {
       if (noteEl) noteEl.textContent = anyLive
-        ? 'Days with a live forecast show real numbers pulled just now — everything else still shows the seasonal average.'
-        : 'These dates are outside the live ~16-day window right now — showing seasonal averages instead.';
-    }).catch(() => {
-      if (noteEl) noteEl.textContent = 'Live forecast unavailable right now — showing seasonal averages instead.';
+        ? 'Days inside the ~16-day window show a live forecast for that day\'s actual area.'
+        : 'These dates are outside the live ~16-day window — showing the planned notes instead.';
     });
   })();
 

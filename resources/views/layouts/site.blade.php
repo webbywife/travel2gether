@@ -153,6 +153,7 @@
       @if($sampleTrip ?? null)<a href="{{ route('trips.show', $sampleTrip) }}">Sample trip</a>@endif
       @auth
         <a href="{{ route('dashboard') }}">My trips</a>
+        <a class="btn btn-primary" href="{{ route('trips.create') }}">New trip</a>
         <form method="POST" action="{{ route('logout') }}" style="display:inline;">@csrf
           <button type="submit" class="links-logout" style="background:none;border:none;color:var(--text-dim);font:inherit;font-size:14.5px;cursor:pointer;padding:0;">Log out</button>
         </form>

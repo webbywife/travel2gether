@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlacesController;
+use App\Http\Controllers\TripBuilderController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripJoinController;
 use App\Http\Controllers\TripMemberController;
@@ -54,6 +55,9 @@ Route::get('/t/{trip:slug}', [TripController::class, 'show'])->name('trips.show'
 
 // Collaboration (Phase 2) — all require a signed-in user.
 Route::middleware('auth')->group(function () {
+    Route::get('/trips/create', [TripBuilderController::class, 'create'])->name('trips.create');
+    Route::post('/trips', [TripBuilderController::class, 'store'])->name('trips.store');
+
     Route::post('/t/{trip:slug}/duplicate', [TripController::class, 'duplicate'])->name('trips.duplicate');
 
     Route::post('/t/{trip:slug}/invites', [TripMemberController::class, 'storeInvite'])->name('trips.invites.store');

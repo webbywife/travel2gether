@@ -14,7 +14,8 @@ class Trip extends Model
     protected $fillable = [
         'slug', 'title', 'tagline', 'subhead', 'destination', 'origin_label',
         'start_date', 'end_date', 'party_size', 'currency', 'map_provider',
-        'lat', 'lon', 'forecast_note', 'segments', 'stats', 'is_public', 'created_by',
+        'lat', 'lon', 'hotel_name', 'hotel_address', 'interests',
+        'forecast_note', 'segments', 'stats', 'is_public', 'created_by',
     ];
 
     protected $casts = [
@@ -22,6 +23,7 @@ class Trip extends Model
         'end_date' => 'date',
         'segments' => 'array',
         'stats' => 'array',
+        'interests' => 'array',
         'is_public' => 'boolean',
     ];
 

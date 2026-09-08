@@ -32,8 +32,13 @@
 
 @section('content')
 <div class="dash">
-  <h1>Hi, {{ \Illuminate\Support\Str::of(auth()->user()->name)->before(' ') }}</h1>
-  <p class="lede">Your trips and the ones you've been invited to.</p>
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+    <div>
+      <h1>Hi, {{ \Illuminate\Support\Str::of(auth()->user()->name)->before(' ') }}</h1>
+      <p class="lede">Your trips and the ones you've been invited to.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ route('trips.create') }}">Plan a new trip</a>
+  </div>
 
   @if (session('status'))
     <div class="flash">{{ session('status') }}</div>
@@ -42,12 +47,13 @@
   @if ($owned->isEmpty() && $shared->isEmpty())
     <div class="empty">
       <h3>No trips yet</h3>
-      <p>AI trip generation is coming next. For now, start from a sample itinerary — you'll get your own editable copy to invite your group to.</p>
+      <p>Plan your own from flights, dates, hotel and the areas you want — or start from a sample and edit it.</p>
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <a class="btn btn-primary" href="{{ route('trips.create') }}">Plan a new trip</a>
         @foreach ($samples as $s)
           <form method="POST" action="{{ route('trips.duplicate', $s) }}">
             @csrf
-            <button type="submit" class="btn {{ $loop->first ? 'btn-primary' : 'btn-ghost' }}">Start from {{ $s->title }}</button>
+            <button type="submit" class="btn btn-ghost">Start from {{ $s->title }}</button>
           </form>
         @endforeach
       </div>
