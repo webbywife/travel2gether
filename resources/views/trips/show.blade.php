@@ -51,8 +51,9 @@
       radial-gradient(circle at 88% 18%, rgba(180,143,217,0.05), transparent 40%),
       url('/img/bg-pattern.jpg'),
       var(--bg);
-    background-repeat:no-repeat, no-repeat, no-repeat, repeat, no-repeat;
-    background-size:auto, auto, auto, 1100px auto, auto;
+    background-repeat:no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-size:auto, auto, auto, cover, auto;
+    background-position:center, center, center, center top, center;
     background-attachment:fixed, fixed, fixed, fixed, fixed;
     color:var(--text);
     font-family:'Inter', sans-serif;
