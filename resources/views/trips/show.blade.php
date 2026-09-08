@@ -21,6 +21,7 @@
 <meta charset="UTF-8">
 <title>{{ $trip->title }}@if($trip->tagline) — {{ $trip->tagline }}@endif</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="description" content="{{ $trip->subhead ?? $trip->title }}">
 <meta property="og:title" content="{{ $trip->title }}{{ $trip->tagline ? ' — '.$trip->tagline : '' }}">
 <meta property="og:description" content="{{ $trip->subhead ?? $trip->title }}">
@@ -68,6 +69,16 @@
   .sample-ribbon b{font-weight:700; border-bottom:1px solid rgba(255,255,255,0.6);}
   .sample-ribbon .home{opacity:0.85;}
   @media (max-width:560px){ .sample-ribbon{flex-direction:column; gap:3px; text-align:center;} }
+
+  /* live viewers (Reverb presence) */
+  .viewers{display:none; align-items:center; gap:8px; max-width:860px; margin:0 auto 12px; padding:8px 14px;
+    background:var(--panel); border:1px solid var(--line); border-radius:999px; font-size:12.5px; color:var(--text-dim);}
+  .viewers.on{display:flex;}
+  .viewers .dot{width:7px; height:7px; border-radius:50%; background:#3BA776; box-shadow:0 0 0 3px rgba(59,167,118,0.18);}
+  .viewers .who{font-family:'JetBrains Mono',monospace; color:var(--text);}
+  .viewers .av{display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
+    background:var(--grad, linear-gradient(102deg,#C22A66,#6E54A6)); color:#fff; font-size:10px; font-weight:700; margin-left:-6px; border:2px solid #fff;}
+  .viewers .av:first-of-type{margin-left:4px;}
   .mono{font-family:'JetBrains Mono', monospace;}
 
   .gt{
@@ -244,6 +255,15 @@
   <span>Sample itinerary — <b>plan your own, free →</b></span>
 </a>
 @endguest
+
+@auth
+@if(config('broadcasting.default') === 'reverb' && config('broadcasting.connections.reverb.key'))
+<div class="viewers" id="viewers">
+  <span class="dot"></span><span id="viewersText">Connecting…</span>
+  <span id="viewersAvatars"></span>
+</div>
+@endif
+@endauth
 <div class="wrap">
 
   @if($trip->origin_label)<div class="eyebrow">Mission briefing · {{ $trip->origin_label }}</div>@endif
@@ -667,5 +687,56 @@
   })();
 })();
 </script>
+@auth
+@if(config('broadcasting.default') === 'reverb' && config('broadcasting.connections.reverb.key'))
+@php $rev = config('broadcasting.connections.reverb'); @endphp
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pusher/8.4.0/pusher.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.16.1/echo.iife.js"></script>
+<script>
+(function () {
+  if (typeof Echo === 'undefined' || typeof Pusher === 'undefined') return;
+  window.Pusher = Pusher;
+
+  var echo = new Echo({
+    broadcaster: 'reverb',
+    key: @json($rev['key']),
+    wsHost: @json($rev['options']['host']),
+    wsPort: {{ (int) ($rev['options']['port'] ?? 8080) }},
+    wssPort: {{ (int) ($rev['options']['port'] ?? 8080) }},
+    forceTLS: @json(($rev['options']['scheme'] ?? 'http') === 'https'),
+    enabledTransports: ['ws', 'wss'],
+  });
+
+  var box = document.getElementById('viewers');
+  var txt = document.getElementById('viewersText');
+  var avs = document.getElementById('viewersAvatars');
+  var me = @json(auth()->id());
+
+  function render(users) {
+    var others = users.filter(function (u) { return u.id !== me; });
+    if (!others.length) { box.classList.remove('on'); return; }
+    box.classList.add('on');
+    txt.textContent = others.length === 1
+      ? others[0].name + ' is also here'
+      : others.length + ' others are here';
+    avs.innerHTML = others.slice(0, 5).map(function (u) {
+      return '<span class="av" title="' + (u.name || '') + '">' + (u.name || '?').trim().charAt(0).toUpperCase() + '</span>';
+    }).join('');
+  }
+
+  var present = [];
+  echo.join('trip.' + @json($trip->slug))
+    .here(function (users) { present = users; render(present); })
+    .joining(function (user) { present.push(user); render(present); })
+    .leaving(function (user) { present = present.filter(function (u) { return u.id !== user.id; }); render(present); })
+    .listen('.trip.activity', function (e) {
+      // Phase 2b: reconcile live picks / budget / stop edits here.
+      document.dispatchEvent(new CustomEvent('trip:activity', { detail: e }));
+    })
+    .error(function () { box.classList.remove('on'); });
+})();
+</script>
+@endif
+@endauth
 </body>
 </html>
