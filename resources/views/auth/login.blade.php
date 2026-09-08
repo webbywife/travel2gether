@@ -12,6 +12,8 @@
       <div class="form-error"><ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
     @endif
 
+    @include('auth._google')
+
     <form method="POST" action="{{ route('login') }}">
       @csrf
       <div class="field">

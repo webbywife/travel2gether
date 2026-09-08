@@ -71,6 +71,17 @@
   .form-error ul{margin:0; padding-left:18px;}
   .btn-block{display:block; width:100%; text-align:center; border:none; font-size:15px; padding:12px;}
   .card-alt{text-align:center; margin-top:18px; font-size:13.5px; color:var(--text-dim);}
+
+  .btn-google{
+    display:flex; align-items:center; justify-content:center; gap:10px; width:100%;
+    padding:11px 12px; border-radius:10px; border:1px solid var(--line); background:#fff;
+    color:var(--text); font-family:'Inter',sans-serif; font-size:14.5px; font-weight:600;
+    text-decoration:none; cursor:pointer; margin-bottom:16px;
+  }
+  .btn-google:hover{background:var(--panel); border-color:var(--pink-light);}
+  .btn-google svg{width:18px; height:18px; flex-shrink:0;}
+  .or-divider{display:flex; align-items:center; gap:12px; color:var(--text-dim); font-size:12px; letter-spacing:0.08em; text-transform:uppercase; margin:0 0 16px;}
+  .or-divider::before, .or-divider::after{content:""; flex:1; height:1px; background:var(--line);}
   @media (max-width:560px){ .site-nav{padding:16px;} .site-nav .links{gap:14px;} }
 </style>
 @stack('styles')
