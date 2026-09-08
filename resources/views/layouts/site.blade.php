@@ -54,10 +54,10 @@
     body{background-attachment:scroll;}
     .parallax-root .p .pi{animation:none !important;}
   }
-  .navbar, .page, .site-foot{position:relative; z-index:20;}
+  .page, .site-foot{position:relative; z-index:1;}
 
   .navbar{
-    position:sticky; top:0;
+    position:sticky; top:0; z-index:10000;
     background:rgba(255,255,255,0.78);
     -webkit-backdrop-filter:saturate(160%) blur(12px);
     backdrop-filter:saturate(160%) blur(12px);

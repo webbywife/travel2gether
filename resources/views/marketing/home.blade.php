@@ -7,6 +7,7 @@
 @endpush
 
 @push('styles')
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   .wrapc{max-width:1120px; margin:0 auto; padding:0 24px;}
 
@@ -55,17 +56,68 @@
   .split li{margin-bottom:9px;}
   .split li:last-child{margin-bottom:0;}
 
-  /* live preview */
-  .preview-frame{
-    border:1px solid var(--line); border-radius:22px; overflow:hidden; background:var(--panel);
-    box-shadow:var(--shadow-md); max-width:940px; margin:0 auto;
+  /* live preview — a page torn from a planning notebook */
+  .scrapbook{
+    position:relative; max-width:940px; margin:0 auto; padding:44px 30px 30px;
+    background:#FFFDF7;
+    background-image:
+      linear-gradient(90deg, transparent 0 54px, rgba(194,42,102,0.28) 54px 55px, transparent 55px),
+      repeating-linear-gradient(#FFFDF7 0 31px, #E7DEF0 31px 32px);
+    border:1px solid #EAE3D6; border-radius:4px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.7) inset,
+      0 24px 50px -22px rgba(120,40,80,0.28),
+      0 3px 10px rgba(36,30,35,0.06);
+    transform:rotate(-0.7deg);
+    transition:transform .3s ease;
   }
-  .preview-bar{display:flex; align-items:center; gap:8px; padding:12px 18px; background:rgba(255,248,250,0.9); border-bottom:1px solid var(--line);}
-  .preview-bar .dot{width:10px; height:10px; border-radius:50%; background:var(--pink-light);}
-  .preview-bar .addr{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); margin-left:6px;}
-  .preview-frame iframe{width:100%; height:560px; border:0; display:block; background:#fff;}
-  .preview-note{text-align:center; color:var(--text-dim); font-size:13.5px; margin-top:18px;}
+  .scrapbook:hover{transform:rotate(0);}
+  /* torn top edge */
+  .scrapbook::before{
+    content:""; position:absolute; left:0; right:0; top:-6px; height:10px;
+    background:
+      radial-gradient(circle at 6px 8px, transparent 5px, #FFFDF7 5px) repeat-x;
+    background-size:14px 10px; filter:drop-shadow(0 -1px 0 #EAE3D6);
+  }
+  .sb-clip{
+    position:absolute; top:-16px; left:40px; width:26px; height:64px; z-index:4;
+    border:3px solid #B7B2AD; border-radius:14px;
+    border-bottom-color:transparent; transform:rotate(-11deg);
+    box-shadow:0 2px 3px rgba(0,0,0,0.15);
+  }
+  .sb-clip::after{
+    content:""; position:absolute; inset:6px 5px 12px 5px;
+    border:3px solid #CFCAC4; border-radius:10px; border-bottom-color:transparent;
+  }
+  .sb-label{
+    display:block; font-family:'Caveat',cursive; font-size:30px; font-weight:700;
+    color:var(--accent); transform:rotate(-1.5deg); margin:0 0 14px 8px; line-height:1;
+  }
+  .sb-paste{
+    position:relative; background:#fff; border:1px solid #ECE7DE; border-radius:3px;
+    padding:6px; box-shadow:0 10px 26px -12px rgba(36,30,35,0.35);
+    transform:rotate(0.8deg);
+  }
+  .sb-paste iframe{width:100%; height:560px; border:0; display:block; background:#fff; border-radius:2px;}
+  .tape{
+    position:absolute; width:104px; height:28px; z-index:3;
+    background:linear-gradient(180deg, rgba(246,169,198,0.55), rgba(246,169,198,0.4));
+    border:1px solid rgba(255,255,255,0.35);
+    box-shadow:0 1px 3px rgba(36,30,35,0.12);
+  }
+  .tape::after{content:""; position:absolute; inset:0; background:repeating-linear-gradient(90deg, transparent 0 5px, rgba(255,255,255,0.25) 5px 6px);}
+  .tape-l{top:-14px; left:24px; transform:rotate(-6deg);}
+  .tape-r{top:-14px; right:24px; transform:rotate(5deg);}
+  .sb-note{
+    display:block; font-family:'Caveat',cursive; font-size:21px; color:var(--pink);
+    transform:rotate(-1deg); margin:16px 0 0 12px;
+  }
+  .preview-note{text-align:center; color:var(--text-dim); font-size:13.5px; margin-top:22px;}
   .preview-note a{font-weight:600;}
+  @media (max-width:820px){
+    .scrapbook{padding:38px 16px 22px; background-image:repeating-linear-gradient(#FFFDF7 0 31px, #E7DEF0 31px 32px);}
+    .sb-clip{left:20px;}
+  }
 
   /* steps */
   .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; counter-reset:step;}
@@ -116,7 +168,7 @@
 
   @media (max-width:820px){
     .split, .steps, .features{grid-template-columns:1fr;}
-    .preview-frame iframe{height:460px;}
+    .sb-paste iframe{height:460px;}
     .hero{padding-top:52px;}
   }
 </style>
@@ -166,13 +218,16 @@
 <section class="section section-tight reveal">
   <h2 class="gtext">This is what you get</h2>
   <p class="section-sub">A real Travel2gether itinerary — not a screenshot. Tap the option cards, open the budget tab, scroll a day.</p>
-  <div class="preview-frame">
-    <div class="preview-bar">
-      <span class="dot"></span><span class="dot" style="background:var(--lavender)"></span><span class="dot" style="background:var(--accent)"></span>
-      <span class="addr">{{ $sampleTrip ? 'travel2gether · '.$sampleTrip->destination : 'travel2gether · sample trip' }}</span>
-    </div>
+  <div class="scrapbook">
+    <div class="sb-clip" aria-hidden="true"></div>
+    <span class="sb-label">{{ $sampleTrip ? strtolower($sampleTrip->destination) : 'our trip' }} — plan ✎</span>
     @if($sampleTrip ?? null)
-      <iframe src="{{ route('trips.show', $sampleTrip) }}" title="Sample itinerary preview" loading="lazy"></iframe>
+      <div class="sb-paste">
+        <div class="tape tape-l" aria-hidden="true"></div>
+        <div class="tape tape-r" aria-hidden="true"></div>
+        <iframe src="{{ route('trips.show', $sampleTrip) }}" title="Sample itinerary preview" loading="lazy"></iframe>
+      </div>
+      <span class="sb-note">↑ tap a card — it remembers your pick</span>
     @endif
   </div>
   @if($sampleTrip ?? null)
