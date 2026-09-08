@@ -21,7 +21,10 @@
 <meta charset="UTF-8">
 <title>{{ $trip->title }}@if($trip->tagline) — {{ $trip->tagline }}@endif</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
+<meta name="description" content="{{ $trip->subhead ?? $trip->title }}">
+<meta property="og:title" content="{{ $trip->title }}{{ $trip->tagline ? ' — '.$trip->tagline : '' }}">
+<meta property="og:description" content="{{ $trip->subhead ?? $trip->title }}">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -53,6 +56,15 @@
     padding:56px 20px 80px;
   }
   .wrap{max-width:860px; margin:0 auto; padding:25px; background:rgb(255 255 255 / 92%); border-radius:10px; border:2px solid var(--pink);}
+  .sample-ribbon{
+    position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    max-width:860px; margin:0 auto 14px; padding:9px 16px; border-radius:0 0 12px 12px;
+    background:var(--pink); color:#fff; text-decoration:none; font-size:13px;
+    font-family:'JetBrains Mono',monospace; letter-spacing:0.02em;
+  }
+  .sample-ribbon b{font-weight:700; border-bottom:1px solid rgba(255,255,255,0.6);}
+  .sample-ribbon .home{opacity:0.85;}
+  @media (max-width:560px){ .sample-ribbon{flex-direction:column; gap:3px; text-align:center;} }
   .mono{font-family:'JetBrains Mono', monospace;}
 
   .eyebrow{font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.18em; color:var(--pink); text-transform:uppercase; margin-bottom:14px; font-weight:500;}
@@ -219,6 +231,12 @@
 </style>
 </head>
 <body data-lat="{{ $trip->lat }}" data-lon="{{ $trip->lon }}">
+@guest
+<a class="sample-ribbon" href="{{ url('/') }}">
+  <span class="home">◂ Travel2gether</span>
+  <span>Sample itinerary — <b>plan your own, free →</b></span>
+</a>
+@endguest
 <div class="wrap">
 
   @if($trip->origin_label)<div class="eyebrow">Mission briefing · {{ $trip->origin_label }}</div>@endif

@@ -23,7 +23,29 @@ The goal is to turn this pattern into a reusable, collaborative, multi-trip **pl
 
 ---
 
-## 3. Core data schema (foundation for everything else)
+## 3. Competitive landscape
+
+This space already has active players as of 2026 — none nail the exact combination planned here, but a few overlap closely enough to matter.
+
+| Competitor | Overlap | Notable feature |
+|---|---|---|
+| **MonkeyTravel** | Closest direct competitor | Free AI itinerary generation for groups; role-based collaborators (Owner/Editor/Voter/Viewer); weighted voting/consensus score; three auto-generated budget tiers per trip — **all group features are completely free** |
+| **Stardrift** | Shared itineraries, collaborative planning | Imports travel ideas directly from Instagram and TikTok |
+| **Mindtrip** | AI itinerary generation, group chat | 11M+ point-of-interest database; direct booking integration (Priceline, Viator) |
+| **Layla** | AI generation, real-time group collaboration | Positioned as a dedicated planner, not a general chatbot |
+| **Stippl** | Broad "all-in-one" positioning | Travel journals, photo-to-reel generation, and copying/personalizing itineraries from other travelers — close to the community gallery concept |
+| **TripFlow** | Korea-specific, real-time collaborative editing | Uses Korea Tourism Organization data; award-winner in KTO's 2025 data contest — but uses Apple Maps, not Naver/Kakao |
+
+**What's still genuinely open (differentiation opportunities):**
+- **Weather-triggered automatic swaps with live cost delta** — competitors show weather as static info, not something that re-ranks options and recalculates the budget in real time
+- **Naver/Kakao Maps override for Korea** — not offered by any of the above, including the Korea-specific competitor
+- **"Hiccups" as a required, structural field** — competitors don't treat failure-mode planning as first-class itinerary content
+
+**Risk to watch**: several competitors (notably MonkeyTravel) offer all group/collaboration features for free. A "first trip free, then subscription" model runs against that norm and may need a stronger free tier or clearer paid-only differentiators (weather auto-swap, local map routing, hiccups) to justify the upgrade.
+
+---
+
+## 4. Core data schema (foundation for everything else)
 
 Every stop in a trip should carry:
 
@@ -39,7 +61,7 @@ Every stop in a trip should carry:
 
 ---
 
-## 4. AI trip generation & pricing model
+## 5. AI trip generation & pricing model
 
 **Core mechanic**: user describes a trip (destination, dates, interests, budget, group size) and the AI generates a full first draft — day-by-day structure, options per slot, cost tags, weather-aware notes, and hiccups — in the same format as the Seoul prototype, ready for the group to then tap through, adjust, and collaborate on.
 
@@ -52,7 +74,7 @@ Every stop in a trip should carry:
 
 ---
 
-## 5. Phased roadmap
+## 6. Phased roadmap
 
 ### Phase 1 — Extract the schema (1–2 weeks)
 Convert the hand-built Seoul HTML into the reusable JSON/YAML structure above, so any new trip can be generated from data instead of hand-coded per city.
@@ -60,7 +82,7 @@ Convert the hand-built Seoul HTML into the reusable JSON/YAML structure above, s
 ### Phase 2 — Accounts, collaborators & synced picks (2–3 weeks)
 This is the highest-leverage phase — it unlocks sharing, collaboration, *and* analytics at once.
 - User accounts (email or social login)
-- Shared backend (Supabase/Firebase) so picks sync live across everyone's devices, replacing local-only storage
+- Shared backend storage so picks sync live across everyone's devices, replacing local-only storage
 - **Roles**: Owner (invite/remove collaborators, lock decisions, set public/private), Editor (vote, propose stops, comment, edit budget), Viewer (read-only link)
 - Invite via shareable link with role attached, or direct email — same mental model as Google Docs sharing
 - Attribution on picks ("Marco picked Sam's Korean BBQ") for transparency
@@ -94,15 +116,15 @@ This is the highest-leverage phase — it unlocks sharing, collaboration, *and* 
 
 ### Phase 8 — Photo pipeline
 - Instagram cannot be scraped automatically (blocks bots) — two viable paths:
-  - **Manual export** (fastest to ship): upload curated photos to a hosted folder/CDN (GitHub, Cloudinary) and reference them in the trip data
-  - **Instagram Graph API** (for later): if the account is Business/Creator, pull your own posts programmatically — worth it once publishing trips at volume
+  - **Manual export** (fastest to ship): upload curated photos to hosted storage and reference them in the trip data
+  - **Instagram API access** (for later): if the account is Business/Creator, pull your own posts programmatically — worth it once publishing trips at volume
 
 ### Phase 9 — Community gallery
 Public, opt-in gallery of shared itineraries others can browse and remix — this is where the "sharing" half of the brand really pays off.
 
 ---
 
-## 6. Monetization
+## 7. Monetization
 
 | Model | Description |
 |---|---|
@@ -114,7 +136,7 @@ Public, opt-in gallery of shared itineraries others can browse and remix — thi
 
 ---
 
-## 7. Value created
+## 8. Value created
 
 - **Travel groups**: replaces group-chat decision chaos with structured, evidence-based choices and a visible record of why a pick was made
 - **First-time visitors to a country**: local-knowledge details (correct subway line, which market stall closes early, Naver vs. Google Maps) reduce the anxiety of navigating somewhere unfamiliar
@@ -124,7 +146,7 @@ Public, opt-in gallery of shared itineraries others can browse and remix — thi
 
 ---
 
-## 8. Suggested phase order (build sequence)
+## 9. Suggested phase order (build sequence)
 
 1. Schema extraction
 2. Accounts + collaborators + synced picks (do together — unlocks sharing and analytics)

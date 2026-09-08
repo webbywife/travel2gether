@@ -11,11 +11,15 @@ class TripPageTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_home_redirects_to_the_featured_trip(): void
+    public function test_landing_page_renders_and_links_to_signup_and_the_sample(): void
     {
         $this->seed(Seoul2026Seeder::class);
 
-        $this->get('/')->assertRedirect('/t/seoul-2026');
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Plan the trip', false)
+            ->assertSee(route('register'), false)
+            ->assertSee(route('trips.show', 'seoul-2026'), false);
     }
 
     public function test_seoul_trip_renders_entirely_from_the_database(): void
@@ -25,11 +29,12 @@ class TripPageTest extends TestCase
         $this->get('/t/seoul-2026')
             ->assertOk()
             ->assertSee('Seoul 2026', false)
-            ->assertSee('Touchdown &amp; Sejong University', false)   // day 1 title
-            ->assertSee('Four Stones Coffee Roasters', false)         // a seeded option
+            ->assertSee('Touchdown &amp; Sejong University', false)
+            ->assertSee('Four Stones Coffee Roasters', false)
             ->assertSee('Possible hiccups', false)
             ->assertSee('Budget worksheet', false)
-            ->assertSee('PR400', false);                              // boarding-pass segment
+            ->assertSee('PR400', false)
+            ->assertSee('Sample itinerary', false); // guest ribbon
     }
 
     public function test_private_trips_are_not_reachable(): void

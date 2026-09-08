@@ -1,16 +1,22 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\TripController;
-use App\Models\Trip;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    // Phase 1: land on the reference trip. Phase 7 turns this into a gallery.
-    $featured = Trip::where('is_public', true)->orderByDesc('start_date')->first();
+Route::get('/', [PageController::class, 'home'])->name('home');
 
-    abort_unless($featured, 404);
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
-    return redirect()->route('trips.show', $featured);
-})->name('home');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
+Route::get('/dashboard', [PageController::class, 'dashboard'])->middleware('auth')->name('dashboard');
+
+// Public, shareable trip URL (Phase 7). Seoul 2026 is the seeded sample.
 Route::get('/t/{trip:slug}', [TripController::class, 'show'])->name('trips.show');
