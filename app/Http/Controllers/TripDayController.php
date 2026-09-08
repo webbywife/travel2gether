@@ -39,8 +39,8 @@ class TripDayController extends Controller
                 'outfit_chips' => $draft['outfit_chips'] ?: $day->outfit_chips,
                 'summary' => $draft['summary'] ?: $day->summary,
                 'hiccups' => $draft['hiccups'],
-                'temp_high' => null,
-                'temp_low' => null,
+                'temp_high' => $draft['temp_high'] ?? $day->temp_high,
+                'temp_low' => $draft['temp_low'] ?? $day->temp_low,
                 'source' => 'ai',
             ]);
 

@@ -8,17 +8,20 @@ use Illuminate\Support\Facades\Http;
 
 /**
  * Drafts one day of an itinerary with Gemini: stops with 3+ options each,
- * a weather note contextualised to the day's actual area + date, outfit
- * chips, a rationale, and documented hiccups. Grounded with real POIs from
- * Places search when a maps key is configured.
+ * a weather note grounded in real historical climate data for the day's
+ * actual area + date, outfit chips, a rationale, and documented hiccups.
+ * Also grounded with real POIs from Places search when a maps key is
+ * configured.
  */
 class GenerateDayItinerary
 {
     private ?string $key;
     private string $model;
 
-    public function __construct(private PlacesService $places)
-    {
+    public function __construct(
+        private PlacesService $places,
+        private WeatherClimateService $weather,
+    ) {
         $this->key = config('services.gemini.api_key');
         $this->model = config('services.gemini.model', 'gemini-3.6-flash');
     }
@@ -29,8 +32,8 @@ class GenerateDayItinerary
     }
 
     /**
-     * @return array<string, mixed>  keys: weather_note, weather_tag, outfit_chips,
-     *                               summary, hiccups, stops
+     * @return array<string, mixed>  keys: weather_note, weather_tag, temp_high,
+     *                               temp_low, outfit_chips, summary, hiccups, stops
      *
      * @throws \RuntimeException on an unusable response
      */
@@ -41,15 +44,14 @@ class GenerateDayItinerary
         $trip = $day->trip;
         $area = $day->area_label ?: $day->title ?: $trip->destination;
         $prefs = $trip->interests ?? [];
+        $lat = (float) ($day->lat ?? $trip->lat);
+        $lon = (float) ($day->lon ?? $trip->lon);
 
-        $grounding = $this->groundingPois(
-            $area,
-            (float) ($day->lat ?? $trip->lat),
-            (float) ($day->lon ?? $trip->lon),
-            (array) ($prefs['interests'] ?? []),
-        );
+        $climate = ($lat && $lon) ? $this->weather->normalsFor($lat, $lon, $day->date) : null;
 
-        $prompt = $this->prompt($trip, $day, $area, $prefs, $grounding);
+        $grounding = $this->groundingPois($area, $lat, $lon, (array) ($prefs['interests'] ?? []));
+
+        $prompt = $this->prompt($trip, $day, $area, $prefs, $grounding, $climate);
 
         // The model occasionally returns a truncated / degenerate blob, or a 429 under
         // load — retry a few times with a short backoff.
@@ -65,7 +67,7 @@ class GenerateDayItinerary
             throw new \RuntimeException('Gemini returned an unusable draft.');
         }
 
-        return $this->normalize($data);
+        return $this->normalize($data, $climate);
     }
 
     /** @return array<string, mixed>|null */
@@ -128,7 +130,7 @@ class GenerateDayItinerary
             ->all();
     }
 
-    private function prompt($trip, TripDay $day, string $area, array $prefs, array $grounding): string
+    private function prompt($trip, TripDay $day, string $area, array $prefs, array $grounding, ?array $climate): string
     {
         $interests = implode(', ', (array) ($prefs['interests'] ?? [])) ?: 'general sightseeing';
         $shopping = implode(', ', (array) ($prefs['shopping'] ?? []));
@@ -136,6 +138,13 @@ class GenerateDayItinerary
             ? "\nReal places nearby (prefer these; use the exact names):\n- " . implode("\n- ", array_map(
                 fn ($p) => $p['name'] . ($p['address'] ? " ({$p['address']})" : ''), $grounding))
             : '';
+
+        $climateLine = $climate
+            ? "\nHistorical climate for this date ({$climate['years_sampled']}-year average, real data — write the "
+                . "weather_note to match this, do not invent different numbers): high ~{$climate['temp_high']}°C, "
+                . "low ~{$climate['temp_low']}°C, rained on ~{$climate['rain_chance']}% of sampled days."
+            : "\nNo historical climate data available for this location — describe likely conditions in general "
+                . 'terms for the season, without inventing specific temperatures.';
 
         $cur = $trip->currency;
 
@@ -149,12 +158,15 @@ class GenerateDayItinerary
         Interests: {$interests}
         {$this->shoppingLine($shopping)}
         Base hotel: {$trip->hotel_name}
+        {$climateLine}
         {$poiList}
 
         Rules:
         - weather_note: 1-2 sentences, specific to {$area}'s geography (coast/mountain/city/
-          valley) and this date's season. Not generic.
-        - weather_tag: one of "indoor", "covered", "outdoor".
+          valley) and this date's season. Ground it in the historical climate figures above
+          when given — do not contradict them or state different numbers.
+        - weather_tag: one of "indoor", "covered", "outdoor" — pick "covered" or "indoor" if
+          the rain chance above is high (over ~40%) and the plan should lean that way.
         - 5-7 stops, time-ordered, ~09:00 to evening: a morning sight, lunch, an afternoon
           thing, dinner, and one shopping stop if it fits the interests.
         - EVERY meal / sight / activity / shopping stop needs 3-4 real named options at
@@ -195,7 +207,7 @@ class GenerateDayItinerary
 
 
     /** @return array<string, mixed> */
-    private function normalize(array $d): array
+    private function normalize(array $d, ?array $climate = null): array
     {
         $tag = strtolower((string) ($d['weather_tag'] ?? 'outdoor'));
         $tag = in_array($tag, ['indoor', 'covered', 'outdoor'], true) ? $tag : 'outdoor';
@@ -203,6 +215,10 @@ class GenerateDayItinerary
         return [
             'weather_note' => (string) ($d['weather_note'] ?? ''),
             'weather_tag' => $tag,
+            // Real historical averages, not model-invented numbers — null when no
+            // climate data was available for this location.
+            'temp_high' => $climate['temp_high'] ?? null,
+            'temp_low' => $climate['temp_low'] ?? null,
             'outfit_chips' => array_values(array_filter(array_map('strval', (array) ($d['outfit_chips'] ?? [])))),
             'summary' => (string) ($d['summary'] ?? ''),
             'hiccups' => array_values(array_filter(array_map('strval', (array) ($d['hiccups'] ?? [])))) ?: ['Check opening hours the morning of.'],

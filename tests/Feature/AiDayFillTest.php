@@ -21,11 +21,24 @@ class AiDayFillTest extends TestCase
         return app(DuplicateTrip::class)(Trip::where('slug', 'seoul-2026')->first(), $owner);
     }
 
+    private function fakeClimateResponse()
+    {
+        return Http::response([
+            'daily' => [
+                'time' => ['2027-01-01', '2027-01-02', '2027-01-03'],
+                'temperature_2m_max' => [18, 19, 17],
+                'temperature_2m_min' => [9, 10, 8],
+                'precipitation_sum' => [0, 3.2, 0],
+            ],
+        ]);
+    }
+
     private function fakeGemini(): void
     {
         config(['services.gemini.api_key' => 'test-key', 'services.google.maps_key' => null]);
 
         Http::fake([
+            'archive-api.open-meteo.com/*' => $this->fakeClimateResponse(),
             'generativelanguage.googleapis.com/*' => Http::response([
                 'candidates' => [[
                     'content' => ['parts' => [['text' => json_encode([
@@ -65,6 +78,10 @@ class AiDayFillTest extends TestCase
         $this->assertSame(['Museum shuts Mondays.', 'Last bus back is early.'], $day->hiccups);
         $this->assertSame(2, $day->stops()->count());
 
+        // temps come from the (faked) historical climate average, not the model
+        $this->assertSame(18, $day->temp_high); // round(avg(18,19,17))
+        $this->assertSame(9, $day->temp_low);   // round(avg(9,10,8))
+
         $lunch = $day->stops()->where('title', 'Lunch')->first();
         $this->assertTrue($lunch->has_options);
         $this->assertSame(3, $lunch->options()->count());
@@ -103,7 +120,10 @@ class AiDayFillTest extends TestCase
         $before = $day->stops()->count();
 
         config(['services.gemini.api_key' => 'test-key']);
-        Http::fake(['generativelanguage.googleapis.com/*' => Http::response(['candidates' => []], 200)]);
+        Http::fake([
+            'archive-api.open-meteo.com/*' => $this->fakeClimateResponse(),
+            'generativelanguage.googleapis.com/*' => Http::response(['candidates' => []], 200),
+        ]);
 
         $this->actingAs($owner)
             ->post(route('trips.days.generate', [$trip, $day->id]))
