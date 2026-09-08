@@ -89,10 +89,19 @@
     content:""; position:absolute; inset:6px 5px 12px 5px;
     border:3px solid #CFCAC4; border-radius:10px; border-bottom-color:transparent;
   }
+  .sb-head{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 14px;}
   .sb-label{
-    display:block; font-family:'Caveat',cursive; font-size:30px; font-weight:700;
-    color:var(--accent); transform:rotate(-1.5deg); margin:0 0 14px 8px; line-height:1;
+    font-family:'Caveat',cursive; font-size:30px; font-weight:700;
+    color:var(--accent); transform:rotate(-1.5deg); margin-left:8px; line-height:1;
   }
+  .sb-tabs{display:flex; gap:6px;}
+  .sb-tab{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.04em;
+    padding:5px 11px; border-radius:999px; border:1px solid var(--line); background:#fff;
+    color:var(--text-dim); cursor:pointer; transition:all .15s ease;
+  }
+  .sb-tab:hover{border-color:var(--pink-light); color:var(--text);}
+  .sb-tab.on{background:var(--grad-soft); color:#fff; border-color:transparent;}
   .sb-paste{
     position:relative; background:#fff; border:1px solid #ECE7DE; border-radius:3px;
     padding:6px; box-shadow:0 10px 26px -12px rgba(36,30,35,0.35);
@@ -218,20 +227,47 @@
 <section class="section section-tight reveal">
   <h2 class="gtext">This is what you get</h2>
   <p class="section-sub">A real Travel2gether itinerary — not a screenshot. Tap the option cards, open the budget tab, scroll a day.</p>
-  <div class="scrapbook">
+  <div class="scrapbook" id="scrapbook">
     <div class="sb-clip" aria-hidden="true"></div>
-    <span class="sb-label">{{ $sampleTrip ? strtolower($sampleTrip->destination) : 'our trip' }} — plan ✎</span>
+    <div class="sb-head">
+      <span class="sb-label" id="sbLabel">{{ $sampleTrip ? strtolower($sampleTrip->destination) : 'our trip' }} — plan ✎</span>
+      @if(($samples ?? collect())->count() > 1)
+        <div class="sb-tabs">
+          @foreach($samples as $s)
+            <button type="button" class="sb-tab {{ $loop->first ? 'on' : '' }}"
+                    data-src="{{ route('trips.show', $s) }}"
+                    data-label="{{ strtolower($s->destination) }} — plan ✎"
+                    data-href="{{ route('trips.show', $s) }}">{{ $s->title }}</button>
+          @endforeach
+        </div>
+      @endif
+    </div>
     @if($sampleTrip ?? null)
       <div class="sb-paste">
         <div class="tape tape-l" aria-hidden="true"></div>
         <div class="tape tape-r" aria-hidden="true"></div>
-        <iframe src="{{ route('trips.show', $sampleTrip) }}" title="Sample itinerary preview" loading="lazy"></iframe>
+        <iframe id="sbFrame" src="{{ route('trips.show', $sampleTrip) }}" title="Sample itinerary preview" loading="lazy"></iframe>
       </div>
       <span class="sb-note">↑ tap a card — it remembers your pick</span>
     @endif
   </div>
   @if($sampleTrip ?? null)
-    <p class="preview-note"><a href="{{ route('trips.show', $sampleTrip) }}">Open the full sample in its own tab →</a></p>
+    <p class="preview-note"><a id="sbOpen" href="{{ route('trips.show', $sampleTrip) }}">Open the full sample in its own tab →</a></p>
+  @endif
+  @if(($samples ?? collect())->count() > 1)
+  <script>
+  (function () {
+    var frame = document.getElementById('sbFrame'), label = document.getElementById('sbLabel'), open = document.getElementById('sbOpen');
+    document.querySelectorAll('.sb-tab').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.sb-tab').forEach(function (b) { b.classList.toggle('on', b === btn); });
+        frame.src = btn.dataset.src;
+        label.textContent = btn.dataset.label;
+        if (open) open.href = btn.dataset.href;
+      });
+    });
+  })();
+  </script>
   @endif
 </section>
 

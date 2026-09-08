@@ -42,13 +42,15 @@
   @if ($owned->isEmpty() && $shared->isEmpty())
     <div class="empty">
       <h3>No trips yet</h3>
-      <p>AI trip generation is coming next. For now, start from the sample itinerary — you'll get your own editable copy to invite your group to.</p>
-      @if ($sampleTrip)
-        <form method="POST" action="{{ route('trips.duplicate', $sampleTrip) }}">
-          @csrf
-          <button type="submit" class="btn btn-primary">Start from the {{ $sampleTrip->destination }} sample</button>
-        </form>
-      @endif
+      <p>AI trip generation is coming next. For now, start from a sample itinerary — you'll get your own editable copy to invite your group to.</p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        @foreach ($samples as $s)
+          <form method="POST" action="{{ route('trips.duplicate', $s) }}">
+            @csrf
+            <button type="submit" class="btn {{ $loop->first ? 'btn-primary' : 'btn-ghost' }}">Start from {{ $s->title }}</button>
+          </form>
+        @endforeach
+      </div>
     </div>
   @else
     @if ($owned->isNotEmpty())

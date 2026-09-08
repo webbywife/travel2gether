@@ -3,16 +3,29 @@
     $currency = $trip->currency ?? 'USD';
     $sym = ['USD' => '$', 'PHP' => '₱', 'KRW' => '₩', 'EUR' => '€', 'GBP' => '£'][$currency] ?? ($currency . ' ');
 
-    // Budget category -> slug + colour, matching the worksheet calculator.
-    $catMeta = [
+    $budgetByCat = $trip->budgetLines->groupBy('category');
+
+    // Budget category -> slug + colour for the worksheet + doughnut. Known
+    // categories keep a fixed colour; anything else (AI-generated trips) gets
+    // the next colour from the palette so it still charts.
+    $known = [
         'Registration'  => ['slug' => 'reg',     'color' => '#B48FD9'],
+        'Rail & entry'  => ['slug' => 'reg',     'color' => '#B48FD9'],
+        'Shopping'      => ['slug' => 'shop',    'color' => '#D98FC2'],
         'Meals'         => ['slug' => 'meals',   'color' => '#C77DA2'],
         'Accommodation' => ['slug' => 'accom',   'color' => '#E88FAE'],
         'Insurance'     => ['slug' => 'ins',     'color' => '#C22A66'],
         'Transpo'       => ['slug' => 'transpo', 'color' => '#5B8C7B'],
+        'Transport'     => ['slug' => 'transpo', 'color' => '#5B8C7B'],
         'Communication' => ['slug' => 'comm',    'color' => '#8E7986'],
     ];
-    $budgetByCat = $trip->budgetLines->groupBy('category');
+    $palette = ['#B48FD9', '#D98FC2', '#C77DA2', '#E88FAE', '#5B8C7B', '#8E7986', '#7156A8', '#C2843A'];
+    $catMeta = [];
+    $i = 0;
+    foreach ($budgetByCat->keys() as $cat) {
+        $catMeta[$cat] = $known[$cat] ?? ['slug' => \Illuminate\Support\Str::slug($cat) ?: 'cat'.$i, 'color' => $palette[$i % count($palette)]];
+        $i++;
+    }
     $sequence = $trip->days->pluck('day_number')->map(fn ($n) => (string) $n)->push('budget')->all();
 @endphp
 <!DOCTYPE html>
