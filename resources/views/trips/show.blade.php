@@ -29,7 +29,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"
+        integrity="sha384-DhxhYObIMeMNGyAG7iK11OHzBIKyEIeRL0ad1iFPAOwZB8iirUlTT0O/WJJUk8+o"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
   :root{
     --bg:#FFFFFF;
@@ -690,8 +692,12 @@
 @auth
 @if(config('broadcasting.default') === 'reverb' && config('broadcasting.connections.reverb.key'))
 @php $rev = config('broadcasting.connections.reverb'); @endphp
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pusher/8.4.0/pusher.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.16.1/echo.iife.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pusher/8.4.0/pusher.min.js"
+        integrity="sha384-F0kpynobTwTZnUdhUu3W6P6QcdLW2hKKDTh6ECx+p/osH1JYIKlYqUjNc4ObdiTj"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.16.1/echo.iife.js"
+        integrity="sha384-kXMb9TeRl71+fbBi+MgXNRaz6hQlxkKuTq+ZQ3V2KGShvN07Ge/fsCNce1mb/pCB"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 (function () {
   if (typeof Echo === 'undefined' || typeof Pusher === 'undefined') return;

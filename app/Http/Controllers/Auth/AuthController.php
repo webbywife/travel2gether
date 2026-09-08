@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\RegistrationAttempted;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,20 +20,31 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
+    /**
+     * Anti-enumeration: whether or not the email already exists, the user lands
+     * on the same "check your email" screen. An existing account is quietly
+     * notified instead of the form reporting "already taken".
+     */
     public function register(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'email' => ['required', 'string', 'email:rfc', 'max:255'],
+            'password' => ['required', 'confirmed', Password::min(12)],
         ]);
 
-        $user = User::create($data); // password cast to 'hashed' on the model
+        $existing = User::where('email', $data['email'])->first();
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        if ($existing) {
+            $existing->notify(new RegistrationAttempted);
+        } else {
+            $user = User::create($data);
+            event(new Registered($user));   // sends the verification email
+            Auth::login($user);
+            $request->session()->regenerate();
+        }
 
-        return redirect()->route('dashboard');
+        return redirect()->route('register.pending')->with('pending_email', $data['email']);
     }
 
     public function showLogin(): View

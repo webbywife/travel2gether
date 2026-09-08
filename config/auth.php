@@ -114,4 +114,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification Enforcement
+    |--------------------------------------------------------------------------
+    |
+    | When true, the `verified` middleware gates authenticated areas. Set
+    | EMAIL_VERIFICATION=false only while a real mailer is not yet configured
+    | (verification links go nowhere without SMTP).
+    |
+    */
+
+    'require_verification' => env('EMAIL_VERIFICATION', true),
+
 ];

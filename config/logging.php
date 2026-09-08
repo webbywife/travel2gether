@@ -73,6 +73,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Authentication & authorization events — kept separate for alerting.
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => 'info',
+            'days' => 90,
+            'replace_placeholders' => true,
+        ],
+
         'monthly' => [
             'driver' => 'monthly',
             'path' => storage_path('logs/laravel.log'),

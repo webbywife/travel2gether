@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -32,20 +33,40 @@ class GoogleAuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->user();
         } catch (\Throwable $e) {
+            Log::channel('security')->warning('auth.google.callback_failed', [
+                'message' => $e->getMessage(),
+                'ip' => $request->ip(),
+            ]);
+
             return redirect()->route('login')->withErrors([
                 'email' => 'Google sign-in did not complete. Please try again.',
             ]);
         }
 
-        $user = User::where('google_id', $googleUser->getId())
-            ->orWhere('email', $googleUser->getEmail())
-            ->first();
+        // Google only returns an email it has verified, but confirm the claim
+        // before we trust it enough to attach to an existing password account.
+        $emailVerified = (bool) ($googleUser->user['email_verified'] ?? false);
+
+        $user = User::where('google_id', $googleUser->getId())->first();
+
+        if (! $user) {
+            $emailOwner = User::where('email', $googleUser->getEmail())->first();
+
+            if ($emailOwner && ! $emailVerified) {
+                return redirect()->route('login')->withErrors([
+                    'email' => 'An account already uses that email. Log in with your password first, then link Google from your account.',
+                ]);
+            }
+
+            $user = $emailOwner; // null, or an account whose address Google vouched for
+        }
 
         if ($user) {
-            $user->forceFill([
+            $user->forceFill(array_filter([
                 'google_id' => $googleUser->getId(),
                 'avatar' => $googleUser->getAvatar(),
-            ])->save();
+                'email_verified_at' => ($emailVerified && ! $user->email_verified_at) ? now() : $user->email_verified_at,
+            ]))->save();
         } else {
             $user = User::create([
                 'name' => $googleUser->getName() ?: Str::before($googleUser->getEmail(), '@'),
@@ -53,9 +74,13 @@ class GoogleAuthController extends Controller
                 'google_id' => $googleUser->getId(),
                 'avatar' => $googleUser->getAvatar(),
             ]);
+
+            if ($emailVerified) {
+                $user->forceFill(['email_verified_at' => now()])->save();
+            }
         }
 
-        Auth::login($user, remember: true);
+        Auth::login($user, remember: $request->boolean('remember'));
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));
