@@ -194,5 +194,6 @@
   });
 })();
 </script>
+@include('partials.trippie')
 </body>
 </html>

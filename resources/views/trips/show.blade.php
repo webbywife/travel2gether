@@ -936,5 +936,6 @@
 </script>
 @endif
 @endauth
+@include('partials.trippie')
 </body>
 </html>

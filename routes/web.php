@@ -10,9 +10,13 @@ use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripDayController;
 use App\Http\Controllers\TripJoinController;
 use App\Http\Controllers\TripMemberController;
+use App\Http\Controllers\TrippieController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
+
+// Trippie — the planning-buddy chatbot (open to guests, rate-limited).
+Route::post('/trippie', [TrippieController::class, 'chat'])->middleware('throttle:15,1')->name('trippie.chat');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
