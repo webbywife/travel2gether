@@ -1,33 +1,19 @@
 {{-- Decorative travel doodles that drift on scroll. Purely cosmetic. --}}
 <div class="parallax-root" id="parallaxRoot" aria-hidden="true">
 
-  {{-- hot air balloon --}}
-  <div class="p balloon" data-speed="0.12" style="top:8vh; left:4%; width:120px; height:150px;">
-    <span class="pi"><svg viewBox="0 0 120 150" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M60 6c26 0 44 20 44 46 0 24-20 42-30 54H46C36 94 16 76 16 52 16 26 34 6 60 6Z"/>
-      <path d="M60 6c-14 0-22 22-22 48s8 46 22 58c14-12 22-32 22-58S74 6 60 6Z"/>
-      <path d="M38 52c0 26 8 46 22 58 14-12 22-32 22-58"/>
-      <path d="M50 106h20l4 12H46l4-12Z"/>
-      <path d="M52 118v10a8 8 0 0 0 16 0v-10"/>
-    </svg></span>
+  {{-- hot air balloon (brand mark) --}}
+  <div class="p brand balloon" data-speed="0.12" style="top:8vh; left:4%; width:112px; height:150px;">
+    <span class="pi"><img src="{{ asset('img/parallax/balloon.png') }}" alt=""></span>
   </div>
 
-  {{-- airplane --}}
-  <div class="p" data-speed="0.26" style="top:14vh; right:6%; width:150px; height:80px;">
-    <span class="pi"><svg viewBox="0 0 150 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M6 46c4-3 12-4 22-2l30 6 26-30c3-3 8-4 11-1s3 8 0 11L74 54l6 30c1 5-1 9-4 10s-7-1-9-5L52 62l-24 6c-6 2-11 1-13-3s0-16 11-19Z"/>
-    </svg></span>
+  {{-- airplane (brand mark) --}}
+  <div class="p brand" data-speed="0.26" style="top:14vh; right:6%; width:150px; height:95px;">
+    <span class="pi"><img src="{{ asset('img/parallax/plane.png') }}" alt=""></span>
   </div>
 
-  {{-- train --}}
-  <div class="p" data-speed="0.08" style="top:120vh; left:2%; width:190px; height:100px;">
-    <span class="pi"><svg viewBox="0 0 190 100" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20 20h96c22 0 40 18 40 40v14H20a12 12 0 0 1-12-12V32a12 12 0 0 1 12-12Z"/>
-      <path d="M32 34h28v22H32zM74 34h28v22H74z"/>
-      <path d="M118 40h18c10 0 16 6 18 16h-36V40Z"/>
-      <circle cx="46" cy="86" r="9"/><circle cx="96" cy="86" r="9"/><circle cx="140" cy="86" r="9"/>
-      <path d="M8 74h150"/><path d="M96 20V8h14"/>
-    </svg></span>
+  {{-- train (brand mark) --}}
+  <div class="p brand" data-speed="0.08" style="top:120vh; left:2%; width:180px; height:141px;">
+    <span class="pi"><img src="{{ asset('img/parallax/train.png') }}" alt=""></span>
   </div>
 
   {{-- bus --}}
@@ -41,15 +27,9 @@
     </svg></span>
   </div>
 
-  {{-- ship --}}
-  <div class="p ship" data-speed="-0.06" style="top:250vh; left:6%; width:170px; height:120px;">
-    <span class="pi"><svg viewBox="0 0 170 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 82h142l-16 26a12 12 0 0 1-11 7H41a12 12 0 0 1-11-7L14 82Z"/>
-      <path d="M84 14v66"/>
-      <path d="M84 20l40 16-40 14V20Z"/>
-      <path d="M84 30 44 44l40 12V30Z"/>
-      <path d="M4 96c8 6 14 6 22 0s14-6 22 0 14 6 22 0 14-6 22 0 14 6 22 0 14-6 22 0"/>
-    </svg></span>
+  {{-- boat (brand mark) --}}
+  <div class="p brand ship" data-speed="-0.06" style="top:250vh; left:6%; width:170px; height:118px;">
+    <span class="pi"><img src="{{ asset('img/parallax/boat.png') }}" alt=""></span>
   </div>
 
   {{-- compass --}}
@@ -60,11 +40,9 @@
     </svg></span>
   </div>
 
-  {{-- little plane 2 --}}
-  <div class="p" data-speed="0.22" style="top:300vh; right:12%; width:110px; height:60px; opacity:0.12;">
-    <span class="pi"><svg viewBox="0 0 110 60" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 34c3-2 9-3 16-1l22 4 18-22c2-2 6-3 8-1s2 6 0 8L52 40l4 20c1 4-1 7-3 7s-5-1-6-4L38 46l-18 4c-4 1-8 0-9-2s0-11 7-14Z"/>
-    </svg></span>
+  {{-- car (brand mark) --}}
+  <div class="p brand" data-speed="0.22" style="top:300vh; right:12%; width:90px; height:133px;">
+    <span class="pi"><img src="{{ asset('img/parallax/car.png') }}" alt=""></span>
   </div>
 
 </div>

@@ -30,10 +30,16 @@ class IndexGeneratedPlaces
                 continue;
             }
 
-            Place::firstOrCreate(
+            $place = Place::firstOrCreate(
                 ['provider' => self::PROVIDER, 'provider_id' => $slug],
                 ['name' => $name, 'types' => $option->tier ? [$option->tier] : null],
             );
+
+            // Link back so thumbs-up/down on this option roll up to the shared
+            // place record — the same restaurant suggested on two trips shares one score.
+            if ($option->place_id !== $place->id) {
+                $option->forceFill(['place_id' => $place->id])->save();
+            }
 
             $indexed++;
         }

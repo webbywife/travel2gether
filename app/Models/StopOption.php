@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StopOption extends Model
 {
     protected $fillable = [
-        'stop_id', 'sort', 'name', 'tier', 'note', 'cost_min', 'cost_max',
+        'stop_id', 'place_id', 'sort', 'name', 'tier', 'note', 'cost_min', 'cost_max',
         'currency', 'weather_tag', 'map_provider', 'map_url',
         'is_default_pick', 'is_sponsored',
     ];
@@ -21,6 +21,11 @@ class StopOption extends Model
     public function stop(): BelongsTo
     {
         return $this->belongsTo(Stop::class);
+    }
+
+    public function place(): BelongsTo
+    {
+        return $this->belongsTo(Place::class);
     }
 
     /** Midpoint of the cost range, used to seed the budget worksheet. */

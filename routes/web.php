@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PlaceRecommendationController;
 use App\Http\Controllers\PlacesController;
 use App\Http\Controllers\TripBuilderController;
 use App\Http\Controllers\TripController;
@@ -61,6 +62,7 @@ Route::middleware(['auth', 'throttle:40,1'])->group(function () {
 
 // Public / shared trip URL. Seoul 2026 is the seeded sample.
 Route::get('/t/{trip:slug}', [TripController::class, 'show'])->name('trips.show');
+Route::get('/t/{trip:slug}/print', [TripController::class, 'print'])->name('trips.print');
 
 // Collaboration (Phase 2) — all require a signed-in user.
 Route::middleware('auth')->group(function () {
@@ -81,4 +83,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/join/{invite:token}', [TripJoinController::class, 'show'])->name('trips.join');
     Route::post('/join/{invite:token}', [TripJoinController::class, 'store'])->name('trips.join.accept');
+
+    // Thumbs up/down on a place — signed-in users only.
+    Route::post('/places/{place}/recommend', [PlaceRecommendationController::class, 'store'])
+        ->middleware('throttle:30,1')->name('places.recommend');
 });

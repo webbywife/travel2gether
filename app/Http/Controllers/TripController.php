@@ -15,7 +15,7 @@ class TripController extends Controller
         abort_unless($trip->canView($request->user()), 404);
 
         $trip->load([
-            'days.stops.options',
+            'days.stops.options.place.recommendations',
             'budgetLines',
             'members',
             'invites',
@@ -25,6 +25,31 @@ class TripController extends Controller
             'trip' => $trip,
             'role' => $trip->roleFor($request->user()),
             'aiEnabled' => filled(config('services.gemini.api_key')),
+        ]);
+    }
+
+    /** A printable, scrapbook-styled export of the finished itinerary. */
+    public function print(Request $request, Trip $trip): View
+    {
+        abort_unless($trip->canView($request->user()), 404);
+
+        $trip->load([
+            'days.stops.options.place.recommendations',
+            'budgetLines',
+        ]);
+
+        $favorites = $trip->days
+            ->flatMap(fn ($day) => $day->stops)
+            ->flatMap(fn ($stop) => $stop->options)
+            ->filter(fn ($opt) => $opt->place && $opt->place->score() > 0)
+            ->unique('place_id')
+            ->sortByDesc(fn ($opt) => $opt->place->score())
+            ->take(6)
+            ->values();
+
+        return view('trips.print', [
+            'trip' => $trip,
+            'favorites' => $favorites,
         ]);
     }
 

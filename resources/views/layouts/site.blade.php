@@ -47,6 +47,8 @@
   .parallax-root .p{position:absolute; will-change:transform; color:var(--pink); opacity:0.22;}
   .parallax-root .p .pi{display:block; width:100%; height:100%;}
   .parallax-root .p svg{display:block; width:100%; height:100%;}
+  .parallax-root .p img{display:block; width:100%; height:100%; object-fit:contain;}
+  .parallax-root .p.brand{opacity:0.1;} /* full-colour logo doodles read heavier than the thin outline ones, so they stay dimmer */
   .parallax-root .p.balloon .pi{animation:t2g-float 9s ease-in-out infinite;}
   .parallax-root .p.ship .pi{animation:t2g-bob 7s ease-in-out infinite;}
   @keyframes t2g-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}

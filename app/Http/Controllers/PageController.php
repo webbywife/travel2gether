@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Place;
 use App\Models\Trip;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -41,6 +42,7 @@ class PageController extends Controller
             'shared' => $shared,
             'samples' => $samples,
             'sampleTrip' => $samples->first(),
+            'topPlaces' => Place::topRecommended(6)->get(),
         ]);
     }
 

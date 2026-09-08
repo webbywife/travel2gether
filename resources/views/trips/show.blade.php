@@ -132,6 +132,15 @@
   .eyebrow{font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.18em; color:var(--pink); text-transform:uppercase; margin-bottom:14px; font-weight:500;}
   h1{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:56px; line-height:1.05; margin:0 0 12px; letter-spacing:-0.01em;}
   h1 span{background:linear-gradient(102deg,#C22A66,#A5357A 46%,#6E54A6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;}
+  .title-row{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  .title-row h1{flex:1; min-width:260px;}
+  .print-link{
+    display:inline-flex; align-items:center; gap:6px; margin-top:10px; font-size:13.5px; font-weight:500;
+    color:var(--text-dim); background:var(--panel); border:1px solid var(--line); border-radius:999px;
+    padding:8px 16px; text-decoration:none; white-space:nowrap;
+  }
+  .print-link:hover{color:var(--pink); border-color:var(--pink-light);}
+  @media print{.print-link{display:none;}}
   .subhead{color:var(--text-dim); font-size:18px; max-width:560px; margin:0 0 34px; line-height:1.65;}
   .visa-badge{display:inline-block; font-size:13px; padding:8px 14px; border-radius:999px; margin:0 0 18px; max-width:560px; line-height:1.5;}
   .visa-badge.visa-visa_free{background:rgba(59,167,118,0.12); color:#2f6d54;}
@@ -241,6 +250,17 @@
   .opt-meta{display:flex; gap:14px; flex-wrap:wrap; font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--accent); margin:5px 0 6px;}
   .opt-note{font-size:13.5px; color:var(--text-dim); line-height:1.5;}
   .opt-card .pin{margin-left:0; display:inline-block; margin-top:6px;}
+
+  .rec-row{display:flex; align-items:center; gap:6px; margin-top:8px;}
+  .rec-btn{
+    display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:500;
+    color:var(--text-dim); background:var(--bg); border:1px solid var(--line); border-radius:999px;
+    padding:4px 10px; cursor:pointer; font-family:'Inter', sans-serif; line-height:1.4;
+  }
+  .rec-btn:hover{border-color:var(--pink-light); color:var(--text);}
+  .rec-btn.on{border-color:var(--pink); background:var(--panel-2); color:var(--accent);}
+  .rec-btn.down.on{border-color:var(--lavender); background:rgba(113,86,168,0.1); color:var(--lavender);}
+  .rec-hint{font-size:11.5px; color:var(--text-dim); font-style:italic;}
 
   .nav-btns{display:flex; justify-content:space-between; margin-top:22px;}
   .nav-btn{font-family:'Inter', sans-serif; font-size:14px; font-weight:500; color:var(--pink); background:none; border:1px solid var(--pink); border-radius:999px; padding:9px 18px; cursor:pointer;}
@@ -435,7 +455,10 @@
 <div class="wrap">
 
   @if($trip->origin_label)<div class="eyebrow">Mission briefing · {{ $trip->origin_label }}</div>@endif
-  <h1>{{ \Illuminate\Support\Str::beforeLast($trip->title, ' ') }} <span>{{ \Illuminate\Support\Str::afterLast($trip->title, ' ') }}</span></h1>
+  <div class="title-row">
+    <h1>{{ \Illuminate\Support\Str::beforeLast($trip->title, ' ') }} <span>{{ \Illuminate\Support\Str::afterLast($trip->title, ' ') }}</span></h1>
+    <a class="print-link" href="{{ route('trips.print', $trip) }}" target="_blank" rel="noopener">🖨 Print scrapbook</a>
+  </div>
   @php $visa = \App\Support\Destinations::match($trip->destination); @endphp
   @if($visa)
     <div class="visa-badge visa-{{ $visa['visa_status'] }}">🛂 {{ \App\Support\Destinations::visaLabel($visa['visa_status']) }} for a PH passport — {{ $visa['visa_note'] }}</div>
@@ -572,6 +595,21 @@
                 </div>
                 @if($opt->note)<div class="opt-note">{{ $opt->note }}</div>@endif
                 @if($opt->map_url)<a class="pin" href="{{ $opt->map_url }}" target="_blank" rel="noopener">Map ↗</a>@endif
+                @if($opt->place)
+                  @php $myVote = $opt->place->voteFor(auth()->user()); @endphp
+                  <div class="rec-row" data-place-id="{{ $opt->place_id }}">
+                    @auth
+                    <button type="button" class="rec-btn up {{ $myVote === 1 ? 'on' : '' }}" data-vote="up">
+                      👍 <span class="up-count">{{ $opt->place->upCount() }}</span>
+                    </button>
+                    <button type="button" class="rec-btn down {{ $myVote === -1 ? 'on' : '' }}" data-vote="down">
+                      👎 <span class="down-count">{{ $opt->place->downCount() }}</span>
+                    </button>
+                    @else
+                    <span class="rec-hint">👍 {{ $opt->place->upCount() }} · <a href="{{ route('login') }}">sign in to recommend</a></span>
+                    @endauth
+                  </div>
+                @endif
               </div>
               @endforeach
             </div>
@@ -740,6 +778,35 @@
     document.getElementById('resetChoices')?.addEventListener('click', () => {
       try { localStorage.removeItem(KEY); } catch (e) {}
       location.reload();
+    });
+  })();
+
+  /* ===== Thumbs up/down on places (signed-in users) ===== */
+  (function () {
+    const csrf = @json(csrf_token());
+    document.querySelectorAll('.rec-row').forEach(row => {
+      row.querySelectorAll('.rec-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (btn.disabled) return;
+          btn.disabled = true;
+          try {
+            const res = await fetch(`/places/${row.dataset.placeId}/recommend`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+              body: JSON.stringify({ vote: btn.dataset.vote }),
+            });
+            if (!res.ok) throw new Error('vote failed');
+            const data = await res.json();
+            row.querySelector('.up .up-count').textContent = data.up;
+            row.querySelector('.down .down-count').textContent = data.down;
+            row.querySelector('.up').classList.toggle('on', data.my_vote === 1);
+            row.querySelector('.down').classList.toggle('on', data.my_vote === -1);
+          } catch (e) { /* silent — thumbs are a nice-to-have, not critical path */ }
+          btn.disabled = false;
+        });
+      });
     });
   })();
 
