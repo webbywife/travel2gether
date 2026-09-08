@@ -7,6 +7,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlacesController;
 use App\Http\Controllers\TripBuilderController;
 use App\Http\Controllers\TripController;
+use App\Http\Controllers\TripDayController;
 use App\Http\Controllers\TripJoinController;
 use App\Http\Controllers\TripMemberController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/trips', [TripBuilderController::class, 'store'])->name('trips.store');
 
     Route::post('/t/{trip:slug}/duplicate', [TripController::class, 'duplicate'])->name('trips.duplicate');
+
+    Route::post('/t/{trip:slug}/days/{day}/generate', [TripDayController::class, 'generate'])
+        ->middleware('throttle:12,1')->name('trips.days.generate');
 
     Route::post('/t/{trip:slug}/invites', [TripMemberController::class, 'storeInvite'])->name('trips.invites.store');
     Route::delete('/t/{trip:slug}/invites/{invite:token}', [TripMemberController::class, 'revokeInvite'])->name('trips.invites.revoke');

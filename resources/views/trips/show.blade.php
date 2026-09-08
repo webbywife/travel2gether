@@ -174,6 +174,12 @@
   .day-panel.active{display:block;}
 
   .day-head{margin-bottom:14px;}
+  .ai-day{margin:10px 0 4px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .ai-btn{font-family:'Inter',sans-serif; font-size:13px; font-weight:600; padding:8px 14px; border-radius:999px;
+    border:1px solid var(--pink); background:linear-gradient(135deg,#C22A66,#7156A8); color:#fff; cursor:pointer;}
+  .ai-btn:hover{opacity:0.92;}
+  .ai-btn:disabled{opacity:0.55; cursor:default;}
+  .ai-hint{font-size:11.5px; color:var(--text-dim); font-family:'JetBrains Mono',monospace;}
   .day-date{font-family:'JetBrains Mono', monospace; font-size:13.5px; color:var(--text-dim); letter-spacing:0.06em; text-transform:uppercase;}
   .day-title{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:30px; margin:4px 0 0;}
   .day-title .kr{color:var(--text-dim); font-size:16px; font-weight:500; margin-left:8px;}
@@ -312,6 +318,9 @@
 
 @if (session('status'))
   <div class="collab" style="max-width:860px;background:rgba(59,167,118,0.1);border-color:#8fd3b4;color:#2f6d54;">{{ session('status') }}</div>
+@endif
+@if (session('error'))
+  <div class="collab" style="max-width:860px;background:rgba(225,74,128,0.08);border-color:var(--pink-light);color:var(--accent);">{{ session('error') }}</div>
 @endif
 
 @auth
@@ -477,6 +486,19 @@
       <div class="day-head">
         <div class="day-date">{{ $day->date->format('D · M j') }}</div>
         <h1 class="day-title">{{ $day->title }}@if($day->title_secondary)<span class="kr">{{ $day->title_secondary }}</span>@endif</h1>
+
+        @if(($aiEnabled ?? false) && ($role === 'owner' || $role === 'editor'))
+          <form method="POST" action="{{ route('trips.days.generate', [$trip, $day->id]) }}" class="ai-day"
+                onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Drafting…';">
+            @csrf
+            <button type="submit" class="ai-btn"
+                    @if($day->source === 'ai') onclick="return confirm('Re-draft this day? It replaces the current stops.')"
+                    @elseif($day->source !== 'skeleton') onclick="return confirm('Draft this day with AI? It replaces the current stops.')" @endif>
+              ✨ {{ $day->source === 'ai' ? 'Re-draft' : 'Draft this day' }} with AI
+            </button>
+            <span class="ai-hint">stops, options, weather &amp; hiccups for {{ $day->area_label ?: $day->title }} on {{ $day->date->format('M j') }}</span>
+          </form>
+        @endif
 
         <div class="weather" data-forecast-date="{{ $day->forecast_date?->format('Y-m-d') }}"
              data-lat="{{ $day->lat ?? $trip->lat }}" data-lon="{{ $day->lon ?? $trip->lon }}">
