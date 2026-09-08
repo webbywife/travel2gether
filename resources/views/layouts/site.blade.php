@@ -5,6 +5,7 @@
 <title>@yield('title', 'Travel2gether — plan the trip together')</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="@yield('meta_description', 'Describe your trip and get a full day-by-day itinerary your whole group can shape together — options, live budget, weather backups.')">
+<link rel="icon" type="image/png" href="{{ asset('favicon-32.png') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -67,8 +68,10 @@
     max-width:1120px; margin:0 auto; padding:15px 24px;
     display:flex; align-items:center; justify-content:space-between; gap:16px;
   }
-  .brand{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; text-decoration:none; letter-spacing:-0.015em;}
+  .brand{display:flex; align-items:center; gap:9px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; text-decoration:none; letter-spacing:-0.015em;}
+  .brand-mark{height:38px; width:auto; display:block;}
   .brand .gtext{padding-right:1px;}
+  @media (max-width:480px){ .brand span{display:none;} .brand-mark{height:30px;} }
   .site-nav .links{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
   .site-nav .links a{color:var(--text-dim); text-decoration:none; font-size:14.5px; font-weight:500;}
   .site-nav .links a:hover{color:var(--text);}
@@ -141,7 +144,10 @@
 @stack('parallax')
 <header class="navbar">
   <nav class="site-nav">
-    <a class="brand" href="{{ route('home') }}"><span class="gtext">Travel2gether</span></a>
+    <a class="brand" href="{{ route('home') }}">
+      <img class="brand-mark" src="{{ asset('img/logo-mark.png') }}" alt="Travel2gether">
+      <span class="gtext">Travel2gether</span>
+    </a>
     <div class="links">
       <a href="{{ route('home') }}#how">How it works</a>
       @if($sampleTrip ?? null)<a href="{{ route('trips.show', $sampleTrip) }}">Sample trip</a>@endif

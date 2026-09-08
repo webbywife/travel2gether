@@ -22,6 +22,7 @@
 <title>{{ $trip->title }}@if($trip->tagline) — {{ $trip->tagline }}@endif</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="icon" type="image/png" href="{{ asset('favicon-32.png') }}">
 <meta name="description" content="{{ $trip->subhead ?? $trip->title }}">
 <meta property="og:title" content="{{ $trip->title }}{{ $trip->tagline ? ' — '.$trip->tagline : '' }}">
 <meta property="og:description" content="{{ $trip->subhead ?? $trip->title }}">
