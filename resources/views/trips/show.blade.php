@@ -944,6 +944,11 @@
 </script>
 @endif
 @endauth
-@include('partials.trippie')
+{{-- Skip Trippie on the public samples — this page also renders inside the
+     landing page's live-preview iframe, where a floating chat widget has
+     nowhere sensible to sit. Real (owned/shared) trips still get Trippie. --}}
+@unless($trip->is_public && $trip->created_by === null)
+  @include('partials.trippie')
+@endunless
 </body>
 </html>
