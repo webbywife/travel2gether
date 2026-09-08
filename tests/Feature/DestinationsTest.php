@@ -30,6 +30,24 @@ class DestinationsTest extends TestCase
             ->assertSee('value="Bangkok, Thailand"', false);
     }
 
+    public function test_the_browse_page_has_category_filters_and_forty_templates(): void
+    {
+        $this->get('/destinations')
+            ->assertOk()
+            ->assertSee('Cultural &amp; Historic', false)
+            ->assertSee('Nature &amp; Parks', false)
+            ->assertSee('All (40)', false);
+    }
+
+    public function test_a_matched_template_is_available_to_the_wizard(): void
+    {
+        $tpl = \App\Support\Destinations::templateFor('Kyoto, Japan');
+
+        $this->assertNotNull($tpl);
+        $this->assertSame('Cultural & Historic', $tpl['category']);
+        $this->assertSame('3 days', $tpl['trip_length']);
+    }
+
     public function test_the_trip_page_shows_a_visa_badge_for_a_matched_destination(): void
     {
         $this->seed(Seoul2026Seeder::class);

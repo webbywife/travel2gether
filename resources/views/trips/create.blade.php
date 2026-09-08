@@ -71,6 +71,7 @@
           <label class="f">Destination *</label>
           <input class="in" id="destinationInput" name="destination" value="{{ old('destination', $prefillDestination ?? '') }}" placeholder="e.g. Kyoto, Japan" required>
           <div id="visaHint" style="display:none; margin-top:7px; font-size:12px;"></div>
+          <div id="templateHint" style="display:none; margin-top:7px; font-size:12px; color:var(--text-dim); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 11px;"></div>
         </div>
         <div><label class="f">Trip name</label><input class="in" name="title" value="{{ old('title') }}" placeholder="optional — defaults to “Kyoto trip”"></div>
         <div><label class="f">Travellers</label><input class="in" type="number" name="party_size" value="{{ old('party_size', 2) }}" min="1" max="20"></div>
@@ -273,6 +274,19 @@
     visaHint.style.display = 'block';
   }
   if (destInput) { destInput.addEventListener('input', checkVisa); checkVisa(); }
+
+  // ---- recommended-template hint ----
+  var TPLS = @json($templates ?? []);
+  var tplHint = document.getElementById('templateHint');
+  function checkTemplate() {
+    var q = destInput.value.trim().toLowerCase();
+    if (!q) { tplHint.style.display = 'none'; return; }
+    var hit = TPLS.find(function (t) { return q.indexOf(t.destination.toLowerCase()) !== -1; });
+    if (!hit) { tplHint.style.display = 'none'; return; }
+    tplHint.innerHTML = '💡 <strong>Recommended: ' + hit.trip_length + '</strong>, best ' + hit.best_season + '. ' + hit.overview;
+    tplHint.style.display = 'block';
+  }
+  if (destInput) { destInput.addEventListener('input', checkTemplate); checkTemplate(); }
 })();
 </script>
 @endsection

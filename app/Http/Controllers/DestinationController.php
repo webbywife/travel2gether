@@ -11,6 +11,8 @@ class DestinationController extends Controller
     {
         return view('destinations.index', [
             'destinations' => Destinations::all(),
+            'templates' => Destinations::templates(),
+            'categories' => Destinations::categories(),
         ]);
     }
 }

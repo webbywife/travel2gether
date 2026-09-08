@@ -53,4 +53,56 @@ class Destinations
             default => 'Check visa',
         };
     }
+
+    /**
+     * The richer per-destination templates (category, season, trip length,
+     * overview) — a broader, city/region-level index than all().
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function templates(): array
+    {
+        return config('destination_templates', []);
+    }
+
+    /** @return array<int, string> */
+    public static function categories(): array
+    {
+        return collect(self::templates())->pluck('category')->unique()->sort()->values()->all();
+    }
+
+    /**
+     * Loosely match free text (e.g. "Kyoto, Japan") to a destination template.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function templateFor(string $text): ?array
+    {
+        $needle = Str::lower(trim($text));
+        if ($needle === '') {
+            return null;
+        }
+
+        foreach (self::templates() as $entry) {
+            if (Str::contains($needle, Str::lower($entry['destination']))) {
+                return $entry;
+            }
+        }
+
+        return null;
+    }
+
+    /** Visa info (from the country-level list) for a template's country. */
+    public static function visaForCountry(string $country): ?array
+    {
+        $country = Str::lower($country);
+
+        foreach (self::all() as $entry) {
+            if (Str::lower($entry['country']) === $country) {
+                return $entry;
+            }
+        }
+
+        return null;
+    }
 }
