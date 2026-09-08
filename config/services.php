@@ -38,7 +38,9 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+        // Socialite needs an absolute URL here — fall back to building one from
+        // APP_URL rather than a bare path, in case GOOGLE_REDIRECT_URI is unset.
+        'redirect' => env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback'),
         'maps_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
