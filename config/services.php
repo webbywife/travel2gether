@@ -40,7 +40,9 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         // Socialite needs an absolute URL here — fall back to building one from
         // APP_URL rather than a bare path, in case GOOGLE_REDIRECT_URI is unset.
-        'redirect' => env('GOOGLE_REDIRECT_URI') ?: url('/auth/google/callback'),
+        // Uses env() directly (not the url() helper): this file is evaluated
+        // during `config:cache`, outside any HTTP request context.
+        'redirect' => env('GOOGLE_REDIRECT_URI') ?: rtrim(env('APP_URL', 'http://localhost'), '/') . '/auth/google/callback',
         'maps_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
