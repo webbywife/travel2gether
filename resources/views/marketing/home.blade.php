@@ -2,6 +2,10 @@
 
 @section('title', 'Travel2gether — plan the trip together, not in the group chat')
 
+@push('parallax')
+  @include('partials.parallax')
+@endpush
+
 @push('styles')
 <style>
   .hero{max-width:1080px; margin:0 auto; padding:48px 24px 24px; text-align:center;}

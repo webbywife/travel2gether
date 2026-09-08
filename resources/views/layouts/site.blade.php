@@ -18,12 +18,32 @@
   body{
     margin:0; color:var(--text); font-family:'Inter',sans-serif; font-size:17px; line-height:1.6;
     background:
-      radial-gradient(circle at 12% 8%, rgba(225,74,128,0.07), transparent 40%),
-      radial-gradient(circle at 88% 18%, rgba(180,143,217,0.06), transparent 40%),
+      linear-gradient(rgba(255,255,255,0.62), rgba(255,255,255,0.62)),
+      radial-gradient(circle at 12% 8%, rgba(225,74,128,0.05), transparent 40%),
+      radial-gradient(circle at 88% 18%, rgba(180,143,217,0.05), transparent 40%),
+      url('/img/bg-pattern.jpg'),
       var(--bg);
+    background-repeat:no-repeat, no-repeat, no-repeat, repeat, no-repeat;
+    background-size:auto, auto, auto, 1100px auto, auto;
+    background-attachment:fixed, fixed, fixed, fixed, fixed;
   }
   a{color:var(--pink);}
   .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* Parallax travel doodles behind everything */
+  .parallax-root{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
+  .parallax-root .p{position:absolute; will-change:transform; color:var(--pink); opacity:0.22;}
+  .parallax-root .p .pi{display:block; width:100%; height:100%;}
+  .parallax-root .p svg{display:block; width:100%; height:100%;}
+  .parallax-root .p.balloon .pi{animation:t2g-float 9s ease-in-out infinite;}
+  .parallax-root .p.ship .pi{animation:t2g-bob 7s ease-in-out infinite;}
+  @keyframes t2g-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  @keyframes t2g-bob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(6px) rotate(1.5deg)}}
+  @media (prefers-reduced-motion: reduce){
+    body{background-attachment:scroll, scroll, scroll, scroll;}
+    .parallax-root .p .pi{animation:none !important;}
+  }
+  .site-nav, .page, .site-foot{position:relative; z-index:2;}
 
   .site-nav{
     max-width:1080px; margin:0 auto; padding:20px 24px;
@@ -87,6 +107,7 @@
 @stack('styles')
 </head>
 <body>
+@stack('parallax')
 <nav class="site-nav">
   <a class="brand" href="{{ route('home') }}">Travel<b>2</b>gether</a>
   <div class="links">
@@ -104,7 +125,9 @@
   </div>
 </nav>
 
+<div class="page">
 @yield('content')
+</div>
 
 <footer class="site-foot">
   <span>Travel2gether — AI-drafted itineraries your group shapes together.</span>

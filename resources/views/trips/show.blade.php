@@ -46,15 +46,21 @@
   body{
     margin:0;
     background:
-      radial-gradient(circle at 12% 8%, rgba(225,74,128,0.07), transparent 40%),
-      radial-gradient(circle at 88% 18%, rgba(180,143,217,0.06), transparent 40%),
+      linear-gradient(rgba(255,255,255,0.66), rgba(255,255,255,0.66)),
+      radial-gradient(circle at 12% 8%, rgba(225,74,128,0.05), transparent 40%),
+      radial-gradient(circle at 88% 18%, rgba(180,143,217,0.05), transparent 40%),
+      url('/img/bg-pattern.jpg'),
       var(--bg);
+    background-repeat:no-repeat, no-repeat, no-repeat, repeat, no-repeat;
+    background-size:auto, auto, auto, 1100px auto, auto;
+    background-attachment:fixed, fixed, fixed, fixed, fixed;
     color:var(--text);
     font-family:'Inter', sans-serif;
     font-size:17px;
     line-height:1.6;
     padding:56px 20px 80px;
   }
+  @media (prefers-reduced-motion: reduce){ body{background-attachment:scroll,scroll,scroll,scroll;} }
   .wrap{max-width:860px; margin:0 auto; padding:25px; background:rgb(255 255 255 / 92%); border-radius:10px; border:2px solid var(--pink);}
   .sample-ribbon{
     position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:12px;
