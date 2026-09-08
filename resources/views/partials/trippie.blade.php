@@ -40,6 +40,9 @@
   #trippie .t-chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 14px 8px; background:#FFF8FA;}
   #trippie .t-chips button{font-size:12px; padding:6px 11px; border-radius:999px; border:1px solid rgba(36,30,35,0.12); background:#fff; color:#6B5860; cursor:pointer;}
   #trippie .t-chips button:hover{border-color:#F6A9C6; color:#241E23;}
+  #trippie .t-cta{display:block; text-align:center; text-decoration:none; font-size:12.5px; font-weight:700;
+    color:#fff; padding:10px 12px; background:linear-gradient(120deg,#C22A66,#8E3A73 55%,#6E54A6);}
+  #trippie .t-cta:hover{filter:brightness(1.06);}
   #trippie .t-in{display:flex; gap:8px; padding:12px 12px 14px; border-top:1px solid rgba(36,30,35,0.1); background:#fff;}
   #trippie .t-in input{flex:1; border:1px solid rgba(36,30,35,0.14); border-radius:999px; padding:10px 14px; font:inherit; font-size:13.5px; outline:none;}
   #trippie .t-in input:focus{border-color:#C22A66;}
@@ -67,13 +70,15 @@
       <button class="t-x" type="button" data-t-close aria-label="Close">&times;</button>
     </div>
     <div class="t-body" id="tBody">
-      <div class="t-msg bot">Hey! I'm Trippie 🧳 Ask me anything about planning your trip — where to base, how many days, best season, getting around, rough budgets.</div>
+      <div class="t-msg bot">Hey! I'm Trippie 🧳 Tell me where you're thinking of going — I'll help you shape it, then we'll build the day-by-day together.</div>
     </div>
     <div class="t-chips" id="tChips">
+      <button type="button">Where should I go for 5 days?</button>
       <button type="button">How many days for Tokyo?</button>
       <button type="button">Best area to stay in Kyoto?</button>
-      <button type="button">When's cherry blossom season?</button>
+      <button type="button">Help me plan a beach trip</button>
     </div>
+    <a class="t-cta" href="{{ auth()->check() ? route('trips.create') : route('register') }}">✨ Ready? Let's build your trip →</a>
     <form class="t-in" id="tForm">
       <input type="text" id="tInput" placeholder="Ask Trippie…" autocomplete="off" maxlength="1000" required>
       <button type="submit" id="tSend" aria-label="Send">➤</button>
