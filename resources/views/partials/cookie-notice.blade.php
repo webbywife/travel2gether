@@ -23,6 +23,9 @@
   }
   @keyframes cn-up{from{transform:translateY(16px); opacity:0;} to{transform:none; opacity:1;}}
   @media (prefers-reduced-motion: reduce){ .cookie-notice{animation:none;} }
+  /* .cookie-notice{display:flex} above ties [hidden]{display:none} on specificity and
+     wins on cascade order, so the hidden attribute alone can't hide this — force it. */
+  .cookie-notice[hidden]{display:none;}
 </style>
 
 <script>
