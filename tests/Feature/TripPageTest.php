@@ -17,7 +17,7 @@ class TripPageTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('Plan the trip', false)
+            ->assertSee('Turn planning into', false)
             ->assertSee(route('register'), false)
             ->assertSee(route('trips.show', 'seoul-2026'), false);
     }
