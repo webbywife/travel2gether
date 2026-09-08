@@ -34,6 +34,9 @@
   .site-nav .links{display:flex; align-items:center; gap:22px; flex-wrap:wrap;}
   .site-nav .links a{color:var(--text-dim); text-decoration:none; font-size:14.5px;}
   .site-nav .links a:hover{color:var(--text);}
+  .site-nav .links a.btn-primary{color:#fff;}
+  .site-nav .links a.btn-primary:hover{color:#fff;}
+  .site-nav .links a.btn-ghost{color:var(--pink);}
   .btn{
     display:inline-block; font-family:'Inter',sans-serif; font-size:14.5px; font-weight:600;
     padding:10px 18px; border-radius:999px; text-decoration:none; cursor:pointer; border:1px solid var(--pink);
