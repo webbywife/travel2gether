@@ -37,6 +37,23 @@ class TripPageTest extends TestCase
             ->assertSee('Sample itinerary', false); // guest ribbon
     }
 
+    public function test_a_one_word_title_does_not_render_doubled(): void
+    {
+        $trip = Trip::create([
+            'slug' => 'cal2026',
+            'title' => 'CAL2026',
+            'destination' => 'California Trip',
+            'start_date' => '2026-10-31',
+            'end_date' => '2026-11-07',
+            'is_public' => true,
+        ]);
+
+        $this->get(route('trips.show', $trip))
+            ->assertOk()
+            ->assertDontSee('CAL2026 CAL2026', false)
+            ->assertSee('CAL2026', false);
+    }
+
     public function test_private_trips_are_not_reachable(): void
     {
         $trip = Trip::create([

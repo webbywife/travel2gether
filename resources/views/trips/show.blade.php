@@ -456,7 +456,20 @@
 
   @if($trip->origin_label)<div class="eyebrow">Mission briefing · {{ $trip->origin_label }}</div>@endif
   <div class="title-row">
-    <h1>{{ \Illuminate\Support\Str::beforeLast($trip->title, ' ') }} <span>{{ \Illuminate\Support\Str::afterLast($trip->title, ' ') }}</span></h1>
+    @php
+      // Split the title into "everything but the last word" / "last word" so
+      // the last word gets the gradient treatment — but a one-word title (no
+      // space to split on) must render once, not duplicated by beforeLast/
+      // afterLast both falling back to the whole string.
+      $titleHasSpace = str_contains($trip->title, ' ');
+    @endphp
+    <h1>
+      @if($titleHasSpace)
+        {{ \Illuminate\Support\Str::beforeLast($trip->title, ' ') }} <span>{{ \Illuminate\Support\Str::afterLast($trip->title, ' ') }}</span>
+      @else
+        <span>{{ $trip->title }}</span>
+      @endif
+    </h1>
     <a class="print-link" href="{{ route('trips.print', $trip) }}" target="_blank" rel="noopener">🖨 Print scrapbook</a>
   </div>
   @php $visa = \App\Support\Destinations::match($trip->destination); @endphp
