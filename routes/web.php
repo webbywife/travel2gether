@@ -69,6 +69,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/trips/create', [TripBuilderController::class, 'create'])->name('trips.create');
     Route::post('/trips', [TripBuilderController::class, 'store'])->name('trips.store');
 
+    Route::get('/t/{trip:slug}/edit', [TripController::class, 'edit'])->name('trips.edit');
+    Route::patch('/t/{trip:slug}', [TripController::class, 'update'])->name('trips.update');
+
     Route::post('/t/{trip:slug}/duplicate', [TripController::class, 'duplicate'])->name('trips.duplicate');
 
     Route::post('/t/{trip:slug}/days/{day}/generate', [TripDayController::class, 'generate'])

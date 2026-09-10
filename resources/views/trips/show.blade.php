@@ -359,6 +359,9 @@
       <span>{{ $trip->members->count() }} {{ \Illuminate\Support\Str::plural('collaborator', $trip->members->count()) }}</span>
       <span class="role-tag">you: {{ $role }}</span>
       <span style="flex:1"></span>
+      @can('update', $trip)
+        <a class="btn-sm" href="{{ route('trips.edit', $trip) }}">Edit trip details</a>
+      @endcan
       @if ($role !== 'owner')
         <form method="POST" action="{{ route('trips.leave', $trip) }}" onsubmit="return confirm('Leave this trip?')">@csrf
           <button type="submit" class="btn-sm">Leave trip</button>
