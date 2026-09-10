@@ -51,4 +51,10 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-3.6-flash'),
     ],
 
+    // Only used by the one-off `destinations:fetch-photos` command, run locally
+    // to populate public/img/destinations/ — production never calls Pexels.
+    'pexels' => [
+        'api_key' => env('PEXELS_API_KEY'),
+    ],
+
 ];

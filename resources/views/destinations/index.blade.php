@@ -19,8 +19,10 @@
   .cat-tabs button.on{background:var(--grad-soft); color:#fff; border-color:transparent;}
 
   .tpl-grid{max-width:1120px; margin:0 auto; padding:0 24px 64px; display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px;}
-  .tpl-card{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,0.93); box-shadow:var(--shadow-sm); padding:20px; display:flex; flex-direction:column; transition:transform .16s ease, box-shadow .16s ease;}
+  .tpl-card{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,0.93); box-shadow:var(--shadow-sm); overflow:hidden; display:flex; flex-direction:column; transition:transform .16s ease, box-shadow .16s ease;}
   .tpl-card:hover{transform:translateY(-3px); box-shadow:var(--shadow-md);}
+  .tpl-photo{width:100%; aspect-ratio:16/10; object-fit:cover; display:block; background:var(--panel-2);}
+  .tpl-body{padding:20px; display:flex; flex-direction:column; flex:1;}
   .tpl-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
   .cat-tag{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; font-weight:700; color:var(--lavender); background:rgba(113,86,168,0.1); border-radius:999px; padding:4px 10px;}
   .continent-tag{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-dim);}
@@ -61,23 +63,32 @@
 
 <div class="tpl-grid" id="tplGrid">
   @foreach ($templates as $t)
-    @php $visa = \App\Support\Destinations::visaForCountry($t['country']); @endphp
+    @php
+      $visa = \App\Support\Destinations::visaForCountry($t['country']);
+      $photoSlug = \Illuminate\Support\Str::slug($t['destination']);
+      $hasPhoto = file_exists(public_path("img/destinations/{$photoSlug}.jpg"));
+    @endphp
     <div class="tpl-card reveal" data-cat="{{ $t['category'] }}">
-      <div class="tpl-top">
-        <span class="cat-tag">{{ $t['category'] }}</span>
-        <span class="continent-tag">{{ $t['continent'] }}</span>
-      </div>
-      <h3>{{ $t['destination'] }}</h3>
-      <div class="place">{{ $t['country'] }} · {{ $t['region'] }}</div>
-      @if($visa)
-        <span class="visa-pill {{ $visa['visa_status'] }}">🛂 {{ \App\Support\Destinations::visaLabel($visa['visa_status']) }}</span>
+      @if($hasPhoto)
+        <img class="tpl-photo" src="{{ asset("img/destinations/{$photoSlug}.jpg") }}" alt="{{ $t['destination'] }}" loading="lazy">
       @endif
-      <div class="tpl-meta">
-        <span>🗓️ <b>{{ $t['best_season'] }}</b></span>
-        <span>⏱️ <b>{{ $t['trip_length'] }}</b></span>
+      <div class="tpl-body">
+        <div class="tpl-top">
+          <span class="cat-tag">{{ $t['category'] }}</span>
+          <span class="continent-tag">{{ $t['continent'] }}</span>
+        </div>
+        <h3>{{ $t['destination'] }}</h3>
+        <div class="place">{{ $t['country'] }} · {{ $t['region'] }}</div>
+        @if($visa)
+          <span class="visa-pill {{ $visa['visa_status'] }}">🛂 {{ \App\Support\Destinations::visaLabel($visa['visa_status']) }}</span>
+        @endif
+        <div class="tpl-meta">
+          <span>🗓️ <b>{{ $t['best_season'] }}</b></span>
+          <span>⏱️ <b>{{ $t['trip_length'] }}</b></span>
+        </div>
+        <p class="overview">{{ $t['overview'] }}</p>
+        <a class="cta" href="{{ route('trips.create', ['destination' => $t['destination'] . ', ' . $t['country']]) }}">Plan this trip →</a>
       </div>
-      <p class="overview">{{ $t['overview'] }}</p>
-      <a class="cta" href="{{ route('trips.create', ['destination' => $t['destination'] . ', ' . $t['country']]) }}">Plan this trip →</a>
     </div>
   @endforeach
 </div>
