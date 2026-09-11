@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\IndexGeneratedPlaces;
+use App\Http\Requests\UpdateTripDayRequest;
 use App\Models\Trip;
 use App\Models\TripDay;
 use App\Services\GenerateDayItinerary;
@@ -10,9 +11,30 @@ use App\Support\OsmMap;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class TripDayController extends Controller
 {
+    /** Edit one day's own details — title, area, hotel, notes. Stops/options aren't editable here. */
+    public function edit(Trip $trip, TripDay $day): View
+    {
+        $this->authorize('update', $trip);
+        abort_unless($day->trip_id === $trip->id, 404);
+
+        return view('trips.days.edit', ['trip' => $trip, 'day' => $day]);
+    }
+
+    public function update(UpdateTripDayRequest $request, Trip $trip, TripDay $day): RedirectResponse
+    {
+        abort_unless($day->trip_id === $trip->id, 404);
+
+        $day->update($request->validated());
+
+        return redirect()->route('trips.show', $trip)
+            ->withFragment((string) $day->day_number)
+            ->with('status', "Updated {$day->title}.");
+    }
+
     public function generate(Request $request, Trip $trip, TripDay $day, GenerateDayItinerary $ai, IndexGeneratedPlaces $index): RedirectResponse
     {
         $this->authorize('update', $trip);

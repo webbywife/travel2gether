@@ -538,6 +538,9 @@
         @if($day->hotel_name && $day->hotel_name !== $trip->hotel_name)
           <div class="hotel-note">🏨 Staying at <b>{{ $day->hotel_name }}</b> for this leg</div>
         @endif
+        @can('update', $trip)
+          <a class="print-link" href="{{ route('trips.days.edit', [$trip, $day]) }}" style="margin-top:8px;">✏️ Edit day details</a>
+        @endcan
 
         @can('update', $trip)
           @php $canRegen = $day->source !== 'ai' || $trip->canRegenerate(auth()->user()); @endphp

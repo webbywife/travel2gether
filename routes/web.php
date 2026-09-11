@@ -91,6 +91,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/t/{trip:slug}/days/{day}/generate', [TripDayController::class, 'generate'])
         ->middleware('throttle:12,1')->name('trips.days.generate');
+    Route::get('/t/{trip:slug}/days/{day}/edit', [TripDayController::class, 'edit'])->name('trips.days.edit');
+    Route::patch('/t/{trip:slug}/days/{day}', [TripDayController::class, 'update'])->name('trips.days.update');
 
     Route::post('/t/{trip:slug}/invites', [TripMemberController::class, 'storeInvite'])->name('trips.invites.store');
     Route::delete('/t/{trip:slug}/invites/{invite:token}', [TripMemberController::class, 'revokeInvite'])->name('trips.invites.revoke');
