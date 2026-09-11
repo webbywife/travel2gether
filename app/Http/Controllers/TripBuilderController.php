@@ -18,6 +18,8 @@ class TripBuilderController extends Controller
             'prefillDestination' => $request->query('destination', ''),
             'destinations' => Destinations::all(),
             'templates' => Destinations::templates(),
+            'airports' => config('airports', []),
+            'airlines' => config('airlines', []),
         ]);
     }
 

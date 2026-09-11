@@ -84,6 +84,38 @@ class TripBuilderTest extends TestCase
         // budget seeded, with a Shopping line per ticked category
         $this->assertGreaterThan(0, $trip->budgetLines()->where('category', 'Shopping')->count());
         $this->assertSame(200, (int) $trip->budgetLines()->where('label', 'Clothing')->value('amount'));
+
+        // flight legs are also written to trip_segments for analytics — airports
+        // resolve against config/airports.php by code; "PAL" isn't a recognized
+        // airline code/name so it's kept as free text with no resolved code.
+        $segments = $trip->tripSegments()->orderBy('sort')->get();
+        $this->assertSame(2, $segments->count());
+        $this->assertSame('MNL', $segments[0]->from_code);
+        $this->assertSame('KIX', $segments[0]->to_code);
+        $this->assertNull($segments[0]->airline_code);
+        $this->assertSame('PAL', $segments[0]->airline_text);
+        $this->assertTrue($segments[0]->date->isSameDay($trip->start_date));
+        $this->assertTrue($segments[1]->date->isSameDay($trip->end_date));
+
+        // the flight-pass "date shown" is derived from arrival/departure, not
+        // free-typed — no 'date' key is even sent in the payload.
+        $this->assertSame(strtoupper($trip->start_date->format('D d M Y')), $trip->segments[0]['date']);
+        $this->assertSame(strtoupper($trip->end_date->format('D d M Y')), $trip->segments[1]['date']);
+    }
+
+    public function test_a_recognized_airline_resolves_to_its_code(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('trips.store'), $this->payload([
+            'segments' => [
+                ['from' => 'MNL', 'to' => 'KIX', 'airline' => 'Philippine Airlines', 'flight_no' => 'PR 408'],
+                ['from' => 'KIX', 'to' => 'MNL', 'airline' => 'Philippine Airlines', 'flight_no' => 'PR 409'],
+            ],
+        ]));
+
+        $trip = Trip::where('created_by', $user->id)->firstOrFail();
+        $this->assertSame('PR', $trip->tripSegments()->first()->airline_code);
     }
 
     public function test_at_least_one_area_is_required(): void

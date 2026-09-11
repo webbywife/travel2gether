@@ -97,17 +97,28 @@
         <div class="flight">
           <h4>{{ $lbl }}</h4>
           <div class="grid g3">
-            <div><label class="f">From (airport)</label><input class="in" name="segments[{{ $s }}][from]" value="{{ old("segments.$s.from") }}" placeholder="MNL"></div>
-            <div><label class="f">To (airport)</label><input class="in" name="segments[{{ $s }}][to]" value="{{ old("segments.$s.to") }}" placeholder="KIX"></div>
-            <div><label class="f">Date shown</label><input class="in" name="segments[{{ $s }}][date]" value="{{ old("segments.$s.date") }}" placeholder="WED 09 SEP 2026"></div>
+            <div><label class="f">From (airport)</label><input class="in" list="airportsList" name="segments[{{ $s }}][from]" value="{{ old("segments.$s.from") }}" placeholder="MNL" autocomplete="off"></div>
+            <div><label class="f">To (airport)</label><input class="in" list="airportsList" name="segments[{{ $s }}][to]" value="{{ old("segments.$s.to") }}" placeholder="KIX" autocomplete="off"></div>
             <div><label class="f">Depart</label><input class="in" name="segments[{{ $s }}][depart]" value="{{ old("segments.$s.depart") }}" placeholder="23:30"></div>
             <div><label class="f">Arrive</label><input class="in" name="segments[{{ $s }}][arrive]" value="{{ old("segments.$s.arrive") }}" placeholder="04:45 +1"></div>
             <div><label class="f">Terminal</label><input class="in" name="segments[{{ $s }}][terminal]" value="{{ old("segments.$s.terminal") }}" placeholder="T1 → T3"></div>
-            <div><label class="f">Airline</label><input class="in" name="segments[{{ $s }}][airline]" value="{{ old("segments.$s.airline") }}" placeholder="Philippine Airlines"></div>
+            <div><label class="f">Airline</label><input class="in" list="airlinesList" name="segments[{{ $s }}][airline]" value="{{ old("segments.$s.airline") }}" placeholder="Philippine Airlines" autocomplete="off"></div>
             <div><label class="f">Flight no.</label><input class="in" name="segments[{{ $s }}][flight_no]" value="{{ old("segments.$s.flight_no") }}" placeholder="PR 408"></div>
           </div>
+          <p class="hint" style="margin:10px 0 0;">The date shown on the flight pass is filled in automatically from your arrival/departure dates above.</p>
         </div>
       @endforeach
+
+      <datalist id="airportsList">
+        @foreach ($airports ?? [] as $a)
+          <option value="{{ $a['code'] }}">{{ $a['name'] }}, {{ $a['city'] }}</option>
+        @endforeach
+      </datalist>
+      <datalist id="airlinesList">
+        @foreach ($airlines ?? [] as $a)
+          <option value="{{ $a['name'] }}">{{ $a['code'] }}</option>
+        @endforeach
+      </datalist>
     </div>
 
     <div class="step">

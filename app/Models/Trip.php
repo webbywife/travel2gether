@@ -42,6 +42,12 @@ class Trip extends Model
         return $this->hasMany(BudgetLine::class)->orderBy('sort');
     }
 
+    /** Normalized flight legs (from CreateTrip) — feeds the airline/route analytics. */
+    public function tripSegments(): HasMany
+    {
+        return $this->hasMany(TripSegment::class)->orderBy('sort');
+    }
+
     public function stops(): HasManyThrough
     {
         return $this->hasManyThrough(Stop::class, TripDay::class);

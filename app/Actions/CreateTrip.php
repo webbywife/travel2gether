@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Trip;
 use App\Models\User;
+use App\Support\FlightReference;
 use App\Support\OsmMap;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Arr;
@@ -56,7 +57,7 @@ class CreateTrip
                     'budget_per_person' => $data['budget_per_person'] ?? null,
                 ],
                 'forecast_note' => 'Each day shows the live forecast for that day\'s actual area, not just the hotel. Numbers fill in once the dates fall inside the ~16-day window.',
-                'segments' => $this->segments($data['segments'] ?? []),
+                'segments' => $this->segments($data['segments'] ?? [], $arrival, $departure),
                 'stats' => [
                     ['value' => (string) ($arrival->diffInDays($departure)), 'label' => 'nights'],
                     ['value' => (string) max($areas->count(), 1), 'label' => 'areas'],
@@ -79,8 +80,45 @@ class CreateTrip
                 $trip->budgetLines()->create($line + ['sort' => $j]);
             }
 
+            $this->storeTripSegments($trip, $data['segments'] ?? [], $arrival, $departure);
+
             return $trip;
         });
+    }
+
+    /**
+     * Normalized copy of the flight legs, one row per segment, resolving
+     * airport/airline codes against the curated reference lists when
+     * possible — feeds the airline/route analytics. Purely additive; the
+     * trip's own `segments` JSON (built by segments()) still drives the
+     * flight-pass display and is unaffected by whether a match was found.
+     */
+    private function storeTripSegments(Trip $trip, array $rows, Carbon $arrival, Carbon $departure): void
+    {
+        $dates = [$arrival, $departure];
+
+        foreach ($rows as $i => $r) {
+            if (blank($r['from'] ?? null) && blank($r['to'] ?? null)) {
+                continue;
+            }
+
+            $from = FlightReference::airport($r['from'] ?? null);
+            $to = FlightReference::airport($r['to'] ?? null);
+            $airline = FlightReference::airline($r['airline'] ?? null);
+
+            $trip->tripSegments()->create([
+                'sort' => $i,
+                'from_text' => $r['from'] ?? null,
+                'to_text' => $r['to'] ?? null,
+                'airline_text' => $r['airline'] ?? null,
+                'from_code' => $from['code'] ?? null,
+                'to_code' => $to['code'] ?? null,
+                'airline_code' => $airline['code'] ?? null,
+                'airline_name' => $airline['name'] ?? null,
+                'date' => $dates[$i] ?? null,
+                'flight_no' => $r['flight_no'] ?? null,
+            ]);
+        }
     }
 
     private function buildDay(Trip $trip, int $i, int $lastIndex, Carbon $date, array $data, $areas): void
@@ -176,14 +214,25 @@ class CreateTrip
         }
     }
 
-    /** @return array<int, array<string, mixed>> */
-    private function segments(array $rows): array
+    /**
+     * @return array<int, array<string, mixed>>
+     *
+     * The "date shown" on the flight pass used to be a free-text field the
+     * wizard asked for by hand — easy to typo or leave stale against the
+     * real arrival/departure date. It's computed here instead: segment 0
+     * (outbound) uses the arrival date, segment 1 (return) the departure
+     * date — the only two real dates the wizard actually collects.
+     */
+    private function segments(array $rows, Carbon $arrival, Carbon $departure): array
     {
+        $dates = [$arrival, $departure];
+
         return collect($rows)
             ->filter(fn ($r) => filled($r['from'] ?? null) || filled($r['to'] ?? null))
-            ->map(fn ($r) => [
+            ->map(fn ($r, $i) => [
                 'from' => $r['from'] ?? '', 'to' => $r['to'] ?? '',
-                'date' => $r['date'] ?? '', 'depart' => $r['depart'] ?? '', 'arrive' => $r['arrive'] ?? '',
+                'date' => isset($dates[$i]) ? strtoupper($dates[$i]->format('D d M Y')) : ($r['date'] ?? ''),
+                'depart' => $r['depart'] ?? '', 'arrive' => $r['arrive'] ?? '',
                 'terminal' => $r['terminal'] ?? '', 'airline' => $r['airline'] ?? '', 'flight_no' => $r['flight_no'] ?? '',
             ])->values()->all();
     }
