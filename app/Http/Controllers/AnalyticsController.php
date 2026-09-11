@@ -5,12 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\Trip;
 use App\Models\TripSegment;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /** Admin-only (gated by the 'admin' Gate — see AppServiceProvider). */
 class AnalyticsController extends Controller
 {
+    /**
+     * No payment processing yet — this is the manual stand-in an admin uses
+     * to flip a member's subscription until real billing exists.
+     */
+    public function toggleSubscription(User $user): RedirectResponse
+    {
+        $user->forceFill(['subscription' => $user->subscription === 'paid' ? 'free' : 'paid'])->save();
+
+        return back()->with('status', "{$user->name} is now " . ($user->subscription === 'paid' ? 'a paid member.' : 'on the free tier.'));
+    }
+
     public function index(): View
     {
         $topAirlines = TripSegment::query()
@@ -62,6 +74,7 @@ class AnalyticsController extends Controller
         return view('analytics.index', [
             'totalTrips' => Trip::count(),
             'totalUsers' => User::count(),
+            'members' => User::withCount('ownedTrips')->orderBy('name')->get(),
             'totalSegments' => $totalSegments,
             'resolvedAirlinePct' => $totalSegments ? round($resolvedAirline / $totalSegments * 100) : 0,
             'resolvedAirportPct' => $totalSegments ? round($resolvedAirport / $totalSegments * 100) : 0,

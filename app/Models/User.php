@@ -17,6 +17,9 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    /** Trips a free member may own at once — see isPaid(), TripBuilderController. */
+    public const FREE_TRIP_LIMIT = 3;
+
     /**
      * Get the attributes that should be cast.
      *
@@ -46,5 +49,20 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdmin(): bool
     {
         return in_array($this->email, config('app.admin_emails', []), true);
+    }
+
+    /**
+     * No payment processing yet — 'subscription' is flipped by hand (tinker,
+     * or an admin control later). Admins are always treated as paid.
+     */
+    public function isPaid(): bool
+    {
+        return $this->isAdmin() || $this->subscription === 'paid';
+    }
+
+    /** Whether this member has hit the free-tier cap on trips they own. */
+    public function hasReachedTripLimit(): bool
+    {
+        return ! $this->isPaid() && $this->ownedTrips()->count() >= self::FREE_TRIP_LIMIT;
     }
 }

@@ -19,6 +19,17 @@
   .an-list li:last-child{border-bottom:none;}
   .an-list .bar{color:var(--text-dim); font-family:'JetBrains Mono',monospace; font-size:12px;}
   .empty-note{color:var(--text-dim); font-size:13.5px; padding:20px 0; text-align:center;}
+  .member-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:13.5px;}
+  .member-row:last-child{border-bottom:none;}
+  .member-row .who{display:flex; flex-direction:column;}
+  .member-row .who span{color:var(--text-dim); font-size:12px;}
+  .tier-tag{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.05em; text-transform:uppercase; border-radius:999px; padding:3px 9px;}
+  .tier-tag.free{background:var(--panel); color:var(--text-dim);}
+  .tier-tag.paid{background:rgba(59,167,118,0.14); color:#2f6d54;}
+  .tier-tag.admin{background:rgba(113,86,168,0.14); color:#5a4488;}
+  .member-row form{margin:0;}
+  .member-row button{font-family:'Inter',sans-serif; font-size:12px; font-weight:600; border:1px solid var(--line); background:#fff; border-radius:999px; padding:5px 11px; cursor:pointer; color:var(--text-dim);}
+  .member-row button:hover{border-color:var(--pink-light); color:var(--pink);}
   @media (max-width:680px){ .an-grid{grid-template-columns:1fr;} }
 </style>
 @endpush
@@ -88,6 +99,30 @@
         </ul>
       </div>
     </div>
+  </div>
+
+  <h2>Members</h2>
+  @if (session('status'))<div class="flash" style="background:rgba(59,167,118,0.1); border:1px solid #8fd3b4; color:#2f6d54; border-radius:12px; padding:10px 16px; font-size:13.5px; margin-bottom:14px;">{{ session('status') }}</div>@endif
+  <div class="an-card">
+    @foreach ($members as $m)
+      <div class="member-row">
+        <div class="who">
+          {{ $m->name }}
+          <span>{{ $m->email }} · {{ $m->owned_trips_count }} {{ Str::plural('trip', $m->owned_trips_count) }}</span>
+        </div>
+        @if($m->isAdmin())
+          <span class="tier-tag admin">admin</span>
+        @else
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="tier-tag {{ $m->subscription }}">{{ $m->subscription }}</span>
+            <form method="POST" action="{{ route('analytics.toggle-subscription', $m) }}">
+              @csrf @method('PATCH')
+              <button type="submit">{{ $m->subscription === 'paid' ? 'Downgrade' : 'Upgrade' }}</button>
+            </form>
+          </div>
+        @endif
+      </div>
+    @endforeach
   </div>
 
   <h2>Trips created, by month</h2>

@@ -118,10 +118,16 @@ class Trip extends Model
      * Whether $user may (re)draft a day with AI right now. The *first* draft
      * of any day is always allowed for whoever can edit the trip — this only
      * gates *re*-drafting a day that's already been AI-drafted once.
+     *
+     * Gated on the trip *owner's* subscription, not the acting user's — an
+     * editor collaborating on a paid member's trip gets the same unlimited
+     * regenerations the owner paid for.
      */
     public function canRegenerate(?User $user): bool
     {
-        return (bool) $user?->isAdmin() || $this->regenerations_used < self::FREE_REGENERATIONS;
+        return (bool) $user?->isAdmin()
+            || (bool) $this->owner?->isPaid()
+            || $this->regenerations_used < self::FREE_REGENERATIONS;
     }
 
     /** Trips a user owns or was invited to. */

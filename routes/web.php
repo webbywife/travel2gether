@@ -62,8 +62,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
-Route::get('/analytics', [AnalyticsController::class, 'index'])
-    ->middleware(['auth', 'can:admin'])->name('analytics');
+Route::middleware(['auth', 'can:admin'])->group(function () {
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
+    Route::patch('/analytics/users/{user}/subscription', [AnalyticsController::class, 'toggleSubscription'])->name('analytics.toggle-subscription');
+});
 
 Route::view('/upgrade', 'upgrade')->name('upgrade');
 

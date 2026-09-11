@@ -10,19 +10,24 @@
   .up .card{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,0.94); box-shadow:var(--shadow-sm); padding:28px; text-align:left;}
   .up .card h3{font-family:'Space Grotesk',sans-serif; margin:0 0 8px; font-size:18px;}
   .up ul{color:var(--text-dim); font-size:14px; line-height:1.8; padding-left:20px; margin:0 0 20px;}
+  .up .flash{background:rgba(225,74,128,0.08); border:1px solid var(--pink-light); color:var(--accent); border-radius:10px; padding:12px 16px; font-size:14px; margin:0 0 22px; text-align:left;}
 </style>
 @endpush
 
 @section('content')
 <div class="up">
-  <h1><span class="gtext">More re-drafts, coming soon</span></h1>
-  <p>Every trip gets one free AI re-draft. Paid regeneration credits aren't live yet — this page is a placeholder for when they are.</p>
+  <h1><span class="gtext">Upgrade — coming soon</span></h1>
+  <p>Free membership caps trips and AI re-drafts. Paid subscriptions aren't live yet — this page is a placeholder for when they are.</p>
+
+  @if (session('error'))<div class="flash">{{ session('error') }}</div>@endif
+
   <div class="card">
     <h3>What's planned</h3>
     <ul>
-      <li>Buy a small pack of re-draft credits, spend them on any day, any trip.</li>
-      <li>No subscription — pay only when you actually want another AI pass.</li>
-      <li>Your first draft of every day always stays free, no matter what.</li>
+      <li>Free members: up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips at a time, and one AI re-draft per trip.</li>
+      <li>Paid members: unlimited trips, and unlimited AI re-drafts on trips they own.</li>
+      <li>No subscription is charged automatically today — this is a placeholder, not a checkout.</li>
+      <li>Your first AI draft of every day always stays free either way.</li>
     </ul>
     <a class="btn btn-primary" href="{{ route('dashboard') }}">Back to your trips</a>
   </div>
