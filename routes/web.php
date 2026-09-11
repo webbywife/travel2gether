@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\LegalController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlaceRecommendationController;
 use App\Http\Controllers\PlacesController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TripBuilderController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripDayController;
@@ -53,6 +55,15 @@ Route::middleware('auth')->group(function () {
 Route::get('/dashboard', [PageController::class, 'dashboard'])
     ->middleware(array_filter(['auth', config('auth.require_verification') ? 'verified' : null]))
     ->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+});
+
+Route::get('/analytics', [AnalyticsController::class, 'index'])
+    ->middleware(['auth', 'can:admin'])->name('analytics');
 
 // POI search / indexing for building itineraries (Google Places API New).
 Route::middleware(['auth', 'throttle:40,1'])->group(function () {
