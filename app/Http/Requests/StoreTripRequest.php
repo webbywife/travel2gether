@@ -43,6 +43,11 @@ class StoreTripRequest extends FormRequest
             'areas.*.name' => ['nullable', 'string', 'max:120'],
             'areas.*.lat' => ['nullable', 'numeric', 'between:-90,90'],
             'areas.*.lon' => ['nullable', 'numeric', 'between:-180,180'],
+            // Multi-city: an area may carry its own hotel instead of using the trip's main one.
+            'areas.*.hotel_name' => ['nullable', 'string', 'max:160'],
+            'areas.*.hotel_address' => ['nullable', 'string', 'max:255'],
+            'areas.*.hotel_lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'areas.*.hotel_lon' => ['nullable', 'numeric', 'between:-180,180'],
 
             'interests' => ['nullable', 'array', 'max:12'],
             'interests.*' => ['string', 'max:40'],

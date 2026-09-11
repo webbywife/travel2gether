@@ -125,8 +125,27 @@ class CreateTrip
     {
         $out = $data['segments'][0] ?? [];
         $ret = $data['segments'][1] ?? [];
-        $hotel = $data['hotel_name'] ?? 'your hotel';
         $mapFor = fn (?float $lat, ?float $lon) => ($lat && $lon) ? OsmMap::embedUrl($lat, $lon) : null;
+
+        $tripHotel = [
+            'name' => $data['hotel_name'] ?? null, 'address' => $data['hotel_address'] ?? null,
+            'lat' => $data['hotel_lat'] ?? null, 'lon' => $data['hotel_lon'] ?? null,
+        ];
+
+        // Multi-city: an area can carry its own hotel (step 04). Arrival uses
+        // the first area's hotel (that's the city you land in), departure the
+        // last area's (the city you fly out of), each falling back to the
+        // trip's single main hotel when the area didn't set one of its own.
+        $hotelFor = function (?array $area) use ($tripHotel) {
+            if ($area && filled($area['hotel_name'] ?? null)) {
+                return [
+                    'name' => $area['hotel_name'], 'address' => $area['hotel_address'] ?? null,
+                    'lat' => $area['hotel_lat'] ?? null, 'lon' => $area['hotel_lon'] ?? null,
+                ];
+            }
+
+            return $tripHotel;
+        };
 
         $common = [
             'day_number' => $i + 1,
@@ -146,19 +165,24 @@ class CreateTrip
         ];
 
         if ($i === 0) {
+            $hotel = $hotelFor($areas->first());
+            $hotelName = $hotel['name'] ?: 'your hotel';
+
             $day = $trip->days()->create($common + [
                 'title' => 'Arrival & settle in',
-                'area_label' => $data['hotel_name'] ? "Base: {$data['hotel_name']}" : 'Settle in near the hotel',
+                'area_label' => $hotel['name'] ? "Base: {$hotel['name']}" : 'Settle in near the hotel',
                 'summary' => 'Land, drop bags, and stay close — a short first outing near the hotel, not a full day.',
+                'hotel_name' => $hotel['name'], 'hotel_address' => $hotel['address'],
+                'hotel_lat' => $hotel['lat'], 'hotel_lon' => $hotel['lon'],
             ]);
 
             $day->stops()->create(['sort' => 0, 'time' => $out['arrive'] ?? null, 'has_options' => false,
                 'title' => 'Land at ' . ($out['to'] ?: 'the airport'),
                 'description' => trim(($out['airline'] ?? '') . ' ' . ($out['flight_no'] ?? '')) . '. Immigration, bags, then a transit card and the ride into town.']);
             $day->stops()->create(['sort' => 1, 'time' => null, 'has_options' => false,
-                'title' => "Bag drop at {$hotel}",
+                'title' => "Bag drop at {$hotelName}",
                 'description' => 'Front desk holds luggage until check-in. This is your base for the trip.',
-                'map_url' => filled($data['hotel_address'] ?? null) ? 'https://www.google.com/maps/search/?api=1&query=' . urlencode($data['hotel_address']) : null]);
+                'map_url' => filled($hotel['address']) ? 'https://www.google.com/maps/search/?api=1&query=' . urlencode($hotel['address']) : null]);
             $day->stops()->create(['sort' => 2, 'time' => '16:00', 'has_options' => false,
                 'title' => 'Short ease-in outing near the hotel',
                 'description' => 'One low-effort thing within ~30 minutes — a park, a market, a viewpoint — then an early dinner.']);
@@ -167,14 +191,19 @@ class CreateTrip
         }
 
         if ($i === $lastIndex) {
+            $hotel = $hotelFor($areas->last());
+            $hotelName = $hotel['name'] ?: 'your hotel';
+
             $day = $trip->days()->create($common + [
                 'title' => 'Departure day',
                 'area_label' => 'Last morning, then the airport',
                 'summary' => 'Bags travel with you. One easy thing if there\'s time, then head out.',
+                'hotel_name' => $hotel['name'], 'hotel_address' => $hotel['address'],
+                'hotel_lat' => $hotel['lat'], 'hotel_lon' => $hotel['lon'],
             ]);
 
             $day->stops()->create(['sort' => 0, 'time' => '10:00', 'has_options' => false,
-                'title' => "Checkout — bags with you or held at {$hotel}",
+                'title' => "Checkout — bags with you or held at {$hotelName}",
                 'description' => 'Front desk holds luggage until the evening if the flight is late.']);
             $day->stops()->create(['sort' => 1, 'time' => null, 'has_options' => false,
                 'title' => 'One last easy thing, if time', 'description' => 'A neighbourhood walk, a last meal, a final shop.']);
@@ -188,9 +217,11 @@ class CreateTrip
             return;
         }
 
-        // Middle day → anchor to an area (round-robin).
+        // Middle day → anchor to an area (round-robin), and to that area's own
+        // hotel when it has one.
         $area = $areas->isNotEmpty() ? $areas[($i - 1) % $areas->count()] : null;
         $name = $area['name'] ?? 'Free day — revisit a favourite';
+        $hotel = $hotelFor($area);
 
         $areaLat = $area['lat'] ?? $trip->lat;
         $areaLon = $area['lon'] ?? $trip->lon;
@@ -202,6 +233,8 @@ class CreateTrip
             'lon' => $areaLon,
             'map_embed_url' => $mapFor($areaLat, $areaLon),
             'summary' => "A day around {$name}. Fill the slots below, or let the draft-with-AI button suggest options.",
+            'hotel_name' => $hotel['name'], 'hotel_address' => $hotel['address'],
+            'hotel_lat' => $hotel['lat'], 'hotel_lon' => $hotel['lon'],
         ]));
 
         foreach ([

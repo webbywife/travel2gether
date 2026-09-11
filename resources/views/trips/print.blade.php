@@ -125,6 +125,9 @@
         <h2>Day {{ $day->day_number }} — {{ $day->title }}</h2>
         <span class="date">{{ $day->date->format('D · M j, Y') }}</span>
       </div>
+      @if($day->hotel_name && $day->hotel_name !== $trip->hotel_name)
+        <p class="weather-line" style="margin-top:-4px;">🏨 Staying at <b>{{ $day->hotel_name }}</b> for this leg</p>
+      @endif
       @if($day->weather_note || $day->temp_high)
       <p class="weather-line">
         @if($day->temp_high){{ $day->temp_high }}°@if($day->temp_low)/{{ $day->temp_low }}°C @endif — @endif

@@ -196,6 +196,8 @@
   .day-date{font-family:'JetBrains Mono', monospace; font-size:13.5px; color:var(--text-dim); letter-spacing:0.06em; text-transform:uppercase;}
   .day-title{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:30px; margin:4px 0 0;}
   .day-title .kr{color:var(--text-dim); font-size:16px; font-weight:500; margin-left:8px;}
+  .hotel-note{font-size:13px; color:var(--text-dim); margin:6px 0 0;}
+  .hotel-note b{color:var(--text);}
 
   .weather{display:flex; align-items:center; gap:14px; margin-top:16px; background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:14px 18px;}
   .weather .temp{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:22px; color:var(--accent); white-space:nowrap;}
@@ -533,6 +535,9 @@
       <div class="day-head">
         <div class="day-date">{{ $day->date->format('D · M j') }}</div>
         <h1 class="day-title">{{ $day->title }}@if($day->title_secondary)<span class="kr">{{ $day->title_secondary }}</span>@endif</h1>
+        @if($day->hotel_name && $day->hotel_name !== $trip->hotel_name)
+          <div class="hotel-note">🏨 Staying at <b>{{ $day->hotel_name }}</b> for this leg</div>
+        @endif
 
         @if(($aiEnabled ?? false) && ($role === 'owner' || $role === 'editor'))
           <form method="POST" action="{{ route('trips.days.generate', [$trip, $day->id]) }}" class="ai-day"

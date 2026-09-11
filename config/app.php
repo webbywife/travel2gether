@@ -30,6 +30,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Site admins
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated emails in ADMIN_EMAILS. Gates cross-user features
+    | (analytics, unlimited sample-trip regeneration) to just these accounts —
+    | there's no separate roles table, this is deliberately that simple.
+    |
+    */
+
+    'admin_emails' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('ADMIN_EMAILS', ''))
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |

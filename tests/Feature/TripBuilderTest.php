@@ -118,6 +118,38 @@ class TripBuilderTest extends TestCase
         $this->assertSame('PR', $trip->tripSegments()->first()->airline_code);
     }
 
+    public function test_an_area_with_its_own_hotel_overrides_the_trip_hotel_for_that_day(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('trips.store'), $this->payload([
+            'areas' => [
+                ['name' => 'Higashiyama', 'lat' => 34.9948, 'lon' => 135.7850],
+                [
+                    'name' => 'Arashiyama', 'lat' => 35.0094, 'lon' => 135.6667,
+                    'hotel_name' => 'Arashiyama Ryokan', 'hotel_address' => 'Arashiyama, Kyoto',
+                    'hotel_lat' => 35.0100, 'hotel_lon' => 135.6700,
+                ],
+            ],
+        ]));
+
+        $trip = Trip::where('created_by', $user->id)->firstOrFail();
+        $days = $trip->days()->orderBy('day_number')->get();
+
+        // Higashiyama day has no hotel of its own — falls back to the trip's main hotel.
+        $this->assertSame('Hotel Granvia Kyoto', $days[1]->hotel_name);
+        // Arashiyama day uses its own hotel instead.
+        $this->assertSame('Arashiyama Ryokan', $days[2]->hotel_name);
+        $this->assertEqualsWithDelta(35.0100, (float) $days[2]->hotel_lat, 0.001);
+
+        // Arrival anchors to the first area (Higashiyama, no hotel of its own)
+        // so it falls back to the main hotel; departure anchors to the last
+        // area (Arashiyama, which does have one) so it uses that instead —
+        // the "fly out from the last city" case in a multi-city trip.
+        $this->assertSame('Hotel Granvia Kyoto', $days->first()->hotel_name);
+        $this->assertSame('Arashiyama Ryokan', $days->last()->hotel_name);
+    }
+
     public function test_at_least_one_area_is_required(): void
     {
         $user = User::factory()->create();

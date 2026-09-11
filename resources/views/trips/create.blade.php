@@ -27,6 +27,13 @@
   .ps-menu .addr{display:block; color:var(--text-dim); font-size:11.5px;}
   .area-row{display:flex; gap:8px; align-items:flex-start; margin-bottom:8px;}
   .area-row .ps{flex:1;}
+  .area-main{flex:1; min-width:0;}
+  .area-distance{font-size:12px; color:var(--pink); margin:6px 0 0 2px;}
+  .area-hotel{margin-top:6px;}
+  .area-hotel summary{font-size:12px; color:var(--text-dim); cursor:pointer; list-style:none;}
+  .area-hotel summary::-webkit-details-marker{display:none;}
+  .area-hotel summary:hover{color:var(--pink);}
+  .area-hotel[open] summary{color:var(--pink); margin-bottom:2px;}
   .icon-btn{border:1px solid var(--line); background:#fff; border-radius:10px; width:38px; height:38px; font-size:16px; cursor:pointer; color:var(--text-dim); flex-shrink:0;}
   .icon-btn:hover{border-color:var(--pink); color:var(--pink);}
   .tags{display:flex; flex-wrap:wrap; gap:8px;}
@@ -141,11 +148,24 @@
         @php $olds = old('areas', [['name'=>'']]); @endphp
         @foreach ($olds as $i => $a)
           <div class="area-row">
-            <div class="ps" data-place>
-              <input class="in" name="areas[{{ $i }}][name]" value="{{ $a['name'] ?? '' }}" placeholder="e.g. Higashiyama, or “Nara day trip”" autocomplete="off" data-place-input>
-              <div class="ps-menu" data-place-menu></div>
-              <input type="hidden" name="areas[{{ $i }}][lat]" value="{{ $a['lat'] ?? '' }}" data-place-lat>
-              <input type="hidden" name="areas[{{ $i }}][lon]" value="{{ $a['lon'] ?? '' }}" data-place-lon>
+            <div class="area-main">
+              <div class="ps" data-place>
+                <input class="in" name="areas[{{ $i }}][name]" value="{{ $a['name'] ?? '' }}" placeholder="e.g. Higashiyama, or “Nara day trip”" autocomplete="off" data-place-input>
+                <div class="ps-menu" data-place-menu></div>
+                <input type="hidden" name="areas[{{ $i }}][lat]" value="{{ $a['lat'] ?? '' }}" data-place-lat>
+                <input type="hidden" name="areas[{{ $i }}][lon]" value="{{ $a['lon'] ?? '' }}" data-place-lon>
+              </div>
+              <div class="area-distance" data-area-distance style="display:none;"></div>
+              <details class="area-hotel">
+                <summary>+ Staying somewhere different for this area? (multi-city)</summary>
+                <div class="ps" data-place style="margin-top:8px;">
+                  <input class="in" name="areas[{{ $i }}][hotel_name]" value="{{ $a['hotel_name'] ?? '' }}" placeholder="Search a hotel for this area" autocomplete="off" data-place-input>
+                  <div class="ps-menu" data-place-menu></div>
+                  <input type="hidden" name="areas[{{ $i }}][hotel_address]" value="{{ $a['hotel_address'] ?? '' }}" data-place-address>
+                  <input type="hidden" name="areas[{{ $i }}][hotel_lat]" value="{{ $a['hotel_lat'] ?? '' }}" data-place-lat>
+                  <input type="hidden" name="areas[{{ $i }}][hotel_lon]" value="{{ $a['hotel_lon'] ?? '' }}" data-place-lon>
+                </div>
+              </details>
             </div>
             <button type="button" class="icon-btn" data-remove-area>&times;</button>
           </div>
@@ -199,15 +219,28 @@
     var row = document.createElement('div');
     row.className = 'area-row';
     row.innerHTML =
-      '<div class="ps" data-place>' +
-        '<input class="in" name="areas[' + i + '][name]" placeholder="Another area…" autocomplete="off" data-place-input>' +
-        '<div class="ps-menu" data-place-menu></div>' +
-        '<input type="hidden" name="areas[' + i + '][lat]" data-place-lat>' +
-        '<input type="hidden" name="areas[' + i + '][lon]" data-place-lon>' +
+      '<div class="area-main">' +
+        '<div class="ps" data-place>' +
+          '<input class="in" name="areas[' + i + '][name]" placeholder="Another area…" autocomplete="off" data-place-input>' +
+          '<div class="ps-menu" data-place-menu></div>' +
+          '<input type="hidden" name="areas[' + i + '][lat]" data-place-lat>' +
+          '<input type="hidden" name="areas[' + i + '][lon]" data-place-lon>' +
+        '</div>' +
+        '<div class="area-distance" data-area-distance style="display:none;"></div>' +
+        '<details class="area-hotel">' +
+          '<summary>+ Staying somewhere different for this area? (multi-city)</summary>' +
+          '<div class="ps" data-place style="margin-top:8px;">' +
+            '<input class="in" name="areas[' + i + '][hotel_name]" placeholder="Search a hotel for this area" autocomplete="off" data-place-input>' +
+            '<div class="ps-menu" data-place-menu></div>' +
+            '<input type="hidden" name="areas[' + i + '][hotel_address]" data-place-address>' +
+            '<input type="hidden" name="areas[' + i + '][hotel_lat]" data-place-lat>' +
+            '<input type="hidden" name="areas[' + i + '][hotel_lon]" data-place-lon>' +
+          '</div>' +
+        '</details>' +
       '</div>' +
       '<button type="button" class="icon-btn" data-remove-area>&times;</button>';
     list.appendChild(row);
-    attachPlace(row.querySelector('[data-place]'));
+    row.querySelectorAll('[data-place]').forEach(attachPlace);
   });
   list.addEventListener('click', function (e) {
     if (e.target.matches('[data-remove-area]') && list.querySelectorAll('.area-row').length > 1) {
@@ -254,6 +287,7 @@
               if (lonF) lonF.value = p.lon || '';
               if (addrF) addrF.value = p.formatted_address || '';
               menu.classList.remove('on');
+              updateDistances();
             });
             menu.appendChild(b);
           });
@@ -267,6 +301,40 @@
   }
 
   document.querySelectorAll('[data-place]').forEach(attachPlace);
+
+  // ---- approximate distance from hotel per area ----
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    var toRad = function (d) { return d * Math.PI / 180; };
+    var R = 6371;
+    var dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    var a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  function updateDistances() {
+    var mainLatEl = document.querySelector('[name="hotel_lat"]'), mainLonEl = document.querySelector('[name="hotel_lon"]');
+    var mainLat = mainLatEl && mainLatEl.value ? parseFloat(mainLatEl.value) : NaN;
+    var mainLon = mainLonEl && mainLonEl.value ? parseFloat(mainLonEl.value) : NaN;
+
+    document.querySelectorAll('.area-row').forEach(function (row) {
+      var out = row.querySelector('[data-area-distance]');
+      var areaLatEl = row.querySelector('[name$="[lat]"]'), areaLonEl = row.querySelector('[name$="[lon]"]');
+      var ownHotelLatEl = row.querySelector('[name$="[hotel_lat]"]'), ownHotelLonEl = row.querySelector('[name$="[hotel_lon]"]');
+      if (!out || !areaLatEl || !areaLonEl) return;
+
+      var areaLat = parseFloat(areaLatEl.value), areaLon = parseFloat(areaLonEl.value);
+      var usingOwnHotel = ownHotelLatEl && ownHotelLatEl.value;
+      var hLat = usingOwnHotel ? parseFloat(ownHotelLatEl.value) : mainLat;
+      var hLon = usingOwnHotel ? parseFloat(ownHotelLonEl.value) : mainLon;
+
+      if (isNaN(areaLat) || isNaN(areaLon) || isNaN(hLat) || isNaN(hLon)) { out.style.display = 'none'; return; }
+
+      var km = haversineKm(areaLat, areaLon, hLat, hLon);
+      var dist = km < 1 ? Math.round(km * 1000) + ' m' : km.toFixed(1) + ' km';
+      out.textContent = '📍 ≈ ' + dist + ' from ' + (usingOwnHotel ? "this area's hotel" : 'your hotel');
+      out.style.display = 'block';
+    });
+  }
+  updateDistances();
 
   // ---- visa hint ----
   var DESTS = @json($destinations ?? []);

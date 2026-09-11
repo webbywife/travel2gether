@@ -8,9 +8,11 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -41,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         RateLimiter::for('oauth', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+
+        Gate::define('admin', fn (User $user) => $user->isAdmin());
 
         $this->logSecurityEvents();
     }

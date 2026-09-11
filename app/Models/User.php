@@ -41,4 +41,10 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot(['role', 'invited_by'])
             ->withTimestamps();
     }
+
+    /** Site admin — gated by email (ADMIN_EMAILS), not a roles table. See config/app.php. */
+    public function isAdmin(): bool
+    {
+        return in_array($this->email, config('app.admin_emails', []), true);
+    }
 }

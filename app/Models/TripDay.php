@@ -13,6 +13,7 @@ class TripDay extends Model
         'weather_tag', 'forecast_date', 'temp_high', 'temp_low', 'weather_note',
         'outfit_chips', 'outfit_photos', 'area_label', 'map_embed_url',
         'lat', 'lon', 'hiccups', 'sort', 'source',
+        'hotel_name', 'hotel_address', 'hotel_lat', 'hotel_lon',
     ];
 
     protected $casts = [
