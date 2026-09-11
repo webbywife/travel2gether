@@ -8,15 +8,25 @@ use App\Models\TripDay;
 use App\Services\GenerateDayItinerary;
 use App\Support\OsmMap;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TripDayController extends Controller
 {
-    public function generate(Trip $trip, TripDay $day, GenerateDayItinerary $ai, IndexGeneratedPlaces $index): RedirectResponse
+    public function generate(Request $request, Trip $trip, TripDay $day, GenerateDayItinerary $ai, IndexGeneratedPlaces $index): RedirectResponse
     {
         $this->authorize('update', $trip);
         abort_unless($day->trip_id === $trip->id, 404);
         abort_unless($ai->enabled(), 503, 'AI drafting is not configured.');
+
+        // The first draft of a day is always free; only *re*-drafting an
+        // already-AI-drafted day counts against the trip's free regeneration.
+        $isRegeneration = $day->source === 'ai';
+
+        if ($isRegeneration && ! $trip->canRegenerate($request->user())) {
+            return back()->with('error', 'You\'ve used your free re-draft for this trip. Upgrading lifts the limit.')
+                ->with('paywall', true);
+        }
 
         @set_time_limit(150); // the model call can run ~30-70s; nginx/FPM must allow it
 
@@ -68,6 +78,13 @@ class TripDayController extends Controller
                 $index($record->options);
             }
         });
+
+        // Only a *re*-draft by a non-admin spends the trip's free regeneration —
+        // the first draft of a day is never counted, and admins are exempt
+        // (so the sample trips can be redrafted freely).
+        if ($isRegeneration && ! $request->user()->isAdmin()) {
+            $trip->increment('regenerations_used');
+        }
 
         return back()->with('status', "Drafted {$day->title} with AI — edit anything that's off.")
             ->withFragment((string) $day->day_number);

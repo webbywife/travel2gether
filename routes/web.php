@@ -65,6 +65,8 @@ Route::middleware('auth')->group(function () {
 Route::get('/analytics', [AnalyticsController::class, 'index'])
     ->middleware(['auth', 'can:admin'])->name('analytics');
 
+Route::view('/upgrade', 'upgrade')->name('upgrade');
+
 // POI search / indexing for building itineraries (Google Places API New).
 Route::middleware(['auth', 'throttle:40,1'])->group(function () {
     Route::get('/places/search', [PlacesController::class, 'search'])->name('places.search');

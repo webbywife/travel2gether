@@ -120,6 +120,81 @@ class AiDayFillTest extends TestCase
             ->assertStatus(503);
     }
 
+    public function test_the_first_draft_never_spends_the_free_regeneration(): void
+    {
+        $owner = User::factory()->create();
+        $trip = $this->ownedTrip($owner);
+        $day = $trip->days()->first();
+        $this->fakeGemini();
+
+        $this->actingAs($owner)->post(route('trips.days.generate', [$trip, $day->id]));
+
+        $this->assertSame(0, $trip->fresh()->regenerations_used);
+    }
+
+    public function test_one_free_redraft_then_a_paywall(): void
+    {
+        $owner = User::factory()->create();
+        $trip = $this->ownedTrip($owner);
+        $day = $trip->days()->first();
+        $this->fakeGemini();
+
+        // first draft — free, not a "regeneration"
+        $this->actingAs($owner)->post(route('trips.days.generate', [$trip, $day->id]));
+        $this->assertSame(0, $trip->fresh()->regenerations_used);
+
+        // re-draft #1 — the one free regeneration
+        $this->actingAs($owner)->post(route('trips.days.generate', [$trip, $day->id]));
+        $this->assertSame(1, $trip->fresh()->regenerations_used);
+
+        // re-draft #2 — blocked
+        $beforeNote = $day->fresh()->weather_note;
+        $this->actingAs($owner)
+            ->post(route('trips.days.generate', [$trip, $day->id]))
+            ->assertRedirect()
+            ->assertSessionHas('paywall', true);
+
+        $this->assertSame(1, $trip->fresh()->regenerations_used);
+        $this->assertSame($beforeNote, $day->fresh()->weather_note);
+    }
+
+    public function test_an_admin_is_exempt_from_the_regeneration_limit(): void
+    {
+        config(['app.admin_emails' => ['admin@example.com']]);
+        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $trip = $this->ownedTrip($admin);
+        $day = $trip->days()->first();
+        $this->fakeGemini();
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->actingAs($admin)->post(route('trips.days.generate', [$trip, $day->id]))->assertRedirect();
+        }
+
+        $this->assertSame(0, $trip->fresh()->regenerations_used);
+        $this->assertSame('ai', $day->fresh()->source);
+    }
+
+    public function test_an_admin_can_draft_a_sample_trip_that_no_one_else_can_touch(): void
+    {
+        config(['app.admin_emails' => ['admin@example.com']]);
+        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $regular = User::factory()->create();
+        $this->seed(Seoul2026Seeder::class);
+        $sample = Trip::where('slug', 'seoul-2026')->first();
+        $day = $sample->days()->first();
+        $this->fakeGemini();
+
+        $this->actingAs($regular)
+            ->post(route('trips.days.generate', [$sample, $day->id]))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->post(route('trips.days.generate', [$sample, $day->id]))
+            ->assertRedirect();
+
+        $this->assertSame('ai', $day->fresh()->source);
+    }
+
     public function test_a_bad_gemini_response_leaves_the_day_untouched(): void
     {
         $owner = User::factory()->create();

@@ -539,18 +539,26 @@
           <div class="hotel-note">🏨 Staying at <b>{{ $day->hotel_name }}</b> for this leg</div>
         @endif
 
-        @if(($aiEnabled ?? false) && ($role === 'owner' || $role === 'editor'))
-          <form method="POST" action="{{ route('trips.days.generate', [$trip, $day->id]) }}" class="ai-day"
-                onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Drafting…';">
-            @csrf
-            <button type="submit" class="ai-btn"
-                    @if($day->source === 'ai') onclick="return confirm('Re-draft this day? It replaces the current stops.')"
-                    @elseif($day->source !== 'skeleton') onclick="return confirm('Draft this day with AI? It replaces the current stops.')" @endif>
-              ✨ {{ $day->source === 'ai' ? 'Re-draft' : 'Draft this day' }} with AI
-            </button>
-            <span class="ai-hint">stops, options, weather &amp; hiccups for {{ $day->area_label ?: $day->title }} on {{ $day->date->format('M j') }}</span>
-          </form>
-        @endif
+        @can('update', $trip)
+          @php $canRegen = $day->source !== 'ai' || $trip->canRegenerate(auth()->user()); @endphp
+          @if(($aiEnabled ?? false) && $canRegen)
+            <form method="POST" action="{{ route('trips.days.generate', [$trip, $day->id]) }}" class="ai-day"
+                  onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Drafting…';">
+              @csrf
+              <button type="submit" class="ai-btn"
+                      @if($day->source === 'ai') onclick="return confirm('Re-draft this day? It replaces the current stops.')"
+                      @elseif($day->source !== 'skeleton') onclick="return confirm('Draft this day with AI? It replaces the current stops.')" @endif>
+                ✨ {{ $day->source === 'ai' ? 'Re-draft' : 'Draft this day' }} with AI
+              </button>
+              <span class="ai-hint">stops, options, weather &amp; hiccups for {{ $day->area_label ?: $day->title }} on {{ $day->date->format('M j') }}</span>
+            </form>
+          @elseif($aiEnabled ?? false)
+            <div class="ai-day ai-paywall">
+              <button type="button" class="ai-btn" disabled>🔒 Re-draft with AI</button>
+              <span class="ai-hint">You've used this trip's free re-draft. <a href="{{ route('upgrade') }}">Upgrade to regenerate again →</a></span>
+            </div>
+          @endif
+        @endcan
 
         <div class="weather" data-forecast-date="{{ $day->forecast_date?->format('Y-m-d') }}"
              data-lat="{{ $day->lat ?? $trip->lat }}" data-lon="{{ $day->lon ?? $trip->lon }}">
