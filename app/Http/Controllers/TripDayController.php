@@ -8,6 +8,7 @@ use App\Models\TripDay;
 use App\Services\GenerateDayItinerary;
 use App\Jobs\DraftDayWithAi;
 use App\Services\DayDetailsAssistant;
+use App\Support\OsmMap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,35 @@ class TripDayController extends Controller
     {
         abort_unless($day->trip_id === $trip->id, 404);
 
-        $day->update($request->validated());
+        $data = $request->validated();
+        $picked = fn (string $a, string $b) => filled($data[$a] ?? null) && filled($data[$b] ?? null);
+
+        // Area: new coordinates only from a picked place; clearing the area clears them;
+        // editing other fields leaves the existing location alone.
+        if (blank($data['area_label'] ?? null)) {
+            $data['lat'] = $data['lon'] = null;
+        } elseif (! $picked('lat', 'lon')) {
+            unset($data['lat'], $data['lon']);
+        }
+
+        // Hotel: same rule; address comes from the picked place.
+        if (blank($data['hotel_name'] ?? null)) {
+            $data['hotel_address'] = $data['hotel_lat'] = $data['hotel_lon'] = null;
+        } elseif (! $picked('hotel_lat', 'hotel_lon')) {
+            unset($data['hotel_lat'], $data['hotel_lon'], $data['hotel_address']);
+        }
+
+        $locationChanged = array_key_exists('lat', $data)
+            && ((string) $data['lat'] !== (string) $day->lat || (string) $data['lon'] !== (string) $day->lon);
+
+        $day->fill($data);
+        if ($locationChanged) {
+            // Keep the day's "today's area" map in step with where the day now is.
+            $lat = $day->lat ?? $trip->lat;
+            $lon = $day->lon ?? $trip->lon;
+            $day->map_embed_url = ($lat && $lon) ? OsmMap::embedUrl((float) $lat, (float) $lon) : $day->map_embed_url;
+        }
+        $day->save();
 
         return redirect()->route('trips.show', $trip)
             ->withFragment((string) $day->day_number)

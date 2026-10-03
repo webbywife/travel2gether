@@ -19,6 +19,33 @@
   .actions{display:flex; gap:12px; align-items:center; margin:6px 0 60px;}
   @media (max-width:620px){ .g2{grid-template-columns:1fr;} }
 
+  /* 📍 place search */
+  .ps{position:relative;}
+  .ps-menu{display:none; position:absolute; left:0; right:0; top:calc(100% - 22px); z-index:20; background:#fff; border:1px solid var(--line);
+    border-radius:12px; box-shadow:var(--shadow-md); max-height:260px; overflow:auto;}
+  .ps-menu.on{display:block;}
+  .ps-menu button{display:block; width:100%; text-align:left; border:0; background:none; padding:9px 12px; font:inherit; font-size:14px; cursor:pointer;}
+  .ps-menu button:hover, .ps-menu button:focus{background:var(--panel-2);}
+  .ps-menu .addr{display:block; font-size:12px; color:var(--text-dim);}
+  .loc-status{font-size:12.5px; margin:5px 0 0; color:#2f6d54;}
+  .loc-status.warn{color:var(--accent);}
+  .loc-err{font-size:12.5px; margin:4px 0 0; color:var(--pink); font-weight:600;}
+  .ps-menu .cat{display:inline-block; font-size:11px; font-weight:600; color:var(--lavender); background:rgba(113,86,168,.1); border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:1px;}
+  .near{margin-top:16px; border:1px solid var(--line); border-radius:14px; padding:14px 16px; background:var(--panel);}
+  .near h3{font-family:'Space Grotesk',sans-serif; font-size:15px; margin:0 0 10px;}
+  .near-cols{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  .near h4{font-size:12.5px; margin:0 0 6px; color:var(--text-dim); font-weight:600;}
+  .near h4 small{font-weight:400;}
+  .near ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px;}
+  .near li{font-size:13px; line-height:1.35;}
+  .near li .km{color:var(--text-dim); font-size:12px; white-space:nowrap;}
+  .near li button{all:unset; cursor:pointer; color:var(--text); border-bottom:1px dashed var(--pink-light);}
+  .near li button:hover, .near li button:focus-visible{color:var(--pink); border-bottom-color:var(--pink);}
+  .near li a{color:var(--text); text-decoration:none; border-bottom:1px dotted var(--line);}
+  .near li a:hover{color:var(--pink);}
+  .near-note{font-size:12px; color:var(--text-dim); margin:8px 0 0;}
+  @media (max-width:720px){ .near-cols{grid-template-columns:1fr;} }
+
   /* ✨ AI helper */
   .ai-help{border:1px solid rgba(113,86,168,0.28); background:linear-gradient(180deg, rgba(253,234,241,0.65), rgba(255,255,255,0.94));}
   .ai-help h2{font-family:'Space Grotesk',sans-serif; font-size:17px; margin:0 0 4px;}
@@ -78,19 +105,39 @@
           <label class="f" for="f-title-secondary">Secondary title</label>
           <input id="f-title-secondary" class="in" name="title_secondary" value="{{ old('title_secondary', $day->title_secondary) }}" placeholder="optional, e.g. local-language name">
         </div>
-        <div>
-          <label class="f" for="f-area-label">Area label</label>
-          <input id="f-area-label" class="in" name="area_label" value="{{ old('area_label', $day->area_label) }}" placeholder="shown under the date tab">
+        <div class="ps" data-loc data-kind="area">
+          <label class="f" for="f-area-label">Area for this day</label>
+          <input class="in" id="f-area-label" name="area_label" value="{{ old('area_label', $day->area_label) }}"
+                 placeholder="Search a neighbourhood, town or park…" autocomplete="off" data-loc-input
+                 data-was="{{ $day->area_label }}" aria-describedby="area-status">
+          <div class="ps-menu" data-loc-menu></div>
+          <input type="hidden" name="lat" value="{{ old('lat') }}" data-loc-lat>
+          <input type="hidden" name="lon" value="{{ old('lon') }}" data-loc-lon>
+          <p class="loc-status" id="area-status" data-loc-status data-located="{{ ($day->lat && $day->lon) ? '1' : '' }}" data-empty="Optional — the day uses the trip's location">@if($day->area_label && $day->lat && $day->lon)📍 Located on the map @elseif($day->area_label)⚠ Not located yet — search and pick a suggestion @else Optional — the day uses the trip's location @endif</p>
+          @error('area_label')<p class="loc-err">{{ $message }}</p>@enderror
         </div>
         <div></div>
-        <div>
-          <label class="f" for="f-hotel-name">Hotel name for this day</label>
-          <input id="f-hotel-name" class="in" name="hotel_name" value="{{ old('hotel_name', $day->hotel_name) }}" placeholder="leave blank to use the trip's main hotel">
+        <div class="ps" data-loc data-kind="hotel">
+          <label class="f" for="f-hotel-name">Hotel for this day</label>
+          <input class="in" id="f-hotel-name" name="hotel_name" value="{{ old('hotel_name', $day->hotel_name) }}"
+                 placeholder="Search your hotel — blank uses the trip's main hotel" autocomplete="off" data-loc-input
+                 data-was="{{ $day->hotel_name }}" aria-describedby="hotel-status">
+          <div class="ps-menu" data-loc-menu></div>
+          <input type="hidden" name="hotel_lat" value="{{ old('hotel_lat') }}" data-loc-lat>
+          <input type="hidden" name="hotel_lon" value="{{ old('hotel_lon') }}" data-loc-lon>
+          <input type="hidden" name="hotel_address" value="{{ old('hotel_address', $day->hotel_address) }}" data-loc-address>
+          <p class="loc-status" id="hotel-status" data-loc-status data-located="{{ ($day->hotel_lat && $day->hotel_lon) ? '1' : '' }}" data-empty="Blank — uses the trip's main hotel">@if($day->hotel_name && $day->hotel_lat && $day->hotel_lon)📍 {{ $day->hotel_address ?: 'Located on the map' }}@elseif($day->hotel_name)⚠ Not located yet — search and pick a suggestion @else Blank — uses the trip's main hotel @endif</p>
+          @error('hotel_name')<p class="loc-err">{{ $message }}</p>@enderror
         </div>
-        <div>
-          <label class="f" for="f-hotel-address">Hotel address for this day</label>
-          <input id="f-hotel-address" class="in" name="hotel_address" value="{{ old('hotel_address', $day->hotel_address) }}">
+      </div>
+      <div class="near" id="nearPanel" hidden aria-live="polite">
+        <h3 id="nearTitle">Near this area</h3>
+        <div class="near-cols">
+          <section><h4>✈️ Airports</h4><ul id="nearAirports"></ul></section>
+          <section><h4>🏨 Hotels nearby <small>tap to use</small></h4><ul id="nearHotels"></ul></section>
+          <section><h4>📍 Landmarks &amp; things to see</h4><ul id="nearLandmarks"></ul></section>
         </div>
+        <p class="near-note" id="nearNote"></p>
       </div>
       <div style="margin-top:12px;">
         <label class="f" for="f-summary">Summary — "Why it's worth it"</label>
@@ -179,4 +226,137 @@
 })();
 </script>
 @endif
+<script>
+/* 📍 Area & hotel must be real places (with coordinates) — search, then pick. */
+(function () {
+  var near = @json(['lat' => $day->lat ?? $trip->lat, 'lon' => $day->lon ?? $trip->lon]);
+  var searchUrl = @json(route('places.search'));
+
+  document.querySelectorAll('[data-loc]').forEach(function (wrap) {
+    var input = wrap.querySelector('[data-loc-input]'), menu = wrap.querySelector('[data-loc-menu]');
+    var lat = wrap.querySelector('[data-loc-lat]'), lon = wrap.querySelector('[data-loc-lon]');
+    var addr = wrap.querySelector('[data-loc-address]'), status = wrap.querySelector('[data-loc-status]');
+    var was = (input.dataset.was || '').trim(), wasLocated = status.dataset.located === '1';
+    var timer = null, seq = 0;
+
+    function setStatus(text, warn) { status.textContent = text; status.classList.toggle('warn', !!warn); }
+    function located() { return lat.value !== '' && lon.value !== ''; }
+    wrap.isOk = function () {
+      var v = input.value.trim();
+      return v === '' || located() || (v === was && wasLocated);
+    };
+
+    function refreshStatus() {
+      var v = input.value.trim();
+      if (v === '') setStatus(status.dataset.empty, false);
+      else if (located()) return;
+      else if (v === was && wasLocated) setStatus('📍 Located on the map', false);
+      else setStatus('⚠ Not located yet — pick one of the suggestions', true);
+    }
+
+    function pick(p) {
+      input.value = p.name;
+      lat.value = p.lat; lon.value = p.lon;
+      if (addr) addr.value = p.formatted_address || '';
+      menu.classList.remove('on'); menu.textContent = '';
+      setStatus('📍 ' + p.name + (p.formatted_address ? ' — ' + p.formatted_address : ''), false);
+      if (wrap.dataset.kind === 'area') { window.t2gExplore && window.t2gExplore(p.lat, p.lon, p.name); }
+    }
+    wrap.pick = pick;
+
+    function search() {
+      var q = input.value.trim(), my = ++seq;
+      if (q.length < 3) { menu.classList.remove('on'); return; }
+      var url = searchUrl + '?q=' + encodeURIComponent(q) + '&kind=' + (wrap.dataset.kind || '') + (near.lat ? '&lat=' + near.lat + '&lon=' + near.lon : '');
+      fetch(url, { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : { results: [] }; })
+        .then(function (d) {
+          if (my !== seq) return; // a newer search is on its way
+          menu.textContent = '';
+          (d.results || []).filter(function (p) { return p.lat != null && p.lon != null; }).slice(0, 6).forEach(function (p) {
+            var b = document.createElement('button'); b.type = 'button';
+            var n = document.createElement('strong'); n.textContent = p.name; b.appendChild(n);
+            if (p.category) { var c = document.createElement('span'); c.className = 'cat'; c.textContent = p.category; b.appendChild(c); }
+            if (p.formatted_address) { var a = document.createElement('span'); a.className = 'addr'; a.textContent = p.formatted_address; b.appendChild(a); }
+            b.addEventListener('mousedown', function (e) { e.preventDefault(); pick(p); });
+            b.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); pick(p); } });
+            menu.appendChild(b);
+          });
+          if (!menu.children.length) {
+            var none = document.createElement('div'); none.style.cssText = 'padding:9px 12px; font-size:13px; color:var(--text-dim)';
+            none.textContent = 'No matching place found — try a nearby landmark or the town name.'; menu.appendChild(none);
+          }
+          menu.classList.add('on');
+        })
+        .catch(function () { menu.classList.remove('on'); });
+    }
+
+    input.addEventListener('input', function () {
+      lat.value = ''; lon.value = '';
+      if (addr && input.value.trim() !== was) addr.value = '';
+      refreshStatus();
+      clearTimeout(timer); timer = setTimeout(search, 300);
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown') { var f = menu.querySelector('button'); if (f) { e.preventDefault(); f.focus(); } }
+      if (e.key === 'Escape') menu.classList.remove('on');
+    });
+    input.addEventListener('blur', function () { setTimeout(function () { if (!wrap.contains(document.activeElement)) menu.classList.remove('on'); }, 150); });
+  });
+
+  // ── "Near this area": airports, hotels (tap to use) and landmarks ──
+  var exploreUrl = @json(route('places.explore'));
+  var panel = document.getElementById('nearPanel');
+  function li(listId, item, onPick) {
+    var el = document.createElement('li'), label;
+    if (onPick) {
+      label = document.createElement('button'); label.type = 'button'; label.textContent = item.name;
+      label.addEventListener('click', function () { onPick(item); });
+    } else {
+      label = document.createElement('a'); label.target = '_blank'; label.rel = 'noopener noreferrer';
+      label.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.name + ' ' + (item.formatted_address || ''));
+      label.textContent = item.name;
+    }
+    el.appendChild(label);
+    var km = document.createElement('span'); km.className = 'km'; km.textContent = ' · ' + item.km + ' km'; el.appendChild(km);
+    document.getElementById(listId).appendChild(el);
+  }
+  window.t2gExplore = function (lat, lon, name) {
+    if (lat == null || lon == null) return;
+    panel.hidden = false;
+    document.getElementById('nearTitle').textContent = 'Near ' + (name || 'this area');
+    ['nearAirports', 'nearHotels', 'nearLandmarks'].forEach(function (id) { document.getElementById(id).textContent = ''; });
+    var note = document.getElementById('nearNote'); note.textContent = 'Looking around…';
+    fetch(exploreUrl + '?lat=' + lat + '&lon=' + lon, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { note.textContent = 'Nearby places are unavailable right now — try again shortly.'; return; }
+        var hotelWrap = document.querySelector('[data-loc][data-kind="hotel"]');
+        (d.airports || []).forEach(function (a) { li('nearAirports', a); });
+        (d.hotels || []).forEach(function (h) { li('nearHotels', h, function (p) { hotelWrap.pick(p); hotelWrap.querySelector('[data-loc-input]').focus(); }); });
+        (d.landmarks || []).forEach(function (l) { li('nearLandmarks', l); });
+        ['nearAirports', 'nearHotels', 'nearLandmarks'].forEach(function (id) {
+          var ul = document.getElementById(id);
+          if (!ul.children.length) { var e = document.createElement('li'); e.className = 'km'; e.textContent = 'None found nearby'; ul.appendChild(e); }
+        });
+        note.textContent = d.partial ? 'Hotels and landmarks are temporarily unavailable — airports are shown.' : 'From OpenStreetMap and OurAirports · distances are straight-line.';
+      })
+      .catch(function () { note.textContent = 'Nearby places are unavailable right now.'; });
+  };
+  @if($day->lat && $day->lon)
+  window.t2gExplore({{ (float) $day->lat }}, {{ (float) $day->lon }}, @json($day->area_label ?: $day->title));
+  @endif
+
+  // Don't let an unlocated area/hotel be saved.
+  var form = document.querySelector('form[action*="/days/"]');
+  form && form.addEventListener('submit', function (e) {
+    var bad = Array.from(document.querySelectorAll('[data-loc]')).filter(function (w) { return !w.isOk(); });
+    if (bad.length) {
+      e.preventDefault();
+      bad.forEach(function (w) { var s = w.querySelector('[data-loc-status]'); s.textContent = '⚠ Please pick this place from the suggestions before saving'; s.classList.add('warn'); });
+      bad[0].querySelector('[data-loc-input]').focus();
+    }
+  });
+})();
+</script>
 @endsection

@@ -86,6 +86,7 @@ Route::view('/upgrade', 'upgrade')->name('upgrade');
 // POI search / indexing for building itineraries (Google Places API New).
 Route::middleware(['auth', 'throttle:40,1'])->group(function () {
     Route::get('/places/search', [PlacesController::class, 'search'])->name('places.search');
+    Route::get('/places/explore', [PlacesController::class, 'explore'])->middleware('throttle:12,1')->name('places.explore');
     Route::get('/places/{placeId}', [PlacesController::class, 'show'])->name('places.show');
 });
 

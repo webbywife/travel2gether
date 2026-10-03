@@ -131,7 +131,7 @@
     <div class="step">
       <h2><span class="n">03</span>Where you're staying</h2>
       <p class="hint">Search for the hotel — the day skeleton anchors bag-drop and checkout to it, and the map uses its location.</p>
-      <div class="ps" data-place>
+      <div class="ps" data-place data-kind="hotel">
         <label class="f" for="f-hotel-name">Hotel</label>
         <input id="f-hotel-name" class="in" name="hotel_name" value="{{ old('hotel_name') }}" placeholder="Search a hotel or area…" autocomplete="off" data-place-input>
         <div class="ps-menu" data-place-menu></div>
@@ -149,7 +149,7 @@
         @foreach ($olds as $i => $a)
           <div class="area-row">
             <div class="area-main">
-              <div class="ps" data-place>
+              <div class="ps" data-place data-kind="area">
                 <input class="in" name="areas[{{ $i }}][name]" value="{{ $a['name'] ?? '' }}" placeholder="e.g. Higashiyama, or “Nara day trip”" autocomplete="off" data-place-input>
                 <div class="ps-menu" data-place-menu></div>
                 <input type="hidden" name="areas[{{ $i }}][lat]" value="{{ $a['lat'] ?? '' }}" data-place-lat>
@@ -220,7 +220,7 @@
     row.className = 'area-row';
     row.innerHTML =
       '<div class="area-main">' +
-        '<div class="ps" data-place>' +
+        '<div class="ps" data-place data-kind="area">' +
           '<input class="in" name="areas[' + i + '][name]" placeholder="Another area…" autocomplete="off" data-place-input>' +
           '<div class="ps-menu" data-place-menu></div>' +
           '<input type="hidden" name="areas[' + i + '][lat]" data-place-lat>' +
@@ -273,7 +273,7 @@
       if (q.length < 3) { menu.classList.remove('on'); return; }
       var hotelLat = document.querySelector('[name="hotel_lat"]');
       var near = hotelLat && hotelLat.value ? '&lat=' + hotelLat.value + '&lon=' + document.querySelector('[name="hotel_lon"]').value : '';
-      fetch('/places/search?q=' + encodeURIComponent(q) + near, { headers: { 'Accept': 'application/json' } })
+      fetch('/places/search?q=' + encodeURIComponent(q) + '&kind=' + (wrap.dataset.kind || '') + near, { headers: { 'Accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : { results: [] }; })
         .then(function (d) {
           menu.innerHTML = '';
@@ -282,6 +282,7 @@
             b.type = 'button';
             // Place names come from third parties (OSM is user-edited) — never innerHTML them.
             var strong = document.createElement('strong'); strong.textContent = p.name; b.appendChild(strong);
+            if (p.category) { var cat = document.createElement('span'); cat.className = 'addr'; cat.textContent = p.category; cat.style.cssText = 'display:inline; margin-left:6px; color:var(--lavender)'; b.appendChild(cat); }
             if (p.formatted_address) { var ad = document.createElement('span'); ad.className = 'addr'; ad.textContent = p.formatted_address; b.appendChild(ad); }
             b.addEventListener('click', function () {
               input.value = p.name;

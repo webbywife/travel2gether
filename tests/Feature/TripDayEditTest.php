@@ -44,8 +44,8 @@ class TripDayEditTest extends TestCase
         $this->actingAs($owner)
             ->patch(route('trips.days.update', [$trip, $day]), [
                 'title' => 'A whole new title',
-                'area_label' => 'Downtown',
-                'hotel_name' => 'Backup Hotel',
+                'area_label' => 'Downtown', 'lat' => 37.5665, 'lon' => 126.978,          // picked from search
+                'hotel_name' => 'Backup Hotel', 'hotel_lat' => 37.57, 'hotel_lon' => 126.98,
                 'summary' => 'Updated summary.',
             ])
             ->assertRedirect(route('trips.show', $trip) . '#' . $day->day_number);

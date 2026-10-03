@@ -62,8 +62,18 @@ class PlacesService
      *
      * @return array<int, array<string, mixed>>
      */
-    public function search(string $query, ?float $lat = null, ?float $lon = null, int $limit = 8): array
+    /** Search filters, Booking-style: "area" = districts/neighbourhoods/towns, "hotel" = places to stay. */
+    private const KIND_FILTERS = [
+        'area' => ['layer' => ['district', 'locality', 'city', 'county']],
+        'hotel' => ['osm_tag' => ['tourism:hotel', 'tourism:hostel', 'tourism:guest_house', 'tourism:motel', 'tourism:apartment']],
+    ];
+
+    /** How far from the trip a result may be before it's dropped (km). */
+    private const KIND_RADIUS_KM = ['area' => 400, 'hotel' => 150];
+
+    public function search(string $query, ?float $lat = null, ?float $lon = null, int $limit = 8, ?string $kind = null): array
     {
+        $kind = isset(self::KIND_FILTERS[$kind]) ? $kind : null;
         $query = trim($query);
         if (! $this->enabled() || $query === '') {
             return [];
@@ -72,7 +82,7 @@ class PlacesService
         $limit = max(1, min($limit, 20));
 
         if (! $this->usesGoogle()) {
-            return $this->photonSearch($query, $lat, $lon, $limit);
+            return $this->photonSearch($query, $lat, $lon, $limit, $kind);
         }
 
         $cacheKey = 'places:search:' . md5(mb_strtolower($query) . "|$lat|$lon|$limit");
@@ -237,29 +247,186 @@ class PlacesService
     }
 
     /** @return array<int, array<string, mixed>> */
-    private function photonSearch(string $query, ?float $lat, ?float $lon, int $limit): array
+    private function photonSearch(string $query, ?float $lat, ?float $lon, int $limit, ?string $kind = null): array
     {
-        $cacheKey = 'places:osm:search:' . md5(mb_strtolower($query) . "|$lat|$lon|$limit");
+        $cacheKey = 'places:osm:search:' . md5(mb_strtolower($query) . "|$lat|$lon|$limit|$kind");
 
-        return Cache::remember($cacheKey, now()->addHours(24), function () use ($query, $lat, $lon, $limit) {
-            $params = ['q' => $query, 'limit' => $limit, 'lang' => 'en'];
+        return Cache::remember($cacheKey, now()->addHours(24), function () use ($query, $lat, $lon, $limit, $kind) {
+            // Ask for extra so the distance filter still leaves enough.
+            $query_ = ['q' => $query, 'limit' => $kind ? min(20, $limit * 2) : $limit, 'lang' => 'en'];
             if ($lat !== null && $lon !== null) {
-                $params += ['lat' => $lat, 'lon' => $lon];
+                $query_ += ['lat' => $lat, 'lon' => $lon];
+            }
+            // Photon takes repeated keys (layer=…&layer=…), so build the query string by hand.
+            $qs = http_build_query($query_);
+            foreach (self::KIND_FILTERS[$kind] ?? [] as $key => $values) {
+                foreach ($values as $v) {
+                    $qs .= '&' . $key . '=' . rawurlencode($v);
+                }
             }
 
             $res = rescue(fn () => Http::withHeaders(['User-Agent' => self::USER_AGENT])
-                ->timeout(8)->get(self::PHOTON_URL, $params), null, false);
+                ->timeout(8)->get(self::PHOTON_URL . '?' . $qs), null, false);
 
             if (! $res?->successful()) {
                 return [];
             }
 
-            return collect($res->json('features', []))
+            $rows = collect($res->json('features', []))
                 ->map(fn (array $f) => $this->normalizePhoton($f))
-                ->filter(fn (array $p) => $p['provider_id'] !== '' && $p['name'] !== '')
-                ->values()
-                ->all();
+                ->filter(fn (array $p) => $p['provider_id'] !== '' && $p['name'] !== '' && $p['lat'] !== null);
+
+            // Drop far-away namesakes (an "Ibis" in Brazil when planning Tokyo).
+            if ($kind && $lat !== null && $lon !== null) {
+                $rows = $rows->filter(fn ($p) => self::km($lat, $lon, $p['lat'], $p['lon']) <= self::KIND_RADIUS_KM[$kind]);
+            }
+
+            // One entry per name+place (OSM often has a node and a building for the same hotel).
+            return $rows->unique(fn ($p) => mb_strtolower($p['name'] . '|' . $p['formatted_address']))
+                ->take($limit)->values()->all();
         });
+    }
+
+    /** Photon queries per group: [query words, OSM tags, max km, how many to keep, map zoom for the location bias]. */
+    private const EXPLORE = [
+        'hotels' => [['hotel', 'hostel', 'inn'], ['tourism:hotel', 'tourism:hostel', 'tourism:guest_house', 'tourism:apartment'], 4, 10, 15],
+        'landmarks' => [['museum', 'park', 'temple', 'tower', 'square'],
+            ['tourism:museum', 'tourism:attraction', 'tourism:viewpoint', 'tourism:gallery', 'leisure:park', 'leisure:garden',
+             'historic:monument', 'historic:castle', 'historic:memorial', 'amenity:place_of_worship', 'man_made:tower', 'man_made:bridge',
+             'amenity:marketplace', 'place:square'], 6, 10, 14],
+    ];
+
+    /**
+     * "Near this area": airports within reach, hotels close by, and landmarks —
+     * grouped, deduped and sorted by distance. Uses Photon (fast, free) with
+     * several targeted queries run in parallel.
+     *
+     * @return array{airports: array, hotels: array, landmarks: array}|null  null = lookup unavailable
+     */
+    public function explore(float $lat, float $lon): ?array
+    {
+        if (! config('services.places.osm', true)) {
+            return null;
+        }
+        $key = 'places:osm:explore4:' . round($lat, 3) . ',' . round($lon, 3);
+
+        $result = Cache::remember($key, now()->addDays(7), function () use ($lat, $lon) {
+            $jobs = [];
+            foreach (self::EXPLORE as $group => [$words, $tags, , , $zoom]) {
+                foreach ($words as $w) {
+                    $qs = http_build_query(['q' => $w, 'limit' => 25, 'lang' => 'en', 'lat' => $lat, 'lon' => $lon,
+                        'location_bias_scale' => 0.1, 'zoom' => $zoom]);
+                    foreach ($tags as $t) {
+                        $qs .= '&osm_tag=' . rawurlencode($t);
+                    }
+                    $jobs[] = [$group, self::PHOTON_URL . '?' . $qs];
+                }
+            }
+
+            $responses = rescue(fn () => Http::pool(fn ($pool) => array_map(
+                fn ($j) => $pool->withHeaders(['User-Agent' => self::USER_AGENT])->timeout(8)->get($j[1]), $jobs)), [], false);
+
+            $out = ['hotels' => [], 'landmarks' => []];
+            $ok = 0;
+            foreach ($jobs as $i => [$group]) {
+                $res = $responses[$i] ?? null;
+                if (! $res instanceof \Illuminate\Http\Client\Response || ! $res->successful()) {
+                    continue;
+                }
+                $ok++;
+                foreach ($res->json('features', []) as $f) {
+                    $p = $this->normalizePhoton($f);
+                    if ($p['name'] === '' || $p['lat'] === null) {
+                        continue;
+                    }
+                    $p['km'] = round(self::km($lat, $lon, (float) $p['lat'], (float) $p['lon']), 1);
+                    $out[$group][] = $p;
+                }
+            }
+            if ($ok === 0) {
+                return null;
+            }
+
+            foreach (self::EXPLORE as $group => [, , $maxKm, $keep, ]) {
+                $out[$group] = collect($out[$group])
+                    ->filter(fn ($p) => $p['km'] <= $maxKm)
+                    // generic names ("Airport", "Park") and heliports aren't useful suggestions
+                    ->reject(fn ($p) => str_word_count($p['name']) < 2 && ! preg_match('/\d/', $p['name']))
+                    ->reject(fn ($p) => $group === 'airports' && stripos($p['name'], 'heliport') !== false)
+                    ->unique(fn ($p) => mb_strtolower($p['name']))
+                    ->sortBy('km')->take($keep)->values()->all();
+            }
+
+            return $out;
+        });
+
+        if ($result === null) {
+            Cache::forget($key);
+            $result = ['hotels' => [], 'landmarks' => [], 'partial' => true]; // airports still work offline
+        }
+
+        return ['airports' => self::nearestAirports($lat, $lon)] + $result;
+    }
+
+    /**
+     * Airports with scheduled flights near a point, from the bundled OurAirports
+     * list (public domain) — offline, instant, and names in English.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function nearestAirports(float $lat, float $lon, float $maxKm = 150, int $keep = 4): array
+    {
+        $all = once(fn () => json_decode((string) file_get_contents(database_path('data/airports.json')), true)['airports'] ?? []);
+
+        return collect($all)
+            ->map(fn ($a) => ['a' => $a, 'km' => self::km($lat, $lon, $a[4], $a[5])])
+            ->filter(fn ($x) => $x['km'] <= $maxKm)
+            ->sortBy('km')->take($keep)
+            ->map(fn ($x) => [
+                'provider' => 'ourairports',
+                'provider_id' => $x['a'][0],
+                'name' => "{$x['a'][1]} ({$x['a'][0]})",
+                'category' => 'Airport',
+                'formatted_address' => trim(($x['a'][2] ?: '') . ', ' . $x['a'][3], ', '),
+                'lat' => $x['a'][4],
+                'lon' => $x['a'][5],
+                'km' => round($x['km'], 1),
+            ])->values()->all();
+    }
+
+    /** Great-circle distance in km. */
+    public static function km(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $r = 6371;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+
+        return 2 * $r * asin(min(1, sqrt($a)));
+    }
+
+    /** A Booking-style label for an OSM type: "Neighbourhood", "Hotel", "Airport"… */
+    public static function categoryLabel(?string $key, ?string $value): string
+    {
+        return match (true) {
+            $key === 'tourism' && $value === 'hotel' => 'Hotel',
+            $key === 'tourism' && $value === 'hostel' => 'Hostel',
+            $key === 'tourism' && $value === 'guest_house' => 'Guesthouse',
+            $key === 'tourism' && $value === 'motel' => 'Motel',
+            $key === 'tourism' && $value === 'apartment' => 'Apartment',
+            $key === 'tourism' && in_array($value, ['museum', 'gallery'], true) => 'Museum',
+            $key === 'tourism' && $value === 'viewpoint' => 'Viewpoint',
+            $key === 'tourism' => 'Attraction',
+            $key === 'aeroway' => 'Airport',
+            $key === 'historic' => 'Historic site',
+            $key === 'amenity' && $value === 'place_of_worship' => 'Temple / church',
+            $key === 'leisure' => 'Park',
+            $key === 'place' && in_array($value, ['city', 'town'], true) => 'City',
+            $key === 'place' && in_array($value, ['village', 'hamlet'], true) => 'Town',
+            $key === 'place' && in_array($value, ['suburb', 'quarter', 'neighbourhood', 'borough'], true) => 'Neighbourhood',
+            $key === 'boundary' || $key === 'place' => 'Area',
+            default => 'Place',
+        };
     }
 
     /** @return array<string, mixed> */
@@ -278,6 +445,7 @@ class PlacesService
             'lat' => data_get($f, 'geometry.coordinates.1'),
             'lon' => data_get($f, 'geometry.coordinates.0'),
             'types' => array_values(array_filter([($p['osm_key'] ?? '') . ':' . ($p['osm_value'] ?? '')], fn ($t) => $t !== ':')),
+            'category' => self::categoryLabel($p['osm_key'] ?? null, $p['osm_value'] ?? null),
             'rating' => null,
             'rating_count' => null,
             'price_level' => null,
