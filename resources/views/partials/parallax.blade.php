@@ -1,21 +1,43 @@
 {{-- Decorative travel doodles that drift on scroll. Purely cosmetic. --}}
 <div class="parallax-root" id="parallaxRoot" aria-hidden="true">
 
-  {{-- hot air balloon --}}
-  <div class="p balloon" data-speed="0.12" style="top:8vh; left:4%; width:120px; height:150px;">
-    <span class="pi"><svg viewBox="0 0 120 150" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M60 6c26 0 44 20 44 46 0 24-20 42-30 54H46C36 94 16 76 16 52 16 26 34 6 60 6Z"/>
-      <path d="M60 6c-14 0-22 22-22 48s8 46 22 58c14-12 22-32 22-58S74 6 60 6Z"/>
-      <path d="M38 52c0 26 8 46 22 58 14-12 22-32 22-58"/>
-      <path d="M50 106h20l4 12H46l4-12Z"/>
-      <path d="M52 118v10a8 8 0 0 0 16 0v-10"/>
+  {{-- hot air balloon (colour illustration; outline draws itself in, then floats) --}}
+  <div class="p balloon balloon-colour" data-speed="0.12" style="top:8vh; left:4%; width:130px; height:170px;">
+    <span class="pi"><svg class="balloon-mark" viewBox="0 0 260 340" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id="balloonClip">
+          <path d="M130 35 C180 35 215 65 218 110 C221 155 205 195 178 224 C165 238 152 250 140 260 L118 260 C106 250 93 238 80 224 C53 195 37 155 40 110 C43 65 80 35 130 35 Z"/>
+        </clipPath>
+      </defs>
+      <g class="balloon-rig">
+        <path d="M130 35 C180 35 215 65 218 110 C221 155 205 195 178 224 C165 238 152 250 140 260 L118 260 C106 250 93 238 80 224 C53 195 37 155 40 110 C43 65 80 35 130 35 Z" fill="var(--cream)"/>
+        <g clip-path="url(#balloonClip)">
+          <rect x="36" y="32" width="190" height="230" fill="rgba(246,169,198,0.35)"/>
+          <path d="M42 138 L78 116 L108 140 L130 114 L152 140 L182 116 L220 138 L220 180 L182 158 L152 184 L130 158 L108 184 L78 158 L42 180 Z" fill="var(--teal)" opacity=".9"/>
+        </g>
+        <path class="draw-path" d="M130 35 C180 35 215 65 218 110 C221 155 205 195 178 224 C165 238 152 250 140 260 L118 260 C106 250 93 238 80 224 C53 195 37 155 40 110 C43 65 80 35 130 35 Z" fill="none" stroke="var(--ink)" stroke-width="2.2"/>
+        <path d="M130 37 L130 259" stroke="var(--ink)" stroke-width="1.4" opacity=".7"/>
+        <path d="M130 37 C95 55 78 90 74 130 C70 168 82 208 100 240 C107 249 112 254 118 259" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".7"/>
+        <path d="M130 37 C165 55 182 90 186 130 C190 168 178 208 160 240 C153 249 148 254 142 259" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".7"/>
+        <circle cx="130" cy="35" r="6" fill="var(--teal)" stroke="none"/>
+        <line x1="120" y1="258" x2="105" y2="286" stroke="var(--ink)" stroke-width=".9" opacity=".55"/>
+        <line x1="140" y1="258" x2="155" y2="286" stroke="var(--ink)" stroke-width=".9" opacity=".55"/>
+        <line x1="120" y1="258" x2="155" y2="286" stroke="var(--ink)" stroke-width=".7" opacity=".35"/>
+        <line x1="140" y1="258" x2="105" y2="286" stroke="var(--ink)" stroke-width=".7" opacity=".35"/>
+        <rect x="105" y="286" width="50" height="40" rx="4" fill="var(--green)" opacity=".9" stroke="var(--ink)" stroke-width="1.8"/>
+        <path d="M105 296h50M105 306h50M105 316h50" stroke="rgba(255,255,255,.55)" stroke-width="1"/>
+      </g>
     </svg></span>
   </div>
 
-  {{-- airplane --}}
-  <div class="p" data-speed="0.26" style="top:14vh; right:6%; width:150px; height:80px;">
-    <span class="pi"><svg viewBox="0 0 150 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M6 46c4-3 12-4 22-2l30 6 26-30c3-3 8-4 11-1s3 8 0 11L74 54l6 30c1 5-1 9-4 10s-7-1-9-5L52 62l-24 6c-6 2-11 1-13-3s0-16 11-19Z"/>
+  {{-- airplane (top view, climbing, with a dashed trail) --}}
+  <div class="p" data-speed="0.26" style="top:14vh; right:6%; width:160px; height:118px;">
+    <span class="pi"><svg viewBox="0 0 150 110" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 100 C 28 96, 46 84, 60 70" stroke-dasharray="3 6"/>
+      <g transform="translate(98 44) rotate(50) scale(1.2) translate(-30 -40)">
+        <path d="M30 2c3 0 5 5 5 12v18l26 15v7l-26-8v20l8 7v6l-13-4-13 4v-6l8-7V46L-1 54v-7l26-15V14c0-7 2-12 5-12Z"/>
+        <path d="M25 18h10"/>
+      </g>
     </svg></span>
   </div>
 

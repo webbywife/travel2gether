@@ -48,12 +48,19 @@
   .parallax-root .p .pi{display:block; width:100%; height:100%;}
   .parallax-root .p svg{display:block; width:100%; height:100%;}
   .parallax-root .p.balloon .pi{animation:t2g-float 9s ease-in-out infinite;}
+  /* Colour balloon illustration: its own palette, more visible than the outline doodles */
+  .parallax-root .p.balloon-colour{opacity:0.85;}
+  .balloon-mark{--cream:#FFF0F5; --teal:#E0558A; --ink:#5A2440; --green:#B23A6E; overflow:visible;}
+  .balloon-mark .draw-path{stroke-dasharray:760; stroke-dashoffset:760; animation:t2g-draw 2.4s ease-out .3s forwards;}
+  @keyframes t2g-draw{to{stroke-dashoffset:0}}
+  @media (max-width:700px){ .parallax-root .p.balloon-colour{opacity:0.45; width:90px !important; height:118px !important;} }
   .parallax-root .p.ship .pi{animation:t2g-bob 7s ease-in-out infinite;}
   @keyframes t2g-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
   @keyframes t2g-bob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(6px) rotate(1.5deg)}}
   @media (prefers-reduced-motion: reduce){
     body{background-attachment:scroll;}
     .parallax-root .p .pi{animation:none !important;}
+    .balloon-mark .draw-path{animation:none; stroke-dashoffset:0;}
   }
   .page, .site-foot{position:relative; z-index:1;}
 
