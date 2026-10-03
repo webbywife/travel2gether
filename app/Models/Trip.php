@@ -39,7 +39,7 @@ class Trip extends Model
 
     public function days(): HasMany
     {
-        return $this->hasMany(TripDay::class)->orderBy('sort')->orderBy('day_number');
+        return $this->hasMany(TripDay::class)->chaperone('trip')->orderBy('sort')->orderBy('day_number');
     }
 
     public function budgetLines(): HasMany

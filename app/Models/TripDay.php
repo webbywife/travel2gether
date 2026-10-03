@@ -32,6 +32,6 @@ class TripDay extends Model
 
     public function stops(): HasMany
     {
-        return $this->hasMany(Stop::class)->orderBy('sort');
+        return $this->hasMany(Stop::class)->chaperone('day')->orderBy('sort');
     }
 }

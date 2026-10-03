@@ -28,6 +28,13 @@ class Gallery
             return []; // hides the nav link, home strip and destination covers too
         }
 
+        // Pages ask for this dozens of times (covers, counts, nav) — load it once per request.
+        return once(fn () => self::load());
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private static function load(): array
+    {
         $disk = Storage::disk('public');
         if (! $disk->exists(self::INDEX)) {
             return [];

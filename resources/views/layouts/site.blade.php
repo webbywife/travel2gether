@@ -32,7 +32,7 @@
     font-family:'Inter', sans-serif;
     font-size:17px;
     line-height:1.6;
-    background: linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), radial-gradient(circle at 12% 8%, rgba(225, 74, 128, 0.05), transparent 40%), radial-gradient(circle at 88% 18%, rgba(180, 143, 217, 0.05), transparent 40%), url(/img/bg-pattern.jpg), var(--bg);
+    background: linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), radial-gradient(circle at 12% 8%, rgba(225, 74, 128, 0.05), transparent 40%), radial-gradient(circle at 88% 18%, rgba(180, 143, 217, 0.05), transparent 40%), url(/img/bg-pattern.webp), var(--bg);
     background-repeat: repeat-x;
     background-size: 1200px;
     background-position: center, center, center, center top, center;

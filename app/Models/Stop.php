@@ -25,6 +25,6 @@ class Stop extends Model
 
     public function options(): HasMany
     {
-        return $this->hasMany(StopOption::class)->orderBy('sort');
+        return $this->hasMany(StopOption::class)->chaperone('stop')->orderBy('sort');
     }
 }
