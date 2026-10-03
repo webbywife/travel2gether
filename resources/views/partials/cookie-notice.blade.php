@@ -1,7 +1,6 @@
 <div id="cookieNotice" class="cookie-notice" role="status" aria-live="polite" hidden>
   <p>
-    We use essential cookies to keep you signed in — no ad trackers. Your trip picks and Trippie chat
-    stay in your browser's local storage, not on our servers.
+    We only use essential cookies to keep you signed in — no ad trackers.
     <a href="{{ route('privacy') }}">Learn more</a>
   </p>
   <button type="button" id="cookieOk">Got it</button>

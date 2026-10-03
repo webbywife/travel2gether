@@ -88,7 +88,8 @@
   .brand{display:flex; align-items:center; gap:9px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; text-decoration:none; letter-spacing:-0.015em;}
   .brand-mark{height:38px; width:auto; display:block;}
   .brand .gtext{padding-right:1px;}
-  @media (max-width:480px){ .brand span{display:none;} .brand-mark{height:30px;} }
+  .brand-word{height:28px; width:auto; display:block;}
+  @media (max-width:480px){ .brand-word{height:20px;} }
   .site-nav .links{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
   .site-nav .links a{color:var(--text-dim); text-decoration:none; font-size:14.5px; font-weight:500;}
   .site-nav .links a:hover{color:var(--text);}
@@ -184,9 +185,8 @@
 @stack('parallax')
 <header class="navbar">
   <nav class="site-nav">
-    <a class="brand" href="{{ route('home') }}">
-      <img class="brand-mark" src="{{ asset('img/logo-mark-128.png') }}" width="38" height="37" alt="Travel2gether">
-      <span class="gtext">Travel2gether</span>
+    <a class="brand" href="{{ route('home') }}" aria-label="Travel2gether — home">
+      <img class="brand-word" src="{{ asset('img/wordmark.png') }}" width="152" height="28" alt="Travel2gether">
     </a>
     @auth
       <a class="btn btn-primary nav-cta" href="{{ route('trips.create') }}">New trip</a>
