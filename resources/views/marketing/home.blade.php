@@ -46,6 +46,12 @@
   .btn-lg{font-size:16px; padding:15px 28px;}
   .trust{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); letter-spacing:0.02em;}
   .trust b{color:var(--accent);}
+  @media (max-width:520px){
+    .hero{padding-top:36px;}
+    .hero .kicker{font-size:10px; letter-spacing:0.1em; padding:6px 11px; margin-bottom:18px;}
+    .cta-row{flex-direction:column; align-items:stretch; gap:10px;}
+    .cta-row .btn{width:100%;}
+  }
 
   /* sections */
   .section{max-width:1120px; margin:0 auto; padding:64px 24px;}
