@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Actions\IndexGeneratedPlaces;
 use App\Models\TripDay;
 use App\Services\GenerateDayItinerary;
+use App\Services\StopPhotoFinder;
 use App\Support\OsmMap;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,7 +31,7 @@ class DraftDayWithAi implements ShouldQueue
         public bool $countsAsRegeneration = false,
     ) {}
 
-    public function handle(GenerateDayItinerary $ai, IndexGeneratedPlaces $index): void
+    public function handle(GenerateDayItinerary $ai, IndexGeneratedPlaces $index, StopPhotoFinder $photos): void
     {
         $day = TripDay::with('trip')->find($this->dayId);
         if (! $day) {
@@ -96,6 +97,20 @@ class DraftDayWithAi implements ShouldQueue
                 $day->trip->increment('regenerations_used');
             }
         });
+
+        // A picture per stop: Lea's gallery first, Pexels otherwise. Never blocks the draft.
+        $area = $day->area_label ?: $day->title;
+        foreach ($day->stops()->with('options')->get() as $stop) {
+            if ($stop->options->isEmpty()) {
+                continue; // transit / check-out rows
+            }
+            $pic = rescue(fn () => $photos->find(
+                $stop->options->pluck('name')->all(), (string) $area, (string) $day->trip->destination), null);
+            if ($pic) {
+                $stop->update(['thumb_url' => $pic['url'], 'photo_source' => $pic['source'],
+                    'photo_credit' => $pic['credit'], 'photo_credit_url' => $pic['credit_url']]);
+            }
+        }
     }
 
     /** Worker crashed / timed out — don't leave the day stuck on "drafting". */

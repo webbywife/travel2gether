@@ -244,6 +244,10 @@
   .opt-card{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 14px 12px; cursor:pointer; transition:border-color 0.15s ease, background 0.15s ease;}
   .opt-card:hover{border-color:var(--pink-light);}
   .opt-card.pick{border-color:var(--pink); background:var(--panel-2);}
+  .stop-photo{margin:8px 0 10px; max-width:440px;}
+  .stop-photo img{display:block; width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; background:var(--panel-2); border:1px solid var(--line);}
+  .stop-photo figcaption{font-size:11.5px; color:var(--text-dim); margin-top:4px;}
+  .stop-photo figcaption a{color:inherit;}
   /* Phase 3 — weather swap prompt */
   .wx-alert{margin:2px 0 10px; padding:10px 12px; border-radius:10px; font-size:13.5px; line-height:1.5;
     background:rgba(113,86,168,0.08); border:1px solid rgba(113,86,168,0.25); color:var(--text);}
@@ -627,6 +631,14 @@
               @if($stop->cost_label)<span class="cost">{{ $stop->cost_label }}</span>@endif
               @if($stop->map_url)<a class="pin" href="{{ $stop->map_url }}" target="_blank" rel="noopener">Map ↗</a>@endif
             </div>
+            @if($stop->thumb_url)
+            <figure class="stop-photo">
+              <img src="{{ $stop->thumb_url }}" alt="{{ $stop->title }}" loading="lazy" decoding="async">
+              @if($stop->photo_credit)
+              <figcaption>@if($stop->photo_credit_url)<a href="{{ $stop->photo_credit_url }}" target="_blank" rel="noopener noreferrer">{{ $stop->photo_credit }}</a>@else{{ $stop->photo_credit }}@endif</figcaption>
+              @endif
+            </figure>
+            @endif
             @if($stop->description)<div class="note">{{ $stop->description }}</div>@endif
             @if($stop->hiccup)<div class="stop-hiccup">⚠ {{ $stop->hiccup }}</div>@endif
 

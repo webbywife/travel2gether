@@ -58,6 +58,7 @@ class Gallery
                                 ? $ph['link'] : null,
                             'w' => (int) ($ph['w'] ?? 0),
                             'h' => (int) ($ph['h'] ?? 0),
+                            'place' => (string) ($ph['place'] ?? ''),
                             'caption' => collect([$ph['place'] ?? null, $ph['city'] ?? null])->filter()->unique()->implode(' · '),
                             'taken' => (string) ($ph['taken'] ?? ''),
                         ])->values()->all(),

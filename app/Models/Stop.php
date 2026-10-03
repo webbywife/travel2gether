@@ -10,7 +10,7 @@ class Stop extends Model
 {
     protected $fillable = [
         'trip_day_id', 'sort', 'time', 'title', 'description', 'cost_label',
-        'weather_tag', 'map_provider', 'map_url', 'thumb_url', 'hiccup',
+        'weather_tag', 'map_provider', 'map_url', 'thumb_url', 'photo_source', 'photo_credit', 'photo_credit_url', 'hiccup',
         'has_options', 'option_label',
     ];
 

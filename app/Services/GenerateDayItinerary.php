@@ -100,7 +100,7 @@ class GenerateDayItinerary
 
         $grounding = $this->groundingPois($area, $lat, $lon, (array) ($prefs['interests'] ?? []));
 
-        $prompt = $this->prompt($trip, $day, $area, $prefs, $grounding, $climate);
+        $prompt = $this->prompt($trip, $day, $area, $prefs, $grounding, $climate) . $this->continuity($trip, $day, $area);
 
         if ($this->claude->enabled()) {
             // Structured outputs: the reply is guaranteed to match DAY_SCHEMA.
@@ -167,6 +167,41 @@ class GenerateDayItinerary
         $data = json_decode($text, true);
 
         return (is_array($data) && ! empty($data['stops'])) ? $data : null;
+    }
+
+    /**
+     * Where the group actually wakes up: last night's hotel and where yesterday
+     * ended, plus where tomorrow goes — so a far-away day starts with a real
+     * transfer instead of teleporting the group there.
+     */
+    private function continuity($trip, TripDay $day, string $area): string
+    {
+        $days = $trip->days()->with('stops')->get()->keyBy('day_number');
+        $prev = $days->get($day->day_number - 1);
+        $next = $days->get($day->day_number + 1);
+
+        $lines = [];
+        if ($prev) {
+            $prevArea = $prev->area_label ?: $prev->title;
+            $hotel = $prev->hotel_name ?: $trip->hotel_name;
+            $lastStop = $prev->stops->sortBy('sort')->last();
+            $lines[] = "Starting point: the group wakes up at " . ($hotel ?: "their hotel in {$prevArea}")
+                . " after yesterday ({$prevArea})" . ($lastStop ? ", which ended at \"{$lastStop->title}\"" : '') . '.';
+        } else {
+            $lines[] = 'Starting point: this is the first day — the group starts from '
+                . ($trip->hotel_name ?: 'their arrival point') . '.';
+        }
+        if ($day->hotel_name && $day->hotel_name !== ($prev?->hotel_name ?: $trip->hotel_name)) {
+            $lines[] = "Tonight they sleep at {$day->hotel_name}" . ($day->hotel_address ? " ({$day->hotel_address})" : '') . '.';
+        }
+        if ($next) {
+            $lines[] = 'Tomorrow they go to: ' . ($next->area_label ?: $next->title) . '.';
+        }
+
+        return "\n\nContinuity (make the day physically realistic):\n- " . implode("\n- ", $lines)
+            . "\n- If {$area} is more than about an hour from the starting point, the FIRST stop must be the transfer "
+            . '(mode, realistic duration, \"options\": [] ), and the first sight starts after it. Keep the last stop within '
+            . 'reasonable reach of where they sleep tonight.';
     }
 
     /** @return array<int, array{name:string, address:?string, lat:?float, lon:?float}> */
