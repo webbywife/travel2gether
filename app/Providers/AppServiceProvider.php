@@ -66,6 +66,11 @@ class AppServiceProvider extends ServiceProvider
             Limit::perHour(10)->by($request->ip()),
         ]);
 
+        RateLimiter::for('password-reset-submit', fn (Request $request) => [
+            Limit::perMinute(6)->by($request->ip()),
+            Limit::perHour(30)->by($request->ip()),
+        ]);
+
         RateLimiter::for('oauth', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
 
         Gate::define('admin', fn (User $user) => $user->isAdmin());

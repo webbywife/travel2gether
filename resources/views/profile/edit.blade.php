@@ -53,16 +53,16 @@
     <form method="POST" action="{{ route('profile.update') }}">
       @csrf
       @method('PATCH')
-      <label class="f">Name</label>
-      <input class="in" name="name" value="{{ old('name', $user->name) }}" required>
-      <label class="f">Email</label>
-      <input class="in" type="email" name="email" value="{{ old('email', $user->email) }}" required>
+      <label class="f" for="f-name">Name</label>
+      <input id="f-name" class="in" name="name" value="{{ old('name', $user->name) }}" required>
+      <label class="f" for="f-email">Email</label>
+      <input id="f-email" class="in" type="email" name="email" value="{{ old('email', $user->email) }}" required>
       @unless($user->email_verified_at)
         <p style="font-size:12.5px; color:var(--text-dim); margin:-8px 0 14px;">Not yet verified.</p>
       @endunless
       @if(filled($user->password))
-        <label class="f">Current password <span style="font-weight:400;">(only needed if you change your email)</span></label>
-        <input class="in" type="password" name="current_password" autocomplete="current-password">
+        <label class="f" for="f-current-password">Current password <span style="font-weight:400;">(only needed if you change your email)</span></label>
+        <input id="f-current-password" class="in" type="password" name="current_password" autocomplete="current-password">
       @endif
       <button type="submit" class="btn btn-primary">Save changes</button>
     </form>
@@ -77,13 +77,13 @@
       @csrf
       @method('PUT')
       @if($user->password)
-        <label class="f">Current password</label>
-        <input class="in" type="password" name="current_password" required>
+        <label class="f" for="f-current-password">Current password</label>
+        <input id="f-current-password" class="in" type="password" name="current_password" required>
       @endif
-      <label class="f">New password</label>
-      <input class="in" type="password" name="password" required minlength="12">
-      <label class="f">Confirm new password</label>
-      <input class="in" type="password" name="password_confirmation" required minlength="12">
+      <label class="f" for="f-password">New password</label>
+      <input id="f-password" class="in" type="password" name="password" required minlength="12">
+      <label class="f" for="f-password-confirmation">Confirm new password</label>
+      <input id="f-password-confirmation" class="in" type="password" name="password_confirmation" required minlength="12">
       <button type="submit" class="btn btn-primary">{{ $user->password ? 'Change password' : 'Set password' }}</button>
     </form>
   </div>

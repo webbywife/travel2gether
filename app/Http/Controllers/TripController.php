@@ -29,7 +29,7 @@ class TripController extends Controller
             'role' => $trip->roleFor($request->user()),
             'picks' => $trip->picks->keyBy('stop_id'),
             'canPick' => $trip->canPick($request->user()),
-            'aiEnabled' => filled(config('services.gemini.api_key')),
+            'aiEnabled' => app(\App\Services\GenerateDayItinerary::class)->enabled(),
         ]);
     }
 
@@ -91,6 +91,7 @@ class TripController extends Controller
     public function duplicate(Request $request, Trip $trip, DuplicateTrip $duplicate): RedirectResponse
     {
         $this->authorize('duplicate', $trip);
+        $request->validate(['title' => ['nullable', 'string', 'max:120']]);
 
         if ($request->user()->hasReachedTripLimit()) {
             return redirect()->route('upgrade')->with('error',
@@ -105,5 +106,22 @@ class TripController extends Controller
         return redirect()
             ->route('trips.show', $copy)
             ->with('status', 'Trip copied — invite your group from the Share panel.');
+    }
+
+    /** Owners can delete their own trip (frees a slot under the free-tier cap). Samples can't be deleted. */
+    public function destroy(Request $request, Trip $trip): RedirectResponse
+    {
+        $this->authorize('delete', $trip);
+        abort_if($trip->isSample(), 403);
+
+        $request->validate(['confirm_title' => ['required', 'string']]);
+        if (trim($request->input('confirm_title')) !== trim($trip->title)) {
+            return back()->withErrors(['confirm_title' => 'Type the trip name exactly to confirm.']);
+        }
+
+        $title = $trip->title;
+        $trip->delete(); // days, stops, options, picks, members and invites cascade
+
+        return redirect()->route('dashboard')->with('status', "Deleted \"{$title}\".");
     }
 }

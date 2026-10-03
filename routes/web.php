@@ -43,7 +43,7 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:password-reset')->name('password.email');
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
     Route::post('/reset-password', [PasswordResetController::class, 'update'])
-        ->middleware('throttle:password-reset')->name('password.update');
+        ->middleware('throttle:password-reset-submit')->name('password.update');
 
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])
         ->middleware('throttle:oauth')->name('auth.google.redirect');
@@ -100,6 +100,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/t/{trip:slug}/edit', [TripController::class, 'edit'])->name('trips.edit');
     Route::patch('/t/{trip:slug}', [TripController::class, 'update'])->name('trips.update');
+    Route::delete('/t/{trip:slug}', [TripController::class, 'destroy'])->name('trips.destroy');
 
     Route::post('/t/{trip:slug}/duplicate', [TripController::class, 'duplicate'])->name('trips.duplicate');
 

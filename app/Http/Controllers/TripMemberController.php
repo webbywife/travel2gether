@@ -63,8 +63,10 @@ class TripMemberController extends Controller
         abort_if($user->id === $trip->created_by, 403, 'The owner cannot be removed.');
 
         $trip->members()->detach($user->id);
+        \Illuminate\Support\Facades\DB::table('trip_removals')->updateOrInsert(
+            ['trip_id' => $trip->id, 'user_id' => $user->id], ['removed_at' => now()]);
 
-        return back()->with('status', 'Collaborator removed.');
+        return back()->with('status', 'Collaborator removed. Invite links made before now won\'t let them back in.');
     }
 
     /** A collaborator removes themselves. */

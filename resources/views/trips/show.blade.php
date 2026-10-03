@@ -333,7 +333,9 @@
     .pass-seg + .pass-seg{border-left:none; border-top:1px dashed rgba(58,46,56,0.18);}
     .pass-stub{width:100%; flex-direction:row; justify-content:space-between;}
     .stats{grid-template-columns:repeat(2,1fr);}
-    .stop{grid-template-columns:56px 1fr;}
+    .stop{grid-template-columns:1fr; gap:2px;}            /* time sits above the stop: full width for options */
+    .stop .time{font-size:12.5px; padding-top:0;}
+    .opt-card{padding:10px 12px 11px;}
     .tab{min-width:96px;}
     .weather{flex-direction:column; align-items:flex-start; gap:6px;}
     .wrap{padding:16px;}

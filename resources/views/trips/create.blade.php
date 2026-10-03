@@ -80,10 +80,10 @@
           <div id="visaHint" style="display:none; margin-top:7px; font-size:12px;"></div>
           <div id="templateHint" style="display:none; margin-top:7px; font-size:12px; color:var(--text-dim); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 11px;"></div>
         </div>
-        <div><label class="f">Trip name</label><input class="in" name="title" value="{{ old('title') }}" placeholder="optional — defaults to “Kyoto trip”"></div>
-        <div><label class="f">Travellers</label><input class="in" type="number" name="party_size" value="{{ old('party_size', 2) }}" min="1" max="20"></div>
-        <div><label class="f">Currency</label>
-          <select class="in" name="currency">
+        <div><label class="f" for="f-title">Trip name</label><input id="f-title" class="in" name="title" value="{{ old('title') }}" placeholder="optional — defaults to “Kyoto trip”"></div>
+        <div><label class="f" for="f-party-size">Travellers</label><input id="f-party-size" class="in" type="number" name="party_size" value="{{ old('party_size', 2) }}" min="1" max="20"></div>
+        <div><label class="f" for="f-currency">Currency</label>
+          <select id="f-currency" class="in" name="currency">
             @foreach (['USD','PHP','EUR','JPY','KRW','GBP','SGD','AUD'] as $c)
               <option value="{{ $c }}" @selected(old('currency','USD')===$c)>{{ $c }}</option>
             @endforeach
@@ -96,21 +96,21 @@
       <h2><span class="n">02</span>Dates &amp; flights</h2>
       <p class="hint">Your itinerary runs from arrival to departure, one day per date.</p>
       <div class="grid g2" style="margin-bottom:14px;">
-        <div><label class="f">Arrival date *</label><input class="in" type="date" name="arrival_date" value="{{ old('arrival_date') }}" required></div>
-        <div><label class="f">Departure date *</label><input class="in" type="date" name="departure_date" value="{{ old('departure_date') }}" required></div>
+        <div><label class="f" for="f-arrival-date">Arrival date *</label><input id="f-arrival-date" class="in" type="date" name="arrival_date" value="{{ old('arrival_date') }}" required></div>
+        <div><label class="f" for="f-departure-date">Departure date *</label><input id="f-departure-date" class="in" type="date" name="departure_date" value="{{ old('departure_date') }}" required></div>
       </div>
 
       @foreach (['Outbound flight', 'Return flight'] as $s => $lbl)
         <div class="flight">
           <h4>{{ $lbl }}</h4>
           <div class="grid g3">
-            <div><label class="f">From (airport)</label><input class="in" list="airportsList" name="segments[{{ $s }}][from]" value="{{ old("segments.$s.from") }}" placeholder="MNL" autocomplete="off"></div>
-            <div><label class="f">To (airport)</label><input class="in" list="airportsList" name="segments[{{ $s }}][to]" value="{{ old("segments.$s.to") }}" placeholder="KIX" autocomplete="off"></div>
-            <div><label class="f">Depart</label><input class="in" name="segments[{{ $s }}][depart]" value="{{ old("segments.$s.depart") }}" placeholder="23:30"></div>
-            <div><label class="f">Arrive</label><input class="in" name="segments[{{ $s }}][arrive]" value="{{ old("segments.$s.arrive") }}" placeholder="04:45 +1"></div>
-            <div><label class="f">Terminal</label><input class="in" name="segments[{{ $s }}][terminal]" value="{{ old("segments.$s.terminal") }}" placeholder="T1 → T3"></div>
-            <div><label class="f">Airline</label><input class="in" list="airlinesList" name="segments[{{ $s }}][airline]" value="{{ old("segments.$s.airline") }}" placeholder="Philippine Airlines" autocomplete="off"></div>
-            <div><label class="f">Flight no.</label><input class="in" name="segments[{{ $s }}][flight_no]" value="{{ old("segments.$s.flight_no") }}" placeholder="PR 408"></div>
+            <div><label class="f" for="f-segments-{{ $s }}-from">From (airport)</label><input id="f-segments-{{ $s }}-from" class="in" list="airportsList" name="segments[{{ $s }}][from]" value="{{ old("segments.$s.from") }}" placeholder="MNL" autocomplete="off"></div>
+            <div><label class="f" for="f-segments-{{ $s }}-to">To (airport)</label><input id="f-segments-{{ $s }}-to" class="in" list="airportsList" name="segments[{{ $s }}][to]" value="{{ old("segments.$s.to") }}" placeholder="KIX" autocomplete="off"></div>
+            <div><label class="f" for="f-segments-{{ $s }}-depart">Depart</label><input id="f-segments-{{ $s }}-depart" class="in" name="segments[{{ $s }}][depart]" value="{{ old("segments.$s.depart") }}" placeholder="23:30"></div>
+            <div><label class="f" for="f-segments-{{ $s }}-arrive">Arrive</label><input id="f-segments-{{ $s }}-arrive" class="in" name="segments[{{ $s }}][arrive]" value="{{ old("segments.$s.arrive") }}" placeholder="04:45 +1"></div>
+            <div><label class="f" for="f-segments-{{ $s }}-terminal">Terminal</label><input id="f-segments-{{ $s }}-terminal" class="in" name="segments[{{ $s }}][terminal]" value="{{ old("segments.$s.terminal") }}" placeholder="T1 → T3"></div>
+            <div><label class="f" for="f-segments-{{ $s }}-airline">Airline</label><input id="f-segments-{{ $s }}-airline" class="in" list="airlinesList" name="segments[{{ $s }}][airline]" value="{{ old("segments.$s.airline") }}" placeholder="Philippine Airlines" autocomplete="off"></div>
+            <div><label class="f" for="f-segments-{{ $s }}-flight-no">Flight no.</label><input id="f-segments-{{ $s }}-flight-no" class="in" name="segments[{{ $s }}][flight_no]" value="{{ old("segments.$s.flight_no") }}" placeholder="PR 408"></div>
           </div>
           <p class="hint" style="margin:10px 0 0;">The date shown on the flight pass is filled in automatically from your arrival/departure dates above.</p>
         </div>
@@ -132,8 +132,8 @@
       <h2><span class="n">03</span>Where you're staying</h2>
       <p class="hint">Search for the hotel — the day skeleton anchors bag-drop and checkout to it, and the map uses its location.</p>
       <div class="ps" data-place>
-        <label class="f">Hotel</label>
-        <input class="in" name="hotel_name" value="{{ old('hotel_name') }}" placeholder="Search a hotel or area…" autocomplete="off" data-place-input>
+        <label class="f" for="f-hotel-name">Hotel</label>
+        <input id="f-hotel-name" class="in" name="hotel_name" value="{{ old('hotel_name') }}" placeholder="Search a hotel or area…" autocomplete="off" data-place-input>
         <div class="ps-menu" data-place-menu></div>
         <input type="hidden" name="hotel_address" value="{{ old('hotel_address') }}" data-place-address>
         <input type="hidden" name="hotel_lat" value="{{ old('hotel_lat') }}" data-place-lat>
@@ -188,8 +188,8 @@
       <h2><span class="n">06</span>Budget &amp; shopping</h2>
       <p class="hint">Rough numbers are fine — they seed the budget worksheet, which stays editable.</p>
       <div style="max-width:280px; margin-bottom:16px;">
-        <label class="f">Target budget per person ({{ old('currency','USD') }})</label>
-        <input class="in" type="number" name="budget_per_person" value="{{ old('budget_per_person') }}" min="0" placeholder="optional">
+        <label class="f" for="f-budget-per-person">Target budget per person ({{ old('currency','USD') }})</label>
+        <input id="f-budget-per-person" class="in" type="number" name="budget_per_person" value="{{ old('budget_per_person') }}" min="0" placeholder="optional">
       </div>
       <p class="hint" style="margin-bottom:6px;">Planning to shop? Tick what for, and a rough spend:</p>
       @foreach (['electronics'=>'Electronics','stationery'=>'Stationery','clothes'=>'Clothing','beauty'=>'Cosmetics & beauty','food'=>'Food & edible souvenirs','homeware'=>'Homeware','souvenirs'=>'Souvenirs & gifts'] as $key => $lbl)

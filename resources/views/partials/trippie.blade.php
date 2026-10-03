@@ -1,4 +1,4 @@
-@if(config('services.gemini.api_key'))
+@if(app(\App\Services\TrippieAssistant::class)->enabled())
 <style>
   #trippie, #trippie *{box-sizing:border-box;}
   #trippie{position:fixed; right:20px; bottom:20px; z-index:12000; font-family:'Inter',system-ui,sans-serif;}
@@ -81,7 +81,7 @@
     </div>
     <a class="t-cta" href="{{ auth()->check() ? route('trips.create') : route('register') }}">✨ Ready? Let's build your trip →</a>
     <form class="t-in" id="tForm">
-      <input type="text" id="tInput" placeholder="Ask Trippie…" autocomplete="off" maxlength="1000" required>
+      <input type="text" id="tInput" aria-label="Message Trippie" placeholder="Ask Trippie…" autocomplete="off" maxlength="1000" required>
       <button type="submit" id="tSend" aria-label="Send">➤</button>
     </form>
   </div>

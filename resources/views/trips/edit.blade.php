@@ -41,17 +41,17 @@
           <div id="visaHint" style="display:none; margin-top:7px; font-size:12px;"></div>
           <div id="templateHint" style="display:none; margin-top:7px; font-size:12px; color:var(--text-dim); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 11px;"></div>
         </div>
-        <div><label class="f">Trip name</label><input class="in" name="title" value="{{ old('title', $trip->title) }}" placeholder="optional"></div>
-        <div><label class="f">Travellers</label><input class="in" type="number" name="party_size" value="{{ old('party_size', $trip->party_size) }}" min="1" max="20"></div>
-        <div><label class="f">Currency</label>
-          <select class="in" name="currency">
+        <div><label class="f" for="f-title">Trip name</label><input id="f-title" class="in" name="title" value="{{ old('title', $trip->title) }}" placeholder="optional"></div>
+        <div><label class="f" for="f-party-size">Travellers</label><input id="f-party-size" class="in" type="number" name="party_size" value="{{ old('party_size', $trip->party_size) }}" min="1" max="20"></div>
+        <div><label class="f" for="f-currency">Currency</label>
+          <select id="f-currency" class="in" name="currency">
             @foreach (['USD','PHP','EUR','JPY','KRW','GBP','SGD','AUD'] as $c)
               <option value="{{ $c }}" @selected(old('currency', $trip->currency) === $c)>{{ $c }}</option>
             @endforeach
           </select>
         </div>
-        <div><label class="f">Hotel name</label><input class="in" name="hotel_name" value="{{ old('hotel_name', $trip->hotel_name) }}"></div>
-        <div><label class="f">Hotel address</label><input class="in" name="hotel_address" value="{{ old('hotel_address', $trip->hotel_address) }}"></div>
+        <div><label class="f" for="f-hotel-name">Hotel name</label><input id="f-hotel-name" class="in" name="hotel_name" value="{{ old('hotel_name', $trip->hotel_name) }}"></div>
+        <div><label class="f" for="f-hotel-address">Hotel address</label><input id="f-hotel-address" class="in" name="hotel_address" value="{{ old('hotel_address', $trip->hotel_address) }}"></div>
       </div>
     </div>
 
@@ -96,4 +96,22 @@
   if (destInput) { destInput.addEventListener('input', checkTemplate); checkTemplate(); }
 })();
 </script>
+@can('delete', $trip)
+@unless($trip->isSample())
+<div class="build" style="margin-top:-30px;">
+  <div class="step" style="border-color:rgba(194,42,102,0.35);">
+    <h2 style="font-family:'Space Grotesk',sans-serif; font-size:17px; margin:0 0 6px; color:var(--pink);">Delete this trip</h2>
+    <p style="font-size:13.5px; color:var(--text-dim); margin:0 0 12px;">Removes every day, stop, pick and collaborator for good. This can't be undone. Type <b>{{ $trip->title }}</b> to confirm.</p>
+    @error('confirm_title')<div class="form-error">{{ $message }}</div>@enderror
+    <form method="POST" action="{{ route('trips.destroy', $trip) }}" style="display:flex; gap:10px; flex-wrap:wrap;">
+      @csrf
+      @method('DELETE')
+      <label for="confirm_title" class="sr-only" style="position:absolute; left:-9999px;">Trip name</label>
+      <input class="in" id="confirm_title" name="confirm_title" placeholder="{{ $trip->title }}" autocomplete="off" style="flex:1; min-width:200px;">
+      <button type="submit" class="btn" style="background:var(--pink); color:#fff;">Delete trip</button>
+    </form>
+  </div>
+</div>
+@endunless
+@endcan
 @endsection

@@ -39,6 +39,15 @@ class TripJoinController extends Controller
             abort(403, 'This invite is for a different email address.');
         }
 
+        // Removed by the owner? Only an invite created after the removal brings them back.
+        $removal = \Illuminate\Support\Facades\DB::table('trip_removals')
+            ->where('trip_id', $invite->trip_id)->where('user_id', $user->id)->first();
+        if ($removal) {
+            abort_if($invite->created_at <= \Illuminate\Support\Carbon::parse($removal->removed_at), 403,
+                'You were removed from this trip. Ask the owner for a new invite link.');
+            \Illuminate\Support\Facades\DB::table('trip_removals')->where('id', $removal->id)->delete();
+        }
+
         if (! $invite->trip->isMember($user)) {
             $invite->trip->members()->attach($user->id, [
                 'role' => $invite->role,

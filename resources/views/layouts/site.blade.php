@@ -185,7 +185,7 @@
 <header class="navbar">
   <nav class="site-nav">
     <a class="brand" href="{{ route('home') }}">
-      <img class="brand-mark" src="{{ asset('img/logo-mark.png') }}" alt="Travel2gether">
+      <img class="brand-mark" src="{{ asset('img/logo-mark-128.png') }}" width="38" height="37" alt="Travel2gether">
       <span class="gtext">Travel2gether</span>
     </a>
     @auth

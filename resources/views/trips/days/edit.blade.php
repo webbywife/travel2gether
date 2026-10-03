@@ -71,34 +71,34 @@
     <div class="step">
       <div class="grid g2">
         <div>
-          <label class="f">Day title *</label>
-          <input class="in" name="title" value="{{ old('title', $day->title) }}" required>
+          <label class="f" for="f-title">Day title *</label>
+          <input id="f-title" class="in" name="title" value="{{ old('title', $day->title) }}" required>
         </div>
         <div>
-          <label class="f">Secondary title</label>
-          <input class="in" name="title_secondary" value="{{ old('title_secondary', $day->title_secondary) }}" placeholder="optional, e.g. local-language name">
+          <label class="f" for="f-title-secondary">Secondary title</label>
+          <input id="f-title-secondary" class="in" name="title_secondary" value="{{ old('title_secondary', $day->title_secondary) }}" placeholder="optional, e.g. local-language name">
         </div>
         <div>
-          <label class="f">Area label</label>
-          <input class="in" name="area_label" value="{{ old('area_label', $day->area_label) }}" placeholder="shown under the date tab">
+          <label class="f" for="f-area-label">Area label</label>
+          <input id="f-area-label" class="in" name="area_label" value="{{ old('area_label', $day->area_label) }}" placeholder="shown under the date tab">
         </div>
         <div></div>
         <div>
-          <label class="f">Hotel name for this day</label>
-          <input class="in" name="hotel_name" value="{{ old('hotel_name', $day->hotel_name) }}" placeholder="leave blank to use the trip's main hotel">
+          <label class="f" for="f-hotel-name">Hotel name for this day</label>
+          <input id="f-hotel-name" class="in" name="hotel_name" value="{{ old('hotel_name', $day->hotel_name) }}" placeholder="leave blank to use the trip's main hotel">
         </div>
         <div>
-          <label class="f">Hotel address for this day</label>
-          <input class="in" name="hotel_address" value="{{ old('hotel_address', $day->hotel_address) }}">
+          <label class="f" for="f-hotel-address">Hotel address for this day</label>
+          <input id="f-hotel-address" class="in" name="hotel_address" value="{{ old('hotel_address', $day->hotel_address) }}">
         </div>
       </div>
       <div style="margin-top:12px;">
-        <label class="f">Summary — "Why it's worth it"</label>
-        <textarea class="in" name="summary">{{ old('summary', $day->summary) }}</textarea>
+        <label class="f" for="f-summary">Summary — "Why it's worth it"</label>
+        <textarea id="f-summary" class="in" name="summary">{{ old('summary', $day->summary) }}</textarea>
       </div>
       <div style="margin-top:12px;">
-        <label class="f">Weather note</label>
-        <textarea class="in" name="weather_note">{{ old('weather_note', $day->weather_note) }}</textarea>
+        <label class="f" for="f-weather-note">Weather note</label>
+        <textarea id="f-weather-note" class="in" name="weather_note">{{ old('weather_note', $day->weather_note) }}</textarea>
       </div>
     </div>
 
