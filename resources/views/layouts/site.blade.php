@@ -5,7 +5,7 @@
 <title>@yield('title', 'Travel2gether — plan the trip together')</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="@yield('meta_description', 'Describe your trip and get a full day-by-day itinerary your whole group can shape together — options, live budget, weather backups.')">
-<link rel="icon" type="image/png" href="{{ asset('favicon-32.png') }}">
+@include('partials.favicon')
 {{-- Link previews (Facebook, Messenger, Viber, X, LinkedIn…) --}}
 <link rel="canonical" href="{{ url()->current() }}">
 <meta property="og:site_name" content="Travel2gether">
