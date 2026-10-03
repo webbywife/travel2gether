@@ -8,6 +8,9 @@
     <h1>Welcome back</h1>
     <p class="lede">Log in to pick up where your group left off.</p>
 
+    @if (session('status'))
+      <div class="form-ok" role="status">{{ session('status') }}</div>
+    @endif
     @if ($errors->any())
       <div class="form-error"><ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
     @endif
@@ -28,6 +31,7 @@
         <label style="display:flex; align-items:center; gap:7px; margin:0;">
           <input type="checkbox" name="remember" style="width:auto;"> Stay logged in
         </label>
+        <a href="{{ route('password.request') }}">Forgot password?</a>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Log in</button>
     </form>

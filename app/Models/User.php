@@ -65,4 +65,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return ! $this->isPaid() && $this->ownedTrips()->count() >= self::FREE_TRIP_LIMIT;
     }
+
+    /** Branded "reset your password" email (link only). */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
 }

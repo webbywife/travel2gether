@@ -119,6 +119,7 @@
   .form-row{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; font-size:13.5px; color:var(--text-dim);}
   .form-error{background:rgba(225,74,128,0.08); border:1px solid var(--pink-light); color:var(--accent); border-radius:10px; padding:10px 14px; font-size:13.5px; margin-bottom:18px;}
   .form-error ul{margin:0; padding-left:18px;}
+  .form-ok{background:rgba(59,167,118,0.10); border:1px solid rgba(59,167,118,0.35); color:#2f6d54; border-radius:10px; padding:10px 14px; font-size:13.5px; margin-bottom:18px;}
   .btn-block{display:block; width:100%; text-align:center; border:none; font-size:15px; padding:12px;}
   .card-alt{text-align:center; margin-top:18px; font-size:13.5px; color:var(--text-dim);}
 

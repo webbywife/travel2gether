@@ -6,6 +6,7 @@ use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use App\Models\User;
@@ -42,6 +43,11 @@ class AppServiceProvider extends ServiceProvider
             Limit::perDay(20)->by($request->ip()),
         ]);
 
+        RateLimiter::for('password-reset', fn (Request $request) => [
+            Limit::perMinute(3)->by(Str::lower((string) $request->input('email')) . '|' . $request->ip()),
+            Limit::perHour(10)->by($request->ip()),
+        ]);
+
         RateLimiter::for('oauth', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
 
         Gate::define('admin', fn (User $user) => $user->isAdmin());
@@ -65,5 +71,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(fn (Lockout $e) => $log('auth.lockout', ['email' => $e->request->input('email')]));
         Event::listen(fn (Registered $e) => $log('auth.registered', ['user_id' => $e->user->getAuthIdentifier()]));
         Event::listen(fn (Verified $e) => $log('auth.email_verified', ['user_id' => $e->user->getAuthIdentifier()]));
+        Event::listen(fn (PasswordReset $e) => $log('auth.password_reset', ['user_id' => $e->user->getAuthIdentifier()]));
     }
 }
