@@ -313,7 +313,7 @@
   <div class="travel-strip">
     @foreach($travelShots as $shot)
       <a href="{{ route('gallery.show', $shot['slug']) }}" class="travel-shot">
-        <img src="{{ \App\Support\Gallery::url($shot['slug'], $shot['file'], true) }}" alt="{{ $shot['place'] }}" loading="lazy" decoding="async">
+        <img src="{{ \App\Support\Gallery::thumb($shot['slug'], $shot) }}" alt="{{ $shot['place'] }}" loading="lazy" decoding="async">
         <span>{{ $shot['place'] }}</span>
       </a>
     @endforeach

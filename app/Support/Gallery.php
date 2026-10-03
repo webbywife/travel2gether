@@ -48,9 +48,11 @@ class Gallery
                     'years' => array_values((array) ($p['years'] ?? [])),
                     'count' => count($p['photos']),
                     'photos' => collect($p['photos'])
-                        ->filter(fn ($ph) => preg_match('/^[A-Za-z0-9._-]+\.jpe?g$/', (string) ($ph['file'] ?? '')))
+                        ->filter(fn ($ph) => self::validEntry($ph))
                         ->map(fn ($ph) => [
                             'file' => $ph['file'],
+                            'type' => ($ph['type'] ?? '') === 'video' ? 'video' : 'photo',
+                            'poster' => ($ph['type'] ?? '') === 'video' ? $ph['poster'] : null,
                             'w' => (int) ($ph['w'] ?? 0),
                             'h' => (int) ($ph['h'] ?? 0),
                             'caption' => collect([$ph['place'] ?? null, $ph['city'] ?? null])->filter()->unique()->implode(' · '),
@@ -59,6 +61,30 @@ class Gallery
                 ])
                 ->values()->all();
         });
+    }
+
+    /** Photos must be .jpg; videos .mp4 with a .jpg poster. Anything else is dropped. */
+    private static function validEntry($ph): bool
+    {
+        $file = (string) ($ph['file'] ?? '');
+        if (($ph['type'] ?? '') === 'video') {
+            return preg_match('/^[A-Za-z0-9._-]+\.mp4$/', $file)
+                && preg_match('/^[A-Za-z0-9._-]+\.jpe?g$/', (string) ($ph['poster'] ?? ''));
+        }
+
+        return (bool) preg_match('/^[A-Za-z0-9._-]+\.jpe?g$/', $file);
+    }
+
+    /** Grid/strip thumbnail for a photo or a video's poster frame. */
+    public static function thumb(string $slug, array $item): string
+    {
+        return self::url($slug, $item['type'] === 'video' ? $item['poster'] : $item['file'], true);
+    }
+
+    /** @return array<int, array<string, mixed>> photos only (videos excluded) */
+    private static function stills(array $place): array
+    {
+        return array_values(array_filter($place['photos'], fn ($p) => $p['type'] === 'photo')) ?: $place['photos'];
     }
 
     /** @return array<string, mixed>|null */
@@ -84,11 +110,12 @@ class Gallery
         if (! $place) {
             return null;
         }
-        $landscape = array_values(array_filter($place['photos'], fn ($p) => $p['w'] >= $p['h']));
-        $pool = $landscape ?: $place['photos'];
+        $stills = self::stills($place);
+        $landscape = array_values(array_filter($stills, fn ($p) => $p['w'] >= $p['h']));
+        $pool = $landscape ?: $stills;
         $pick = $pool[intdiv(count($pool), 2)];
 
-        return self::url($slug, $pick['file'], $thumb);
+        return $thumb ? self::thumb($slug, $pick) : self::url($slug, $pick['type'] === 'video' ? $pick['poster'] : $pick['file']);
     }
 
     /**
@@ -102,7 +129,8 @@ class Gallery
         $seed = (int) now()->format('Ymd');
         $out = [];
         foreach (self::places() as $i => $place) {
-            $land = array_values(array_filter($place['photos'], fn ($p) => $p['w'] >= $p['h'])) ?: $place['photos'];
+            $stills = self::stills($place);
+            $land = array_values(array_filter($stills, fn ($p) => $p['w'] >= $p['h'])) ?: $stills;
             $p = $land[($seed + $i * 7) % count($land)];
             $out[] = $p + ['slug' => $place['slug'], 'place' => $place['name']];
         }

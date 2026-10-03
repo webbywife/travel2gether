@@ -88,6 +88,20 @@ class GalleryTest extends TestCase
         $this->get(route('destinations'))->assertOk()->assertDontSee('>Gallery</a>', false);
     }
 
+    public function test_videos_show_with_their_poster_and_bad_video_entries_are_dropped(): void
+    {
+        $k = $this->kyoto();
+        $k['photos'][] = ['file' => 'kyoto-v001.mp4', 'type' => 'video', 'poster' => 'kyoto-v001.jpg', 'w' => 720, 'h' => 1280, 'taken' => '2024-04'];
+        $k['photos'][] = ['file' => 'evil.mp4', 'type' => 'video', 'poster' => '../../x.jpg'];
+        $this->index([$k]);
+
+        $this->get(route('gallery.show', 'kyoto'))->assertOk()
+            ->assertSee('photos/kyoto/t/kyoto-v001.jpg', false)   // grid uses the poster
+            ->assertSee('kyoto-v001.mp4', false)                    // lightbox plays the video
+            ->assertSee('1 video')
+            ->assertDontSee('evil.mp4', false);
+    }
+
     public function test_the_index_never_exposes_coordinates(): void
     {
         $k = $this->kyoto();

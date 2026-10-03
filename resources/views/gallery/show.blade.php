@@ -5,14 +5,16 @@
   $years = $place['years'];
   $span = count($years) ? (count($years) > 1 ? reset($years) . '–' . end($years) : reset($years)) : '';
   $slides = collect($place['photos'])->map(fn ($p) => [
+      'type' => $p['type'],
       'src' => Gallery::url($place['slug'], $p['file']),
+      'poster' => $p['type'] === 'video' ? Gallery::url($place['slug'], $p['poster']) : null,
       'caption' => $p['caption'],
       'taken' => $p['taken'] ? \Illuminate\Support\Carbon::createFromFormat('Y-m', $p['taken'])->format('M Y') : '',
   ])->values();
 @endphp
 
 @section('title', $place['name'] . ' — photos · Travel2gether')
-@section('meta_description', count($place['photos']) . ' photos from ' . $place['name'] . ($place['country'] ? ', ' . $place['country'] : '') . ', taken on real trips.')
+@section('meta_description', count($place['photos']) . ' photos and videos from ' . $place['name'] . ($place['country'] ? ', ' . $place['country'] : '') . ', taken on real trips.')
 
 @push('styles')
 <style>
@@ -28,10 +30,15 @@
   .wall img{display:block; width:100%; height:auto; transition:transform .25s ease, opacity .25s ease;}
   .wall button:hover img{transform:scale(1.03);}
   .wall button:focus-visible{outline:3px solid var(--pink); outline-offset:2px;}
+  .wall button{position:relative;}
+  .wall button.is-video::after{content:"▶"; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:52px; height:52px; border-radius:50%; background:rgba(20,12,18,0.55); color:#fff; font-size:20px; line-height:52px; text-align:center;
+    padding-left:4px; box-sizing:border-box; backdrop-filter:blur(3px); pointer-events:none;}
 
   .lb{position:fixed; inset:0; z-index:50; background:rgba(16,10,14,0.94); display:none; flex-direction:column; align-items:center; justify-content:center; padding:24px;}
   .lb.on{display:flex;}
-  .lb img{max-width:min(1600px,100%); max-height:calc(100vh - 120px); object-fit:contain; border-radius:6px; box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+  .lb img, .lb video{max-width:min(1600px,100%); max-height:calc(100vh - 120px); object-fit:contain; border-radius:6px; box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+  .lb [hidden]{display:none;}
   .lb .cap{color:#f2e9ee; font-size:14px; margin-top:12px; text-align:center; min-height:1.4em;}
   .lb .cap small{display:block; font-family:'JetBrains Mono',monospace; font-size:11px; opacity:0.7; margin-top:2px;}
   .lb .nav{position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:0; cursor:pointer;
@@ -49,15 +56,17 @@
   <a class="ph-back" href="{{ route('gallery') }}">← All places</a>
   <h1><span class="gtext">{{ $place['name'] }}</span></h1>
   <div class="ph-sub">
-    <span>{{ $place['country'] }}@if($span) · {{ $span }}@endif · {{ count($place['photos']) }} photos</span>
+    @php $nVid = collect($place['photos'])->where('type', 'video')->count(); $nPh = count($place['photos']) - $nVid; @endphp
+    <span>{{ $place['country'] }}@if($span) · {{ $span }}@endif · {{ $nPh }} {{ \Illuminate\Support\Str::plural('photo', $nPh) }}@if($nVid) · {{ $nVid }} {{ \Illuminate\Support\Str::plural('video', $nVid) }}@endif</span>
     <a class="btn btn-ghost" href="{{ route('trips.create', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">Plan a trip here →</a>
   </div>
 </header>
 
 <div class="wall" id="wall">
   @foreach($place['photos'] as $i => $p)
-    <button type="button" data-i="{{ $i }}" aria-label="Open photo {{ $i + 1 }}{{ $p['caption'] ? ' — ' . $p['caption'] : '' }}">
-      <img src="{{ Gallery::url($place['slug'], $p['file'], true) }}" alt="{{ $p['caption'] ?: $place['name'] }}"
+    <button type="button" data-i="{{ $i }}" class="{{ $p['type'] === 'video' ? 'is-video' : '' }}"
+            aria-label="Open {{ $p['type'] === 'video' ? 'video' : 'photo' }} {{ $i + 1 }}{{ $p['caption'] ? ' — ' . $p['caption'] : '' }}">
+      <img src="{{ Gallery::thumb($place['slug'], $p) }}" alt="{{ $p['caption'] ?: $place['name'] }}"
            @if($p['w'] && $p['h']) width="{{ $p['w'] }}" height="{{ $p['h'] }}" @endif loading="lazy" decoding="async">
     </button>
   @endforeach
@@ -68,6 +77,7 @@
   <button type="button" class="close" id="lbClose" aria-label="Close">✕</button>
   <button type="button" class="nav prev" id="lbPrev" aria-label="Previous photo">‹</button>
   <img id="lbImg" alt="">
+  <video id="lbVid" controls playsinline preload="metadata" hidden></video>
   <div class="cap" id="lbCap"></div>
   <button type="button" class="nav next" id="lbNext" aria-label="Next photo">›</button>
 </div>
@@ -75,22 +85,31 @@
 <script>
 (function () {
   var slides = @json($slides);
+  var vid = document.getElementById('lbVid');
   var lb = document.getElementById('lb'), img = document.getElementById('lbImg'), cap = document.getElementById('lbCap'), pos = document.getElementById('lbPos');
   var i = 0, opener = null;
 
   function show(n) {
     i = (n + slides.length) % slides.length;
     var s = slides[i];
-    img.src = s.src;
+    vid.pause();
+    if (s.type === 'video') {
+      img.hidden = true; img.removeAttribute('src');
+      vid.hidden = false; vid.poster = s.poster || ''; vid.src = s.src;
+    } else {
+      vid.hidden = true; vid.removeAttribute('src'); vid.load();
+      img.hidden = false; img.src = s.src;
+    }
     img.alt = s.caption || '';
     cap.textContent = s.caption || '';
     if (s.taken) { var sm = document.createElement('small'); sm.textContent = s.taken; cap.appendChild(sm); }
     pos.textContent = (i + 1) + ' / ' + slides.length;
     // warm the next one
-    var pre = new Image(); pre.src = slides[(i + 1) % slides.length].src;
+    var nx = slides[(i + 1) % slides.length];
+    if (nx.type !== 'video') { var pre = new Image(); pre.src = nx.src; }
   }
   function open(n, el) { opener = el; show(n); lb.classList.add('on'); document.body.style.overflow = 'hidden'; document.getElementById('lbClose').focus(); }
-  function close() { lb.classList.remove('on'); img.src = ''; document.body.style.overflow = ''; if (opener) opener.focus(); }
+  function close() { lb.classList.remove('on'); img.src = ''; vid.pause(); vid.removeAttribute('src'); vid.load(); document.body.style.overflow = ''; if (opener) opener.focus(); }
 
   document.getElementById('wall').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]'); if (b) open(+b.dataset.i, b);
