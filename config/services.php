@@ -57,4 +57,9 @@ return [
         'api_key' => env('PEXELS_API_KEY'),
     ],
 
+    // Free OpenStreetMap place search (Photon + Overpass), used when no Google key is set.
+    'places' => [
+        'osm' => env('PLACES_OSM', true),
+    ],
+
 ];

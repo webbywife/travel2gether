@@ -112,15 +112,7 @@ class GenerateDayItinerary
             return [];
         }
 
-        $queries = array_slice(array_merge(
-            ["things to do in {$area}", "restaurants in {$area}"],
-            array_map(fn ($i) => "{$i} in {$area}", array_slice($interests, 0, 2)),
-        ), 0, 4);
-
-        return collect($queries)
-            ->flatMap(fn ($q) => $this->places->search($q, $lat, $lon, 4))
-            ->unique('provider_id')
-            ->take(16)
+        return collect($this->places->nearby($area, $lat, $lon, $interests, 16))
             ->map(fn ($p) => [
                 'name' => $p['name'],
                 'address' => $p['formatted_address'] ?? null,

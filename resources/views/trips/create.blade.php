@@ -280,7 +280,9 @@
           (d.results || []).slice(0, 6).forEach(function (p) {
             var b = document.createElement('button');
             b.type = 'button';
-            b.innerHTML = '<strong>' + p.name + '</strong>' + (p.formatted_address ? '<span class="addr">' + p.formatted_address + '</span>' : '');
+            // Place names come from third parties (OSM is user-edited) — never innerHTML them.
+            var strong = document.createElement('strong'); strong.textContent = p.name; b.appendChild(strong);
+            if (p.formatted_address) { var ad = document.createElement('span'); ad.className = 'addr'; ad.textContent = p.formatted_address; b.appendChild(ad); }
             b.addEventListener('click', function () {
               input.value = p.name;
               if (latF) latF.value = p.lat || '';

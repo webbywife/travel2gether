@@ -30,6 +30,7 @@ class Place extends Model
         return match ($this->provider) {
             'kakao' => "https://map.kakao.com/link/map/{$this->provider_id}",
             'gemini' => 'https://www.google.com/maps/search/?api=1&query=' . urlencode($this->name),
+            'osm' => 'https://www.google.com/maps/search/?api=1&query=' . urlencode(trim($this->name . ' ' . $this->formatted_address)),
             default => 'https://www.google.com/maps/place/?q=place_id:' . $this->provider_id,
         };
     }

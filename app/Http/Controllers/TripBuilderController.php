@@ -19,7 +19,7 @@ class TripBuilderController extends Controller
         }
 
         return view('trips.create', [
-            'placesEnabled' => filled(config('services.google.maps_key')),
+            'placesEnabled' => app(\App\Services\PlacesService::class)->enabled(),
             'prefillDestination' => $request->query('destination', ''),
             'destinations' => Destinations::all(),
             'templates' => Destinations::templates(),
