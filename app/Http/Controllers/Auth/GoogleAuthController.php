@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -59,6 +61,16 @@ class GoogleAuthController extends Controller
             }
 
             $user = $emailOwner; // null, or an account whose address Google vouched for
+        }
+
+        if ($user && $emailVerified && ! $user->email_verified_at && ! $user->google_id && filled($user->password)) {
+            // Someone registered this address with a password but never proved they own it.
+            // Google just did prove ownership — so lock that password out and end its sessions.
+            $user->forceFill(['password' => null, 'remember_token' => Str::random(60)])->save();
+            if (Schema::hasTable(config('session.table', 'sessions'))) {
+                DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+            }
+            Log::channel('security')->warning('auth.google.claimed_unverified_account', ['user_id' => $user->id]);
         }
 
         if ($user) {

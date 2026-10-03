@@ -28,7 +28,7 @@ Route::get('/gallery/{slug}', [GalleryController::class, 'show'])->where('slug',
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('privacy');
 
 // Trippie — the planning-buddy chatbot (open to guests, rate-limited).
-Route::post('/trippie', [TrippieController::class, 'chat'])->middleware('throttle:15,1')->name('trippie.chat');
+Route::post('/trippie', [TrippieController::class, 'chat'])->middleware('throttle:ai-trippie')->name('trippie.chat');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -104,11 +104,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/t/{trip:slug}/duplicate', [TripController::class, 'duplicate'])->name('trips.duplicate');
 
     Route::post('/t/{trip:slug}/days/{day}/generate', [TripDayController::class, 'generate'])
-        ->middleware('throttle:12,1')->name('trips.days.generate');
+        ->middleware('throttle:ai-draft')->name('trips.days.generate');
     Route::get('/t/{trip:slug}/days/{day}/ai-status', [TripDayController::class, 'aiStatus'])
         ->middleware('throttle:120,1')->name('trips.days.ai-status');
     Route::post('/t/{trip:slug}/days/{day}/suggest', [TripDayController::class, 'suggest'])
-        ->middleware('throttle:10,1')->name('trips.days.suggest');
+        ->middleware('throttle:ai-suggest')->name('trips.days.suggest');
     Route::get('/t/{trip:slug}/days/{day}/edit', [TripDayController::class, 'edit'])->name('trips.days.edit');
     Route::patch('/t/{trip:slug}/days/{day}', [TripDayController::class, 'update'])->name('trips.days.update');
 

@@ -48,7 +48,8 @@ class User extends Authenticatable implements MustVerifyEmail
     /** Site admin — gated by email (ADMIN_EMAILS), not a roles table. See config/app.php. */
     public function isAdmin(): bool
     {
-        return in_array($this->email, config('app.admin_emails', []), true);
+        return $this->email_verified_at !== null
+            && in_array($this->email, config('app.admin_emails', []), true);
     }
 
     /**

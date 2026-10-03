@@ -24,7 +24,21 @@ class ClaudeClient
 
     public function model(): string
     {
-        return (string) config('services.anthropic.model', 'claude-opus-5-5');
+        return trim((string) config('services.anthropic.model', 'claude-opus-5-5'));
+    }
+
+    /** `effort` exists on Opus 4.5+, Sonnet 4.6+, the 5.x family and Fable — not on Haiku 4.5 / Sonnet 4.5. */
+    private function supportsEffort(): bool
+    {
+        $m = $this->model();
+
+        return ! str_contains($m, 'haiku') && ! str_starts_with($m, 'claude-sonnet-4-5');
+    }
+
+    /** Server-side refusal fallbacks ("default") are offered on the newest models only. */
+    private function supportsFallbacks(): bool
+    {
+        return (bool) preg_match('/^claude-(opus-5|sonnet-5-5|fable-5)/', $this->model());
     }
 
     private function client(float $timeout): Client
@@ -46,7 +60,7 @@ class ClaudeClient
         $text = $this->send(
             system: $system,
             messages: [['role' => 'user', 'content' => $user]],
-            outputConfig: ['effort' => $effort, 'format' => ['type' => 'json_schema', 'schema' => $schema]],
+            outputConfig: ['format' => ['type' => 'json_schema', 'schema' => $schema]] + ($this->supportsEffort() ? ['effort' => $effort] : []),
             maxTokens: $maxTokens,
             timeout: $timeout,
         );
@@ -69,7 +83,7 @@ class ClaudeClient
         return trim($this->send(
             system: $system,
             messages: $messages,
-            outputConfig: ['effort' => $effort],
+            outputConfig: $this->supportsEffort() ? ['effort' => $effort] : null,
             maxTokens: $maxTokens,
             timeout: $timeout,
         ));
@@ -77,9 +91,9 @@ class ClaudeClient
 
     /**
      * @param  array<int, array<string, mixed>>  $messages
-     * @param  array<string, mixed>  $outputConfig
+     * @param  array<string, mixed>|null  $outputConfig
      */
-    private function send(string $system, array $messages, array $outputConfig, int $maxTokens, float $timeout): string
+    private function send(string $system, array $messages, ?array $outputConfig, int $maxTokens, float $timeout): string
     {
         try {
             $message = $this->client($timeout)->beta->messages->create(
@@ -89,8 +103,8 @@ class ClaudeClient
                 messages: $messages,
                 outputConfig: $outputConfig,
                 // If the model declines on policy grounds, let the API retry on its default fallback.
-                fallbacks: 'default',
-                betas: ['server-side-fallback-2026-07-01'],
+                fallbacks: $this->supportsFallbacks() ? 'default' : null,
+                betas: $this->supportsFallbacks() ? ['server-side-fallback-2026-07-01'] : null,
             );
         } catch (RateLimitException $e) {
             throw new \RuntimeException('quota', 0, $e);

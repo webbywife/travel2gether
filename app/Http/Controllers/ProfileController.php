@@ -33,6 +33,11 @@ class ProfileController extends Controller
 
         $emailChanged = $data['email'] !== $user->email;
 
+        // Changing the sign-in email is sensitive: confirm it's really the owner.
+        if ($emailChanged && filled($user->password)) {
+            $request->validate(['current_password' => ['required', 'current_password']]);
+        }
+
         $user->forceFill([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -58,7 +63,17 @@ class ProfileController extends Controller
             'password' => ['required', 'confirmed', Password::min(12)],
         ]);
 
-        $user->forceFill(['password' => Hash::make($data['password'])])->save();
+        $user->forceFill([
+            'password' => Hash::make($data['password']),
+            'remember_token' => \Illuminate\Support\Str::random(60), // kills "stay logged in" cookies everywhere
+        ])->save();
+
+        // Sign out every other device; keep this one.
+        $table = config('session.table', 'sessions');
+        if (\Illuminate\Support\Facades\Schema::hasTable($table)) {
+            \Illuminate\Support\Facades\DB::table($table)->where('user_id', $user->id)
+                ->where('id', '!=', $request->session()->getId())->delete();
+        }
 
         return redirect()->route('profile.edit')->with('status', $hasPassword ? 'Password changed.' : 'Password set — you can now log in with it too.');
     }

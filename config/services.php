@@ -50,6 +50,8 @@ return [
     'anthropic' => [
         'api_key' => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
+        // Site-wide ceiling on AI requests per day (all users together).
+        'daily_cap' => (int) env('AI_DAILY_CAP', 2500),
     ],
 
     'gemini' => [

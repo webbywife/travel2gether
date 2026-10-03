@@ -92,6 +92,11 @@ class TripController extends Controller
     {
         $this->authorize('duplicate', $trip);
 
+        if ($request->user()->hasReachedTripLimit()) {
+            return redirect()->route('upgrade')->with('error',
+                'Free members can have up to ' . \App\Models\User::FREE_TRIP_LIMIT . ' trips at a time — upgrade to add more.');
+        }
+
         $title = $request->string('title')->trim()->value()
             ?: "{$request->user()->name}'s {$trip->destination} trip";
 

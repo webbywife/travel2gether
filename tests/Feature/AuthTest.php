@@ -148,6 +148,25 @@ class AuthTest extends TestCase
         $this->assertSame(1, User::count());
     }
 
+    public function test_google_evicts_a_squatter_who_registered_someone_elses_email(): void
+    {
+        // Attacker registered lea@ with their own password, never verified it.
+        $squatted = User::factory()->unverified()->create([
+            'email' => 'lea@example.com', 'google_id' => null,
+            'password' => \Illuminate\Support\Facades\Hash::make('attacker-password-1'),
+        ]);
+        \DB::table('sessions')->insert(['id' => 'attacker-session', 'user_id' => $squatted->id, 'payload' => '', 'last_activity' => time()]);
+
+        // The real owner signs in with Google, which verified the address.
+        $this->fakeGoogleUser('google-real', 'lea@example.com', verified: true);
+        $this->get('/auth/google/callback')->assertRedirect('/dashboard');
+
+        $fresh = $squatted->fresh();
+        $this->assertNull($fresh->password);                 // attacker's password no longer works
+        $this->assertNotNull($fresh->email_verified_at);
+        $this->assertDatabaseMissing('sessions', ['id' => 'attacker-session']);
+    }
+
     public function test_google_refuses_to_link_an_unverified_email_to_an_existing_account(): void
     {
         User::factory()->create(['email' => 'lea@example.com', 'google_id' => null]);

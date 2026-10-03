@@ -39,6 +39,7 @@ class ProfileTest extends TestCase
         $this->actingAs($user)->patch(route('profile.update'), [
             'name' => $user->name,
             'email' => 'new@example.com',
+            'current_password' => 'password',
         ]);
 
         $user->refresh();

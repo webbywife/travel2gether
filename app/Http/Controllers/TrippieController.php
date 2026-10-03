@@ -13,9 +13,9 @@ class TrippieController extends Controller
     {
         $data = $request->validate([
             'message' => ['required', 'string', 'max:1200'],
-            'history' => ['nullable', 'array', 'max:20'],
+            'history' => ['nullable', 'array', 'max:12'],
             'history.*.role' => ['required', 'in:user,model'],
-            'history.*.text' => ['required', 'string', 'max:4000'],
+            'history.*.text' => ['required', 'string', 'max:1500'],
             'trip_slug' => ['nullable', 'string', 'max:120'],
         ]);
 

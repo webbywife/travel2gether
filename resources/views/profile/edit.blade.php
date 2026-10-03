@@ -60,6 +60,10 @@
       @unless($user->email_verified_at)
         <p style="font-size:12.5px; color:var(--text-dim); margin:-8px 0 14px;">Not yet verified.</p>
       @endunless
+      @if(filled($user->password))
+        <label class="f">Current password <span style="font-weight:400;">(only needed if you change your email)</span></label>
+        <input class="in" type="password" name="current_password" autocomplete="current-password">
+      @endif
       <button type="submit" class="btn btn-primary">Save changes</button>
     </form>
   </div>

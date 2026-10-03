@@ -158,7 +158,7 @@ class TrippieAssistant
         $messages[] = ['role' => 'user', 'content' => $message];
 
         try {
-            $text = $this->claude->chat($system, $messages, effort: 'low', maxTokens: 2000);
+            $text = $this->claude->chat($system, $messages, effort: 'low', maxTokens: 900);
         } catch (\RuntimeException $e) {
             return match ($e->getMessage()) {
                 'quota' => ['reply' => "You're quick! 😄 Give me a few seconds and ask again.", 'emotion' => 'worried'],

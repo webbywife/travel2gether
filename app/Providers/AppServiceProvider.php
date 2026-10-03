@@ -43,6 +43,24 @@ class AppServiceProvider extends ServiceProvider
             Limit::perDay(20)->by($request->ip()),
         ]);
 
+        // Paid AI: per-visitor and per-account daily caps, plus a site-wide daily ceiling,
+        // so nobody (guest scripts included) can run up the Anthropic bill.
+        RateLimiter::for('ai-trippie', fn (Request $request) => [
+            Limit::perMinute(8)->by('trippie-m:' . $request->ip()),
+            Limit::perDay(60)->by('trippie-d:' . ($request->user()?->id ?? $request->ip())),
+            Limit::perDay((int) config('services.anthropic.daily_cap', 2500))->by('ai-global'),
+        ]);
+        RateLimiter::for('ai-suggest', fn (Request $request) => [
+            Limit::perMinute(6)->by('suggest-m:' . $request->user()?->id),
+            Limit::perDay(80)->by('suggest-d:' . $request->user()?->id),
+            Limit::perDay((int) config('services.anthropic.daily_cap', 2500))->by('ai-global'),
+        ]);
+        RateLimiter::for('ai-draft', fn (Request $request) => [
+            Limit::perMinute(6)->by('draft-m:' . $request->user()?->id),
+            Limit::perDay(40)->by('draft-d:' . $request->user()?->id),
+            Limit::perDay((int) config('services.anthropic.daily_cap', 2500))->by('ai-global'),
+        ]);
+
         RateLimiter::for('password-reset', fn (Request $request) => [
             Limit::perMinute(3)->by(Str::lower((string) $request->input('email')) . '|' . $request->ip()),
             Limit::perHour(10)->by($request->ip()),
@@ -67,8 +85,9 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(fn (Login $e) => $log('auth.login', ['user_id' => $e->user->getAuthIdentifier(), 'guard' => $e->guard]));
         Event::listen(fn (Logout $e) => $log('auth.logout', ['user_id' => $e->user?->getAuthIdentifier(), 'guard' => $e->guard]));
-        Event::listen(fn (Failed $e) => $log('auth.failed', ['email' => $e->credentials['email'] ?? null, 'guard' => $e->guard]));
-        Event::listen(fn (Lockout $e) => $log('auth.lockout', ['email' => $e->request->input('email')]));
+        $hash = fn (?string $email) => $email ? hash('sha256', \Illuminate\Support\Str::lower($email)) : null;
+        Event::listen(fn (Failed $e) => $log('auth.failed', ['email_hash' => $hash($e->credentials['email'] ?? null), 'guard' => $e->guard]));
+        Event::listen(fn (Lockout $e) => $log('auth.lockout', ['email_hash' => $hash($e->request->input('email'))]));
         Event::listen(fn (Registered $e) => $log('auth.registered', ['user_id' => $e->user->getAuthIdentifier()]));
         Event::listen(fn (Verified $e) => $log('auth.email_verified', ['user_id' => $e->user->getAuthIdentifier()]));
         Event::listen(fn (PasswordReset $e) => $log('auth.password_reset', ['user_id' => $e->user->getAuthIdentifier()]));

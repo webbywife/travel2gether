@@ -1315,9 +1315,14 @@
     txt.textContent = others.length === 1
       ? others[0].name + ' is also here'
       : others.length + ' others are here';
-    avs.innerHTML = others.slice(0, 5).map(function (u) {
-      return '<span class="av" title="' + (u.name || '') + '">' + (u.name || '?').trim().charAt(0).toUpperCase() + '</span>';
-    }).join('');
+    avs.textContent = '';
+    others.slice(0, 5).forEach(function (u) {
+      var s = document.createElement('span');
+      s.className = 'av';
+      s.title = u.name || '';
+      s.textContent = (u.name || '?').trim().charAt(0).toUpperCase();
+      avs.appendChild(s);
+    });
   }
 
   var present = [];
