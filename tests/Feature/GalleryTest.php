@@ -102,6 +102,19 @@ class GalleryTest extends TestCase
             ->assertDontSee('evil.mp4', false);
     }
 
+    public function test_instagram_photos_link_out_and_only_to_instagram(): void
+    {
+        $k = $this->kyoto();
+        $k['photos'][0]['link'] = 'https://www.instagram.com/traveleyz/';
+        $k['photos'][1]['link'] = 'javascript:alert(1)';
+        $this->index([$k]);
+
+        $page = $this->get(route('gallery.show', 'kyoto'))->assertOk()
+            ->assertSee('View on Instagram')
+            ->assertSee('https:\/\/www.instagram.com\/traveleyz\/', false);
+        $page->assertDontSee('javascript:alert', false);
+    }
+
     public function test_the_index_never_exposes_coordinates(): void
     {
         $k = $this->kyoto();

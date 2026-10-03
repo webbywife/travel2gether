@@ -53,6 +53,9 @@ class Gallery
                             'file' => $ph['file'],
                             'type' => ($ph['type'] ?? '') === 'video' ? 'video' : 'photo',
                             'poster' => ($ph['type'] ?? '') === 'video' ? $ph['poster'] : null,
+                            // Only ever link out to Instagram itself.
+                            'link' => is_string($ph['link'] ?? null) && preg_match('#^https://www\.instagram\.com/[A-Za-z0-9._/-]+$#', $ph['link'])
+                                ? $ph['link'] : null,
                             'w' => (int) ($ph['w'] ?? 0),
                             'h' => (int) ($ph['h'] ?? 0),
                             'caption' => collect([$ph['place'] ?? null, $ph['city'] ?? null])->filter()->unique()->implode(' · '),

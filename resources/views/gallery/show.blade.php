@@ -6,6 +6,7 @@
   $span = count($years) ? (count($years) > 1 ? reset($years) . '–' . end($years) : reset($years)) : '';
   $slides = collect($place['photos'])->map(fn ($p) => [
       'type' => $p['type'],
+      'link' => $p['link'],
       'src' => Gallery::url($place['slug'], $p['file']),
       'poster' => $p['type'] === 'video' ? Gallery::url($place['slug'], $p['poster']) : null,
       'caption' => $p['caption'],
@@ -39,6 +40,9 @@
   .lb.on{display:flex;}
   .lb img, .lb video{max-width:min(1600px,100%); max-height:calc(100vh - 120px); object-fit:contain; border-radius:6px; box-shadow:0 20px 60px rgba(0,0,0,0.5);}
   .lb [hidden]{display:none;}
+  .lb .ig{margin-top:10px; font:600 13px Inter,sans-serif; color:#fff; text-decoration:none; padding:7px 14px; border-radius:999px;
+    background:linear-gradient(135deg,#C22A66,#8E3A73);}
+  .lb .ig:hover{opacity:.9;}
   .lb .cap{color:#f2e9ee; font-size:14px; margin-top:12px; text-align:center; min-height:1.4em;}
   .lb .cap small{display:block; font-family:'JetBrains Mono',monospace; font-size:11px; opacity:0.7; margin-top:2px;}
   .lb .nav{position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:0; cursor:pointer;
@@ -79,6 +83,7 @@
   <img id="lbImg" alt="">
   <video id="lbVid" controls playsinline preload="metadata" hidden></video>
   <div class="cap" id="lbCap"></div>
+  <a class="ig" id="lbIg" href="#" target="_blank" rel="noopener noreferrer" hidden>View on Instagram ↗</a>
   <button type="button" class="nav next" id="lbNext" aria-label="Next photo">›</button>
 </div>
 
@@ -104,6 +109,8 @@
     cap.textContent = s.caption || '';
     if (s.taken) { var sm = document.createElement('small'); sm.textContent = s.taken; cap.appendChild(sm); }
     pos.textContent = (i + 1) + ' / ' + slides.length;
+    var ig = document.getElementById('lbIg');
+    if (s.link) { ig.href = s.link; ig.hidden = false; } else { ig.hidden = true; ig.removeAttribute('href'); }
     // warm the next one
     var nx = slides[(i + 1) % slides.length];
     if (nx.type !== 'video') { var pre = new Image(); pre.src = nx.src; }
