@@ -31,6 +31,17 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPasswordNotification::class);
     }
 
+    public function test_a_mail_server_failure_shows_the_usual_answer_not_an_error_page(): void
+    {
+        User::factory()->create(['email' => 'lea@example.com']);
+        Password::shouldReceive('sendResetLink')->andThrow(
+            new \Symfony\Component\Mailer\Exception\TransportException('535 authentication failed'));
+
+        $this->post(route('password.email'), ['email' => 'lea@example.com'])
+            ->assertRedirect()
+            ->assertSessionHas('status', fn ($s) => str_contains($s, "If an account exists"));
+    }
+
     public function test_unknown_emails_get_the_same_answer_and_nothing_is_sent(): void
     {
         Notification::fake();

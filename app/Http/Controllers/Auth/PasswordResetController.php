@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 /**
  * "Forgot password?" for people who signed up with email + password.
@@ -35,7 +36,13 @@ class PasswordResetController extends Controller
     {
         $data = $request->validate(['email' => ['required', 'string', 'email', 'max:255']]);
 
-        $status = Password::sendResetLink(['email' => Str::lower($data['email'])]);
+        try {
+            $status = Password::sendResetLink(['email' => Str::lower($data['email'])]);
+        } catch (TransportExceptionInterface $e) {
+            // Mail server trouble shouldn't become an error page (or reveal that the account exists).
+            report($e);
+            $status = 'mail_failed';
+        }
 
         Log::channel('security')->info('auth.password_reset_requested', [
             'email_hash' => hash('sha256', Str::lower($data['email'])),
