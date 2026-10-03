@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\DestinationController;
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlaceRecommendationController;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations');
+Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery');
+Route::get('/gallery/{slug}', [GalleryController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('gallery.show');
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('privacy');
 
 // Trippie — the planning-buddy chatbot (open to guests, rate-limited).

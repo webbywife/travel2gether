@@ -12,7 +12,24 @@
   .wrapc{max-width:1120px; margin:0 auto; padding:0 24px;}
 
   /* hero */
-  .hero{max-width:1120px; margin:0 auto; padding:72px 24px 32px; text-align:center;}
+  .hero{max-width:1120px; margin:0 auto; padding:56px 24px 32px; text-align:center;}
+  .hero-photo{margin:36px auto 0; max-width:520px; position:relative;}
+  .hero-photo img{display:block; width:100%; height:auto; aspect-ratio:4/3; object-fit:cover; object-position:50% 72%;
+    border-radius:18px; box-shadow:var(--shadow-md);}
+  .hero-photo figcaption{position:absolute; left:14px; bottom:12px; font-family:'JetBrains Mono',monospace; font-size:11px;
+    letter-spacing:0.06em; text-transform:uppercase; color:#fff; background:rgba(20,12,18,0.55); padding:5px 10px; border-radius:999px;
+    backdrop-filter:blur(4px);}
+  @media (min-width:900px){
+    .hero{display:grid; grid-template-columns:1.15fr 0.85fr; gap:56px; align-items:center; text-align:left; padding-top:64px;}
+    .hero h1, .hero .sub{margin-left:0;}
+    .hero .cta-row{justify-content:flex-start;}
+    .hero-photo{margin:0; max-width:none; transform:rotate(1.6deg);
+      background:#fff; padding:12px 12px 40px; border-radius:6px; box-shadow:0 2px 6px rgba(36,30,35,0.06), 0 26px 50px -20px rgba(120,40,80,0.35);}
+    .hero-photo img{aspect-ratio:3/4; object-position:50% 50%; border-radius:2px; box-shadow:none;}
+    .hero-photo figcaption{position:static; display:block; text-align:center; margin-top:12px; background:none; color:var(--text-dim);
+      backdrop-filter:none; font-family:'Caveat',cursive; font-size:22px; letter-spacing:0; text-transform:none; padding:0;}
+  }
+  @media (prefers-reduced-motion: reduce){ .hero-photo{transform:none;} }
   .hero .kicker{
     display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11.5px;
     letter-spacing:0.18em; text-transform:uppercase; color:var(--accent);
@@ -33,6 +50,13 @@
   /* sections */
   .section{max-width:1120px; margin:0 auto; padding:64px 24px;}
   .section-tight{padding-top:20px;}
+  .travel-strip{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:-16px;}
+  .travel-shot{position:relative; display:block; aspect-ratio:4/3; border-radius:14px; overflow:hidden; background:var(--panel-2); box-shadow:var(--shadow-sm);}
+  .travel-shot img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .3s ease;}
+  .travel-shot:hover img{transform:scale(1.05);}
+  .travel-shot span{position:absolute; left:0; right:0; bottom:0; padding:22px 10px 8px; font-size:12px; font-weight:600; color:#fff;
+    background:linear-gradient(transparent, rgba(20,12,18,0.72));}
+  @media (max-width:760px){ .travel-strip{grid-template-columns:repeat(2,1fr);} .travel-shot:nth-child(n+7){display:none;} }
   .section h2{
     font-family:'Space Grotesk',sans-serif; font-weight:700;
     font-size:clamp(25px,3.2vw,36px); letter-spacing:-0.02em; margin:0 0 12px; text-align:center;
@@ -185,6 +209,7 @@
 
 @section('content')
 <header class="hero">
+  <div class="hero-copy">
   <div class="kicker">AI-drafted · group-editable · shareable</div>
   <h1 class="reveal">Turn planning into the best part of the trip — <span class="gtext">together</span>.</h1>
   <p class="sub reveal d1">
@@ -199,6 +224,15 @@
     @endif
   </div>
   <p class="trust reveal d3">No card required &nbsp;·&nbsp; <b>Your first full AI itinerary is on the house</b></p>
+  </div>
+  <figure class="hero-photo reveal d1">
+    <picture>
+      <source srcset="{{ asset('img/hero/grand-canyon.webp') }}" type="image/webp">
+      <img src="{{ asset('img/hero/grand-canyon.jpg') }}" width="1050" height="1400" fetchpriority="high" decoding="async"
+           alt="Two travellers wrapped up together on the rim of the Grand Canyon, looking out over the layered red cliffs under a wide blue sky">
+    </picture>
+    <figcaption>Grand Canyon, Arizona</figcaption>
+  </figure>
 </header>
 
 <section class="section reveal">
@@ -270,6 +304,23 @@
   </script>
   @endif
 </section>
+
+@php $travelShots = \App\Support\Gallery::highlights(10); @endphp
+@if(count($travelShots))
+<section class="section section-tight reveal">
+  <h2 class="gtext">From my travels</h2>
+  <p class="section-sub">The places behind the itineraries — real photos from real trips.</p>
+  <div class="travel-strip">
+    @foreach($travelShots as $shot)
+      <a href="{{ route('gallery.show', $shot['slug']) }}" class="travel-shot">
+        <img src="{{ \App\Support\Gallery::url($shot['slug'], $shot['file'], true) }}" alt="{{ $shot['place'] }}" loading="lazy" decoding="async">
+        <span>{{ $shot['place'] }}</span>
+      </a>
+    @endforeach
+  </div>
+  <p style="text-align:center; margin-top:18px;"><a class="btn btn-ghost" href="{{ route('gallery') }}">See all the places →</a></p>
+</section>
+@endif
 
 <section class="section section-tight reveal" id="how">
   <h2 class="gtext">Three steps to a plan</h2>

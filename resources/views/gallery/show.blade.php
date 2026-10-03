@@ -1,0 +1,117 @@
+@extends('layouts.site')
+
+@php
+  use App\Support\Gallery;
+  $years = $place['years'];
+  $span = count($years) ? (count($years) > 1 ? reset($years) . '–' . end($years) : reset($years)) : '';
+  $slides = collect($place['photos'])->map(fn ($p) => [
+      'src' => Gallery::url($place['slug'], $p['file']),
+      'caption' => $p['caption'],
+      'taken' => $p['taken'] ? \Illuminate\Support\Carbon::createFromFormat('Y-m', $p['taken'])->format('M Y') : '',
+  ])->values();
+@endphp
+
+@section('title', $place['name'] . ' — photos · Travel2gether')
+@section('meta_description', count($place['photos']) . ' photos from ' . $place['name'] . ($place['country'] ? ', ' . $place['country'] : '') . ', taken on real trips.')
+
+@push('styles')
+<style>
+  .ph-head{max-width:1120px; margin:0 auto; padding:36px 24px 18px;}
+  .ph-back{font-size:13.5px; text-decoration:none; color:var(--text-dim);}
+  .ph-back:hover{color:var(--pink);}
+  .ph-head h1{font-family:'Space Grotesk',sans-serif; font-size:clamp(28px,4vw,40px); margin:10px 0 4px; letter-spacing:-0.02em;}
+  .ph-sub{color:var(--text-dim); font-size:15px; display:flex; gap:14px; flex-wrap:wrap; align-items:center;}
+  .ph-sub .btn{margin-left:auto;}
+
+  .wall{max-width:1120px; margin:0 auto; padding:0 24px 72px; columns:3 260px; column-gap:12px;}
+  .wall button{display:block; width:100%; margin:0 0 12px; padding:0; border:0; background:var(--panel-2); border-radius:12px; overflow:hidden; cursor:zoom-in; break-inside:avoid;}
+  .wall img{display:block; width:100%; height:auto; transition:transform .25s ease, opacity .25s ease;}
+  .wall button:hover img{transform:scale(1.03);}
+  .wall button:focus-visible{outline:3px solid var(--pink); outline-offset:2px;}
+
+  .lb{position:fixed; inset:0; z-index:50; background:rgba(16,10,14,0.94); display:none; flex-direction:column; align-items:center; justify-content:center; padding:24px;}
+  .lb.on{display:flex;}
+  .lb img{max-width:min(1600px,100%); max-height:calc(100vh - 120px); object-fit:contain; border-radius:6px; box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+  .lb .cap{color:#f2e9ee; font-size:14px; margin-top:12px; text-align:center; min-height:1.4em;}
+  .lb .cap small{display:block; font-family:'JetBrains Mono',monospace; font-size:11px; opacity:0.7; margin-top:2px;}
+  .lb .nav{position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; border:0; cursor:pointer;
+    background:rgba(255,255,255,0.14); color:#fff; font-size:22px;}
+  .lb .nav:hover{background:rgba(255,255,255,0.26);}
+  .lb .prev{left:16px;} .lb .next{right:16px;}
+  .lb .close{position:absolute; top:14px; right:16px; width:42px; height:42px; border-radius:50%; border:0; cursor:pointer; background:rgba(255,255,255,0.14); color:#fff; font-size:20px;}
+  .lb .pos{position:absolute; top:22px; left:20px; color:#cfc3ca; font-family:'JetBrains Mono',monospace; font-size:12px;}
+  @media (max-width:560px){ .wall{columns:2; column-gap:8px; padding:0 12px 56px;} .wall button{margin-bottom:8px;} .lb .nav{display:none;} .ph-sub .btn{margin-left:0;} }
+</style>
+@endpush
+
+@section('content')
+<header class="ph-head">
+  <a class="ph-back" href="{{ route('gallery') }}">← All places</a>
+  <h1><span class="gtext">{{ $place['name'] }}</span></h1>
+  <div class="ph-sub">
+    <span>{{ $place['country'] }}@if($span) · {{ $span }}@endif · {{ count($place['photos']) }} photos</span>
+    <a class="btn btn-ghost" href="{{ route('trips.create', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">Plan a trip here →</a>
+  </div>
+</header>
+
+<div class="wall" id="wall">
+  @foreach($place['photos'] as $i => $p)
+    <button type="button" data-i="{{ $i }}" aria-label="Open photo {{ $i + 1 }}{{ $p['caption'] ? ' — ' . $p['caption'] : '' }}">
+      <img src="{{ Gallery::url($place['slug'], $p['file'], true) }}" alt="{{ $p['caption'] ?: $place['name'] }}"
+           @if($p['w'] && $p['h']) width="{{ $p['w'] }}" height="{{ $p['h'] }}" @endif loading="lazy" decoding="async">
+    </button>
+  @endforeach
+</div>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <span class="pos" id="lbPos"></span>
+  <button type="button" class="close" id="lbClose" aria-label="Close">✕</button>
+  <button type="button" class="nav prev" id="lbPrev" aria-label="Previous photo">‹</button>
+  <img id="lbImg" alt="">
+  <div class="cap" id="lbCap"></div>
+  <button type="button" class="nav next" id="lbNext" aria-label="Next photo">›</button>
+</div>
+
+<script>
+(function () {
+  var slides = @json($slides);
+  var lb = document.getElementById('lb'), img = document.getElementById('lbImg'), cap = document.getElementById('lbCap'), pos = document.getElementById('lbPos');
+  var i = 0, opener = null;
+
+  function show(n) {
+    i = (n + slides.length) % slides.length;
+    var s = slides[i];
+    img.src = s.src;
+    img.alt = s.caption || '';
+    cap.textContent = s.caption || '';
+    if (s.taken) { var sm = document.createElement('small'); sm.textContent = s.taken; cap.appendChild(sm); }
+    pos.textContent = (i + 1) + ' / ' + slides.length;
+    // warm the next one
+    var pre = new Image(); pre.src = slides[(i + 1) % slides.length].src;
+  }
+  function open(n, el) { opener = el; show(n); lb.classList.add('on'); document.body.style.overflow = 'hidden'; document.getElementById('lbClose').focus(); }
+  function close() { lb.classList.remove('on'); img.src = ''; document.body.style.overflow = ''; if (opener) opener.focus(); }
+
+  document.getElementById('wall').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-i]'); if (b) open(+b.dataset.i, b);
+  });
+  document.getElementById('lbClose').addEventListener('click', close);
+  document.getElementById('lbPrev').addEventListener('click', function () { show(i - 1); });
+  document.getElementById('lbNext').addEventListener('click', function () { show(i + 1); });
+  lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (!lb.classList.contains('on')) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowLeft') show(i - 1);
+    else if (e.key === 'ArrowRight') show(i + 1);
+  });
+  var x0 = null;
+  lb.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', function (e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+  });
+})();
+</script>
+@endsection

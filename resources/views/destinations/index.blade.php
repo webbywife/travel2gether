@@ -37,6 +37,9 @@
   .tpl-card .overview{font-size:13px; color:var(--text-dim); line-height:1.55; margin:0 0 14px; flex:1;}
   .tpl-card .cta{margin-top:auto; align-self:flex-start; font-size:13px; font-weight:700; text-decoration:none; color:var(--pink);}
   .tpl-card .cta:hover{text-decoration:underline;}
+  .cta-row-tpl{margin-top:auto; display:flex; gap:16px; flex-wrap:wrap; align-items:center;}
+  .cta-row-tpl .cta{margin-top:0;}
+  .tpl-card .cta.photos{color:var(--lavender); font-weight:600;}
   @media (max-width:560px){ .tpl-grid{grid-template-columns:1fr;} }
 </style>
 @endpush
@@ -66,11 +69,13 @@
     @php
       $visa = \App\Support\Destinations::visaForCountry($t['country']);
       $photoSlug = \Illuminate\Support\Str::slug($t['destination']);
-      $hasPhoto = file_exists(public_path("img/destinations/{$photoSlug}.jpg"));
+      $myCover = \App\Support\Gallery::cover($photoSlug);
+      $myCount = \App\Support\Gallery::place($photoSlug)['count'] ?? 0;
+      $hasPhoto = $myCover || file_exists(public_path("img/destinations/{$photoSlug}.jpg"));
     @endphp
     <div class="tpl-card reveal" data-cat="{{ $t['category'] }}">
       @if($hasPhoto)
-        <img class="tpl-photo" src="{{ asset("img/destinations/{$photoSlug}.jpg") }}" alt="{{ $t['destination'] }}" loading="lazy">
+        <img class="tpl-photo" src="{{ $myCover ?? asset("img/destinations/{$photoSlug}.jpg") }}" alt="{{ $t['destination'] }}" loading="lazy">
       @endif
       <div class="tpl-body">
         <div class="tpl-top">
@@ -87,7 +92,10 @@
           <span>⏱️ <b>{{ $t['trip_length'] }}</b></span>
         </div>
         <p class="overview">{{ $t['overview'] }}</p>
-        <a class="cta" href="{{ route('trips.create', ['destination' => $t['destination'] . ', ' . $t['country']]) }}">Plan this trip →</a>
+        <div class="cta-row-tpl">
+          <a class="cta" href="{{ route('trips.create', ['destination' => $t['destination'] . ', ' . $t['country']]) }}">Plan this trip →</a>
+          @if($myCount)<a class="cta photos" href="{{ route('gallery.show', $photoSlug) }}">📷 {{ $myCount }} of my photos</a>@endif
+        </div>
       </div>
     </div>
   @endforeach

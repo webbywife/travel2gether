@@ -62,4 +62,9 @@ return [
         'osm' => env('PLACES_OSM', true),
     ],
 
+    // Lea's photo gallery — off until the photos are edited and uploaded.
+    'gallery' => [
+        'enabled' => (bool) env('GALLERY_ENABLED', false),
+    ],
+
 ];
