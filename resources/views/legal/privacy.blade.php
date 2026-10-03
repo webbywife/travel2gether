@@ -1,7 +1,7 @@
 @extends('layouts.site')
 
 @section('title', 'Privacy & cookies · Travel2gether')
-@section('meta_description', 'What Travel2gether collects, the cookies and local storage it uses, and which third parties (Google Sign-In, Places, Gemini AI, Open-Meteo) your data passes through.')
+@section('meta_description', 'What Travel2gether collects, the cookies and browser storage it uses, and which third parties (Google Sign-In, Anthropic Claude AI, OpenStreetMap, Pexels, Open-Meteo) your data passes through.')
 
 @push('styles')
 <style>
@@ -44,10 +44,10 @@
       <tr><th>What</th><th>Purpose</th><th>Where</th></tr>
       <tr><td>Session cookie</td><td>Keeps you signed in</td><td>Cookie, expires when you log out or after inactivity</td></tr>
       <tr><td>CSRF token cookie</td><td>Blocks cross-site request forgery</td><td>Cookie, session-length</td></tr>
-      <tr><td>Trip picks</td><td>Remembers which option you tapped on a trip</td><td>Your browser's local storage only — never sent to us</td></tr>
+      <tr><td>Trip picks</td><td>Which option the group chose for each stop</td><td>On trips you belong to: saved on our server with who picked it, so everyone on the trip sees the same picks. On the public sample trips: your browser's local storage only</td></tr>
       <tr><td>Trippie history</td><td>Keeps the chat visible while you browse</td><td>Your browser's session storage only, cleared when the tab closes</td></tr>
     </table>
-    <p>Because the picks and chat history live in your browser's storage, not ours, clearing your browser data or using a different device/browser resets them.</p>
+    <p>Trippie's chat history and your picks on the sample trips live in your browser's storage, not ours — clearing your browser data or switching device resets them.</p>
   </section>
 
   <section>
@@ -55,8 +55,9 @@
     <p>To provide specific features, some data leaves Travel2gether and goes to:</p>
     <ul>
       <li><strong>Google Sign-In</strong> — if you use it, to authenticate you.</li>
-      <li><strong>Google Places API</strong> — search text and an approximate location, to look up real places for the trip builder and AI drafting.</li>
-      <li><strong>Google Gemini (AI)</strong> — your trip's destination, dates, areas, interests, and hotel name (to draft a day), and whatever you type to Trippie (plus your current trip's summary, if you're on a trip page). <strong>Don't paste anything sensitive into a trip field or the chat</strong> — treat both like you would a message to any third-party AI tool.</li>
+      <li><strong>Anthropic (Claude AI)</strong> — your trip's destination, dates, day titles and areas, interests, and hotel names (to draft a day or suggest day details), and whatever you type to Trippie or into "Help me with this day" (plus your current trip's summary, if you're on a trip page). Anthropic does not use this to train its models under its commercial API terms. <strong>Don't paste anything sensitive into a trip field or the chat</strong> — treat both like a message to any third-party AI tool.</li>
+      <li><strong>OpenStreetMap services (Photon, Overpass)</strong> — the place name you type and an approximate location, to look up real places for the trip builder and to give the AI a list of real nearby sights. No account data is sent.</li>
+      <li><strong>Pexels</strong> — the names of places in an AI-drafted day, to find an illustrative photo when none of our own photos fits. The photo then loads from Pexels' servers, which can see your IP address, like any image on the web.</li>
       <li><strong>Open-Meteo</strong> — a location's coordinates and a date, to fetch weather. No personal or account data is sent.</li>
     </ul>
     <p class="note">None of these providers are paid to advertise back to you based on this data, and we don't sell or rent your information to anyone.</p>
@@ -69,7 +70,7 @@
 
   <section>
     <h2>How long we keep it, and your choices</h2>
-    <p>We keep account and trip data for as long as your account exists. Security logs (sign-in attempts, etc.) are kept for 90 days. To access, correct, or delete your data — including closing your account —
+    <p>We keep account and trip data for as long as your account exists. Security logs (sign-in attempts, etc.) are kept for 90 days. Nightly database backups are kept for 14 days, then deleted automatically. To access, correct, or delete your data — including closing your account —
     @if($contact)
       email <a href="mailto:{{ $contact }}">{{ $contact }}</a>.
     @else

@@ -1,0 +1,1 @@
+@include('errors.minimal-brand', ['emoji' => '🛠️', 'title' => 'Something went wrong on our side', 'message' => "Sorry about that — it's been logged and we'll look into it. Please try again in a moment."])

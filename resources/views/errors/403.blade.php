@@ -1,0 +1,1 @@
+@include('errors._friendly', ['emoji' => '🔒', 'title' => "That's not available to you", 'message' => "You don't have permission for this. If it's a friend's trip, ask them to invite you as an editor."])

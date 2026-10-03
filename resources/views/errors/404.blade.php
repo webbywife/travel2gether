@@ -1,0 +1,1 @@
+@include('errors._friendly', ['emoji' => '🧭', 'title' => "We couldn't find that page", 'message' => "The link may be mistyped, or the trip is private and you're not on it yet — ask the trip owner for an invite link."])
