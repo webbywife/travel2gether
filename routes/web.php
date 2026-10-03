@@ -13,6 +13,7 @@ use App\Http\Controllers\PlaceRecommendationController;
 use App\Http\Controllers\PlacesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TripBuilderController;
+use App\Http\Controllers\TripCalendarController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripDayController;
 use App\Http\Controllers\TripJoinController;
@@ -91,6 +92,7 @@ Route::middleware(['auth', 'throttle:40,1'])->group(function () {
 // Public / shared trip URL. Seoul 2026 is the seeded sample.
 Route::get('/t/{trip:slug}', [TripController::class, 'show'])->name('trips.show');
 Route::get('/t/{trip:slug}/print', [TripController::class, 'print'])->name('trips.print');
+Route::get('/t/{trip:slug}/calendar.ics', [TripCalendarController::class, 'show'])->middleware('throttle:30,1')->name('trips.calendar');
 Route::get('/t/{trip:slug}/picks', [TripPickController::class, 'index'])->middleware('throttle:60,1')->name('trips.picks.index');
 
 // Collaboration (Phase 2) — all require a signed-in user.

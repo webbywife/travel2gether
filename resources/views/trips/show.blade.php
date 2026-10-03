@@ -494,6 +494,7 @@
       @endif
     </h1>
     <a class="print-link" href="{{ route('trips.print', $trip) }}" target="_blank" rel="noopener">🖨 Print scrapbook</a>
+    <a class="print-link cal-link" href="{{ route('trips.calendar', $trip) }}" data-cal="{{ route('trips.calendar', $trip) }}">📅 Add to calendar</a>
   </div>
   @php $visa = \App\Support\Destinations::match($trip->destination); @endphp
   @if($visa)
@@ -590,6 +591,9 @@
             @endif
           @endcan
         @endif
+
+        <a class="print-link cal-link" style="margin-top:8px;" href="{{ route('trips.calendar', [$trip, 'day' => $day->day_number]) }}"
+           data-cal="{{ route('trips.calendar', [$trip, 'day' => $day->day_number]) }}">📅 Add Day {{ $day->day_number }} to calendar</a>
 
         <div class="weather" data-forecast-date="{{ $day->forecast_date?->format('Y-m-d') }}"
              data-lat="{{ $day->lat ?? $trip->lat }}" data-lon="{{ $day->lon ?? $trip->lon }}">
@@ -1253,6 +1257,18 @@
     };
     setTimeout(tick, 4000);
   })();
+
+  /* ===== 📅 Calendar export: send the picks shown on the page ===== */
+  document.querySelectorAll('a.cal-link[data-cal]').forEach(function (a) {
+    a.addEventListener('click', function () {
+      var picks = Array.from(document.querySelectorAll('.opt-grid')).map(function (g) {
+        var c = g.querySelector('.opt-card.pick');
+        return c && g.dataset.stopId && c.dataset.optionId ? g.dataset.stopId + ':' + c.dataset.optionId : null;
+      }).filter(Boolean).join(',');
+      var base = a.dataset.cal;
+      a.href = picks ? base + (base.indexOf('?') === -1 ? '?' : '&') + 'picks=' + encodeURIComponent(picks) : base;
+    });
+  });
 
   /* ===== Outfit photo lightbox ===== */
   (function () {
