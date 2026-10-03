@@ -15,6 +15,7 @@
 @endphp
 
 @section('title', $place['name'] . ' — photos · Travel2gether')
+@section('og_image', Gallery::cover($place['slug'], false))
 @section('meta_description', count($place['photos']) . ' photos and videos from ' . $place['name'] . ($place['country'] ? ', ' . $place['country'] : '') . ', taken on real trips.')
 
 @push('styles')

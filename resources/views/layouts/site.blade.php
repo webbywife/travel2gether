@@ -6,6 +6,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="@yield('meta_description', 'Describe your trip and get a full day-by-day itinerary your whole group can shape together — options, live budget, weather backups.')">
 <link rel="icon" type="image/png" href="{{ asset('favicon-32.png') }}">
+{{-- Link previews (Facebook, Messenger, Viber, X, LinkedIn…) --}}
+<link rel="canonical" href="{{ url()->current() }}">
+<meta property="og:site_name" content="Travel2gether">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ url()->current() }}">
+<meta property="og:title" content="@yield('title', 'Travel2gether — plan the trip together')">
+<meta property="og:description" content="@yield('meta_description', 'Describe your trip and get a full day-by-day itinerary your whole group can shape together — options, live budget, weather backups.')">
+<meta property="og:image" content="@yield('og_image', asset('img/share/og-home.jpg'))">
+<meta property="og:image:alt" content="Travel2gether — plan the trip together">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">

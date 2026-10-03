@@ -29,3 +29,4 @@ Thumbs.db
 # photo curator — local-only (contains personal location settings; repo is public)
 /tools/photo-curator/
 __pycache__/
+/qa/
