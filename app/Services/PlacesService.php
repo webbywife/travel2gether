@@ -66,6 +66,7 @@ class PlacesService
     private const KIND_FILTERS = [
         'area' => ['layer' => ['district', 'locality', 'city', 'county']],
         'hotel' => ['osm_tag' => ['tourism:hotel', 'tourism:hostel', 'tourism:guest_house', 'tourism:motel', 'tourism:apartment']],
+        'destination' => ['layer' => ['city', 'state', 'country', 'locality', 'district', 'county']],
     ];
 
     /** How far from the trip a result may be before it's dropped (km). */
@@ -277,7 +278,7 @@ class PlacesService
                 ->filter(fn (array $p) => $p['provider_id'] !== '' && $p['name'] !== '' && $p['lat'] !== null);
 
             // Drop far-away namesakes (an "Ibis" in Brazil when planning Tokyo).
-            if ($kind && $lat !== null && $lon !== null) {
+            if (isset(self::KIND_RADIUS_KM[$kind]) && $lat !== null && $lon !== null) {
                 $rows = $rows->filter(fn ($p) => self::km($lat, $lon, $p['lat'], $p['lon']) <= self::KIND_RADIUS_KM[$kind]);
             }
 
@@ -308,7 +309,7 @@ class PlacesService
         if (! config('services.places.osm', true)) {
             return null;
         }
-        $key = 'places:osm:explore5:' . round($lat, 3) . ',' . round($lon, 3);
+        $key = 'places:osm:explore6:' . round($lat, 3) . ',' . round($lon, 3);
 
         $result = Cache::get($key);
         if ($result === null) {
@@ -320,7 +321,7 @@ class PlacesService
         }
 
         if ($result === null) {
-            $result = ['hotels' => [], 'landmarks' => [], 'partial' => true]; // airports still work offline
+            $result = ['hotels' => [], 'landmarks' => [], 'areas' => [], 'partial' => true]; // airports still work offline
         }
 
         return ['airports' => self::nearestAirports($lat, $lon)] + $result;
@@ -367,6 +368,8 @@ class PlacesService
             return null;
         }
 
+        $areas = self::stayAreas($out['hotels'], $lat, $lon);
+
         foreach (self::EXPLORE as $group => [, , $maxKm, $keep, ]) {
             $out[$group] = collect($out[$group])
                 ->filter(fn ($p) => $p['km'] <= $maxKm)
@@ -377,7 +380,34 @@ class PlacesService
                 ->sortBy('km')->take($keep)->values()->all();
         }
 
+        $out['areas'] = $areas;
+
         return $failed ? $out + ['partial' => true] : $out;
+    }
+
+    /**
+     * Where travellers stay: the districts the nearby hotels cluster in (most
+     * hotels first), each placed at the middle of its hotels — e.g. Chuo Ward
+     * and Kita Ward for Sapporo.
+     *
+     * @param  array<int, array<string, mixed>>  $hotels
+     * @return array<int, array<string, mixed>>
+     */
+    private static function stayAreas(array $hotels, float $lat, float $lon, float $maxKm = 8, int $keep = 5): array
+    {
+        return collect($hotels)
+            ->unique(fn ($h) => $h['provider_id'] ?: mb_strtolower($h['name']))
+            ->filter(fn ($h) => filled($h['district'] ?? null) && $h['km'] <= $maxKm)
+            ->groupBy(fn ($h) => $h['district'])
+            ->filter(fn ($group) => $group->count() >= 2)
+            ->map(function ($group, $name) use ($lat, $lon) {
+                $cLat = round($group->avg('lat'), 5);
+                $cLon = round($group->avg('lon'), 5);
+
+                return ['name' => (string) $name, 'lat' => $cLat, 'lon' => $cLon,
+                    'km' => round(self::km($lat, $lon, $cLat, $cLon), 1), 'hotels' => $group->count()];
+            })
+            ->sortByDesc('hotels')->take($keep)->values()->all();
     }
 
     /**
@@ -403,6 +433,7 @@ class PlacesService
                 'lat' => $x['a'][4],
                 'lon' => $x['a'][5],
                 'km' => round($x['km'], 1),
+                'major' => (bool) ($x['a'][6] ?? false), // OurAirports "large_airport" — where international flights land
             ])->values()->all();
     }
 
@@ -458,6 +489,7 @@ class PlacesService
             'lon' => data_get($f, 'geometry.coordinates.0'),
             'types' => array_values(array_filter([($p['osm_key'] ?? '') . ':' . ($p['osm_value'] ?? '')], fn ($t) => $t !== ':')),
             'category' => self::categoryLabel($p['osm_key'] ?? null, $p['osm_value'] ?? null),
+            'district' => ($p['district'] ?? null) ?: ($p['locality'] ?? null),
             'rating' => null,
             'rating_count' => null,
             'price_level' => null,

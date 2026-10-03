@@ -14,7 +14,7 @@ class PlacesController extends Controller
             'q' => ['required', 'string', 'min:2', 'max:120'],
             'lat' => ['nullable', 'numeric', 'between:-90,90'],
             'lon' => ['nullable', 'numeric', 'between:-180,180'],
-            'kind' => ['nullable', 'in:area,hotel'],
+            'kind' => ['nullable', 'in:area,hotel,destination'],
         ]);
 
         abort_unless($places->enabled(), 503, 'Place search is not configured.');
@@ -51,6 +51,6 @@ class PlacesController extends Controller
 
         $result = $places->explore((float) $data['lat'], (float) $data['lon']);
 
-        return response()->json($result ?? ['airports' => [], 'hotels' => [], 'landmarks' => [], 'partial' => true]);
+        return response()->json($result ?? ['airports' => [], 'hotels' => [], 'landmarks' => [], 'areas' => [], 'partial' => true]);
     }
 }

@@ -49,6 +49,15 @@
   .form-error ul{margin:0; padding-left:18px;}
   .actions{display:flex; gap:12px; align-items:center; margin:6px 0 60px;}
   @media (max-width:620px){ .g2,.g3{grid-template-columns:1fr;} }
+  .start{background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:0 0 14px;}
+  .start-head{font-weight:600; font-size:14px; margin-bottom:8px;}
+  .start-note{font-size:12.5px; color:var(--text-dim); margin:4px 0;}
+  .start-group{margin:8px 0;}
+  .start-label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:5px;}
+  .start-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .start-chips button{border:1px solid var(--line); background:#fff; border-radius:999px; padding:6px 11px; font:inherit; font-size:12.5px; cursor:pointer; text-align:left;}
+  .start-chips button:hover{border-color:var(--pink);}
+  .start-chips button small{color:var(--text-dim); margin-left:4px;}
 </style>
 @endpush
 
@@ -75,8 +84,13 @@
       <p class="hint">Not sure where? <a href="{{ route('destinations') }}">Browse popular destinations →</a></p>
       <div class="grid g2">
         <div>
-          <label class="f">Destination *</label>
-          <input class="in" id="destinationInput" name="destination" value="{{ old('destination', $prefillDestination ?? '') }}" placeholder="e.g. Kyoto, Japan" required>
+          <div class="ps" data-place data-kind="destination" id="destWrap">
+            <label class="f" for="destinationInput">Destination *</label>
+            <input class="in" id="destinationInput" name="destination" value="{{ old('destination', $prefillDestination ?? '') }}" placeholder="e.g. Kyoto, Japan" autocomplete="off" required data-place-input>
+            <div class="ps-menu" data-place-menu></div>
+            <input type="hidden" name="dest_lat" value="{{ old('dest_lat') }}" data-place-lat>
+            <input type="hidden" name="dest_lon" value="{{ old('dest_lon') }}" data-place-lon>
+          </div>
           <div id="visaHint" style="display:none; margin-top:7px; font-size:12px;"></div>
           <div id="templateHint" style="display:none; margin-top:7px; font-size:12px; color:var(--text-dim); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 11px;"></div>
         </div>
@@ -131,6 +145,14 @@
     <div class="step">
       <h2><span class="n">03</span>Where you're staying</h2>
       <p class="hint">Search for the hotel — the day skeleton anchors bag-drop and checkout to it, and the map uses its location.</p>
+      <div class="start" id="startPanel" hidden>
+        <div class="start-head" id="startHead"></div>
+        <div class="start-group" id="startAirportsWrap" hidden><span class="start-label">✈️ Airports — tap the one you fly into</span><div class="start-chips" id="startAirports"></div></div>
+        <div class="start-note" id="startAirport" hidden></div>
+        <div class="start-group" id="startAreasWrap" hidden><span class="start-label">🏘️ Areas where visitors stay</span><div class="start-chips" id="startAreas"></div></div>
+        <div class="start-group" id="startHotelsWrap" hidden><span class="start-label">🏨 Hotels &amp; hostels near the centre — tap to use</span><div class="start-chips" id="startHotels"></div></div>
+        <div class="start-note" id="startStatus"></div>
+      </div>
       <div class="ps" data-place data-kind="hotel">
         <label class="f" for="f-hotel-name">Hotel</label>
         <input id="f-hotel-name" class="in" name="hotel_name" value="{{ old('hotel_name') }}" placeholder="Search a hotel or area…" autocomplete="off" data-place-input>
@@ -271,8 +293,7 @@
       var q = input.value.trim();
       latF && (latF.value = ''); lonF && (lonF.value = ''); addrF && (addrF.value = '');
       if (q.length < 3) { menu.classList.remove('on'); return; }
-      var hotelLat = document.querySelector('[name="hotel_lat"]');
-      var near = hotelLat && hotelLat.value ? '&lat=' + hotelLat.value + '&lon=' + document.querySelector('[name="hotel_lon"]').value : '';
+      var near = wrap.dataset.kind === 'destination' ? '' : nearParam();
       fetch('/places/search?q=' + encodeURIComponent(q) + '&kind=' + (wrap.dataset.kind || '') + near, { headers: { 'Accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : { results: [] }; })
         .then(function (d) {
@@ -285,12 +306,13 @@
             if (p.category) { var cat = document.createElement('span'); cat.className = 'addr'; cat.textContent = p.category; cat.style.cssText = 'display:inline; margin-left:6px; color:var(--lavender)'; b.appendChild(cat); }
             if (p.formatted_address) { var ad = document.createElement('span'); ad.className = 'addr'; ad.textContent = p.formatted_address; b.appendChild(ad); }
             b.addEventListener('click', function () {
-              input.value = p.name;
+              input.value = wrap.dataset.kind === 'destination' ? destinationLabel(p) : p.name;
               if (latF) latF.value = p.lat || '';
               if (lonF) lonF.value = p.lon || '';
               if (addrF) addrF.value = p.formatted_address || '';
               menu.classList.remove('on');
               updateDistances();
+              wrap.dispatchEvent(new CustomEvent('placepick', { detail: p }));
             });
             menu.appendChild(b);
           });
@@ -301,6 +323,22 @@
 
     input.addEventListener('input', run);
     input.addEventListener('blur', function () { setTimeout(function () { menu.classList.remove('on'); }, 150); });
+  }
+
+  // Searches lean towards the hotel once it's picked, else the destination.
+  function nearParam() {
+    var pairs = [['hotel_lat', 'hotel_lon'], ['dest_lat', 'dest_lon']];
+    for (var k = 0; k < pairs.length; k++) {
+      var la = document.querySelector('[name="' + pairs[k][0] + '"]'), lo = document.querySelector('[name="' + pairs[k][1] + '"]');
+      if (la && la.value && lo && lo.value) return '&lat=' + encodeURIComponent(la.value) + '&lon=' + encodeURIComponent(lo.value);
+    }
+    return '';
+  }
+  // "Sapporo, Japan" — the country helps the visa and template hints.
+  function destinationLabel(p) {
+    var parts = (p.formatted_address || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+    var country = parts.length ? parts[parts.length - 1] : '';
+    return country && country !== p.name ? p.name + ', ' + country : p.name;
   }
 
   document.querySelectorAll('[data-place]').forEach(attachPlace);
@@ -339,6 +377,92 @@
   }
   updateDistances();
 
+  // ---- starting suggestions once the destination is picked ----
+  var startPanel = document.getElementById('startPanel');
+  function el(tag, text, cls) { var e = document.createElement(tag); if (text) e.textContent = text; if (cls) e.className = cls; return e; }
+  function setPlace(wrap, p, address) {
+    wrap.querySelector('[data-place-input]').value = p.name;
+    var la = wrap.querySelector('[data-place-lat]'), lo = wrap.querySelector('[data-place-lon]'), ad = wrap.querySelector('[data-place-address]');
+    if (la) la.value = p.lat; if (lo) lo.value = p.lon; if (ad) ad.value = address || '';
+    updateDistances();
+  }
+  function emptyAreaWrap() {
+    var wraps = list.querySelectorAll('.area-row .area-main > [data-place]');
+    for (var k = 0; k < wraps.length; k++) if (!wraps[k].querySelector('[data-place-input]').value.trim()) return wraps[k];
+    document.getElementById('addArea').click();
+    return list.querySelector('.area-row:last-child .area-main > [data-place]');
+  }
+  function areaAlreadyListed(name) {
+    return Array.prototype.some.call(list.querySelectorAll('.area-row .area-main > [data-place] [data-place-input]'),
+      function (i) { return i.value.trim().toLowerCase() === name.toLowerCase(); });
+  }
+  function loadStart(lat, lon, name) {
+    if (!placesEnabled || !startPanel) return;
+    startPanel.hidden = false;
+    document.getElementById('startHead').textContent = 'Suggested for ' + name;
+    var status = document.getElementById('startStatus');
+    status.textContent = 'Finding airports, areas and places to stay…';
+    ['startAirport', 'startAirportsWrap', 'startAreasWrap', 'startHotelsWrap'].forEach(function (id) { document.getElementById(id).hidden = true; });
+
+    fetch('/places/explore?lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { status.textContent = 'Suggestions are unavailable right now — search for your hotel and areas below.'; return; }
+
+        // Airports: tap one to use it for the arrival + return flights (the nearest isn't always the one you fly into).
+        var aps = d.airports || [], apBox = document.getElementById('startAirports');
+        apBox.innerHTML = '';
+        aps.forEach(function (ap) {
+          var b = el('button'); b.type = 'button';
+          b.appendChild(document.createTextNode(ap.name)); b.appendChild(el('small', ap.km + ' km'));
+          b.addEventListener('click', function () {
+            var to = document.querySelector('[name="segments[0][to]"]'), from = document.querySelector('[name="segments[1][from]"]');
+            if (to) to.value = ap.provider_id; if (from) from.value = ap.provider_id;
+            document.getElementById('startAirport').textContent = '✈️ ' + ap.provider_id + ' set as your arrival and return airport.';
+            document.getElementById('startAirport').hidden = false;
+          });
+          apBox.appendChild(b);
+        });
+        document.getElementById('startAirportsWrap').hidden = !aps.length;
+
+        // Areas where the hotels cluster; the busiest one starts area 1 if it's empty.
+        var areas = d.areas || [], areaBox = document.getElementById('startAreas');
+        areaBox.innerHTML = '';
+        areas.forEach(function (a, n) {
+          var b = el('button'); b.type = 'button';
+          b.appendChild(document.createTextNode(a.name)); b.appendChild(el('small', a.hotels + ' hotels · ' + a.km + ' km'));
+          b.addEventListener('click', function () { if (!areaAlreadyListed(a.name)) setPlace(emptyAreaWrap(), a); });
+          areaBox.appendChild(b);
+        });
+        document.getElementById('startAreasWrap').hidden = !areas.length;
+        var first = list.querySelector('.area-row .area-main > [data-place]');
+        var autoArea = areas[0] && first && !first.querySelector('[data-place-input]').value.trim();
+        if (autoArea) setPlace(first, areas[0]);
+
+        var hotels = d.hotels || [], hotelBox = document.getElementById('startHotels');
+        var hotelWrap = document.querySelector('[data-place][data-kind="hotel"]');
+        hotelBox.innerHTML = '';
+        hotels.slice(0, 8).forEach(function (h) {
+          var b = el('button'); b.type = 'button';
+          b.appendChild(document.createTextNode(h.name)); b.appendChild(el('small', (h.category ? h.category + ' · ' : '') + h.km + ' km'));
+          b.addEventListener('click', function () { setPlace(hotelWrap, h, h.formatted_address); });
+          hotelBox.appendChild(b);
+        });
+        document.getElementById('startHotelsWrap').hidden = !hotels.length;
+
+        status.textContent = (autoArea ? 'Area 1 is set to ' + areas[0].name + ' — change it anytime. ' : '') +
+          (d.partial ? 'Some suggestions didn\'t load — try picking the destination again in a minute.' : 'From OpenStreetMap and OurAirports.');
+      })
+      .catch(function () { status.textContent = 'Suggestions are unavailable right now — search for your hotel and areas below.'; });
+  }
+  var destWrap = document.getElementById('destWrap');
+  if (destWrap) {
+    destWrap.addEventListener('placepick', function (e) {
+      checkVisa(); checkTemplate();
+      loadStart(e.detail.lat, e.detail.lon, destWrap.querySelector('[data-place-input]').value);
+    });
+  }
+
   // ---- visa hint ----
   var DESTS = @json($destinations ?? []);
   var destInput = document.getElementById('destinationInput'), visaHint = document.getElementById('visaHint');
@@ -369,6 +493,10 @@
     tplHint.style.display = 'block';
   }
   if (destInput) { destInput.addEventListener('input', checkTemplate); checkTemplate(); }
+
+  // Coming back to the form (validation error) with a picked destination: show its suggestions again.
+  var dLat = document.querySelector('[name="dest_lat"]'), dLon = document.querySelector('[name="dest_lon"]');
+  if (dLat && dLat.value && dLon && dLon.value) loadStart(dLat.value, dLon.value, destInput.value);
 })();
 </script>
 @endsection

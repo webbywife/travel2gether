@@ -44,6 +44,16 @@ class TripBuilderTest extends TestCase
         $this->post(route('trips.store'), $this->payload())->assertRedirect(route('login'));
     }
 
+    public function test_the_builder_offers_destination_search_and_starting_suggestions(): void
+    {
+        config(['services.places.osm' => true]);
+        $this->actingAs(\App\Models\User::factory()->create())->get(route('trips.create'))
+            ->assertOk()
+            ->assertSee('data-kind="destination"', false)
+            ->assertSee('name="dest_lat"', false)
+            ->assertSee('id="startPanel"', false);
+    }
+
     public function test_it_builds_a_day_per_date_anchored_to_flights_hotel_and_areas(): void
     {
         $user = User::factory()->create();
