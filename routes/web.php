@@ -15,6 +15,7 @@ use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripDayController;
 use App\Http\Controllers\TripJoinController;
 use App\Http\Controllers\TripMemberController;
+use App\Http\Controllers\TripPickController;
 use App\Http\Controllers\TrippieController;
 use Illuminate\Support\Facades\Route;
 
@@ -78,6 +79,7 @@ Route::middleware(['auth', 'throttle:40,1'])->group(function () {
 // Public / shared trip URL. Seoul 2026 is the seeded sample.
 Route::get('/t/{trip:slug}', [TripController::class, 'show'])->name('trips.show');
 Route::get('/t/{trip:slug}/print', [TripController::class, 'print'])->name('trips.print');
+Route::get('/t/{trip:slug}/picks', [TripPickController::class, 'index'])->middleware('throttle:60,1')->name('trips.picks.index');
 
 // Collaboration (Phase 2) — all require a signed-in user.
 Route::middleware('auth')->group(function () {
@@ -91,8 +93,16 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/t/{trip:slug}/days/{day}/generate', [TripDayController::class, 'generate'])
         ->middleware('throttle:12,1')->name('trips.days.generate');
+    Route::get('/t/{trip:slug}/days/{day}/ai-status', [TripDayController::class, 'aiStatus'])
+        ->middleware('throttle:120,1')->name('trips.days.ai-status');
     Route::get('/t/{trip:slug}/days/{day}/edit', [TripDayController::class, 'edit'])->name('trips.days.edit');
     Route::patch('/t/{trip:slug}/days/{day}', [TripDayController::class, 'update'])->name('trips.days.update');
+
+    // Phase 2b — shared picks (owners/editors).
+    Route::put('/t/{trip:slug}/stops/{stop}/pick', [TripPickController::class, 'update'])
+        ->middleware('throttle:60,1')->name('trips.picks.update');
+    Route::delete('/t/{trip:slug}/stops/{stop}/pick', [TripPickController::class, 'destroy'])
+        ->middleware('throttle:60,1')->name('trips.picks.destroy');
 
     Route::post('/t/{trip:slug}/invites', [TripMemberController::class, 'storeInvite'])->name('trips.invites.store');
     Route::delete('/t/{trip:slug}/invites/{invite:token}', [TripMemberController::class, 'revokeInvite'])->name('trips.invites.revoke');

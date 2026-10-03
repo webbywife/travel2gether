@@ -210,10 +210,47 @@ class AiDayFillTest extends TestCase
 
         $this->actingAs($owner)
             ->post(route('trips.days.generate', [$trip, $day->id]))
-            ->assertRedirect()
-            ->assertSessionHas('error');
+            ->assertRedirect();
 
-        $this->assertSame($before, $day->fresh()->stops()->count());
-        $this->assertNotSame('ai', $day->fresh()->source);
+        // The background draft failed: stops untouched, the day says why, no re-draft spent.
+        $day->refresh();
+        $this->assertSame($before, $day->stops()->count());
+        $this->assertNotSame('ai', $day->source);
+        $this->assertSame('failed', $day->ai_status);
+        $this->assertNotEmpty($day->ai_error);
+        $this->assertSame(0, $trip->fresh()->regenerations_used);
+
+        $this->actingAs($owner)->getJson(route('trips.days.ai-status', [$trip, $day->id]))
+            ->assertOk()->assertJson(['status' => 'failed']);
+    }
+
+    public function test_drafting_is_queued_and_returns_straight_away(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $owner = User::factory()->create();
+        $trip = $this->ownedTrip($owner);
+        $day = $trip->days()->first();
+        $this->fakeGemini();
+
+        $this->actingAs($owner)->post(route('trips.days.generate', [$trip, $day->id]))->assertRedirect();
+        $this->actingAs($owner)->post(route('trips.days.generate', [$trip, $day->id]))->assertRedirect(); // double-click
+
+        \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\DraftDayWithAi::class, 1);
+        $this->assertSame('queued', $day->fresh()->ai_status);
+
+        $this->actingAs($owner)->get(route('trips.show', $trip))
+            ->assertOk()->assertSee('Drafting with AI…');
+        $this->actingAs($owner)->getJson(route('trips.days.ai-status', [$trip, $day->id]))
+            ->assertJson(['status' => 'queued']);
+    }
+
+    public function test_a_stranger_cannot_read_a_private_days_draft_status(): void
+    {
+        $owner = User::factory()->create();
+        $trip = $this->ownedTrip($owner);
+
+        $this->actingAs(User::factory()->create())
+            ->getJson(route('trips.days.ai-status', [$trip, $trip->days()->first()->id]))
+            ->assertNotFound();
     }
 }

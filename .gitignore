@@ -25,3 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# photo curator — local-only (contains personal location settings; repo is public)
+/tools/photo-curator/
+__pycache__/

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\TripDay;
+use App\Support\WeatherFit;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 
@@ -172,6 +173,9 @@ class GenerateDayItinerary
         - EVERY meal / sight / activity / shopping stop needs 3-4 real named options at
           different tiers ("budget", "mid", "splurge", and an "indoor-ac" or "rain-friendly"
           where useful). costs are integers in {$cur}, 0 for free.
+        - Every option has "weather": "indoor", "covered" or "outdoor" — how exposed it is
+          to rain/heat. For outdoor sights/meals, include at least one indoor or covered
+          option at a similar price so the plan can switch if the weather turns.
         - A pure transit hop or a checkout has "options": [].
         - Prefer the real places listed above; use their exact names.
 
@@ -189,9 +193,9 @@ class GenerateDayItinerary
               "description": "one line of context",
               "option_label": "Which temple",
               "options": [
-                {"name": "Real Place A", "tier": "budget", "note": "one line", "cost_min": 0, "cost_max": 5, "map_query": "Real Place A {$area}"},
-                {"name": "Real Place B", "tier": "mid", "note": "one line", "cost_min": 10, "cost_max": 15, "map_query": "Real Place B {$area}"},
-                {"name": "Real Place C", "tier": "splurge", "note": "one line", "cost_min": 40, "cost_max": 60, "map_query": "Real Place C {$area}"}
+                {"name": "Real Place A", "tier": "budget", "note": "one line", "cost_min": 0, "cost_max": 5, "weather": "outdoor", "map_query": "Real Place A {$area}"},
+                {"name": "Real Place B", "tier": "mid", "note": "one line", "cost_min": 10, "cost_max": 15, "weather": "indoor", "map_query": "Real Place B {$area}"},
+                {"name": "Real Place C", "tier": "splurge", "note": "one line", "cost_min": 40, "cost_max": 60, "weather": "covered", "map_query": "Real Place C {$area}"}
               ]
             },
             {"time": "12:00", "title": "Transit to …", "description": "…", "options": []}
@@ -223,12 +227,15 @@ class GenerateDayItinerary
             'summary' => (string) ($d['summary'] ?? ''),
             'hiccups' => array_values(array_filter(array_map('strval', (array) ($d['hiccups'] ?? [])))) ?: ['Check opening hours the morning of.'],
             'stops' => collect($d['stops'] ?? [])->map(function ($s) {
+                $context = trim(($s['title'] ?? '') . ' ' . ($s['option_label'] ?? ''));
                 $options = collect($s['options'] ?? [])->map(fn ($o) => [
                     'name' => (string) ($o['name'] ?? ''),
                     'tier' => Arr::get($o, 'tier') ? (string) $o['tier'] : null,
                     'note' => (string) ($o['note'] ?? ''),
                     'cost_min' => isset($o['cost_min']) ? max(0, (int) $o['cost_min']) : null,
                     'cost_max' => isset($o['cost_max']) ? max(0, (int) $o['cost_max']) : null,
+                    'weather_tag' => WeatherFit::normalize($o['weather'] ?? null)
+                        ?? WeatherFit::infer($o['name'] ?? '', $o['tier'] ?? null, $o['note'] ?? null, $context),
                     'map_url' => Arr::get($o, 'map_query')
                         ? 'https://www.google.com/maps/search/?api=1&query=' . urlencode($o['map_query'])
                         : null,

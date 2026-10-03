@@ -21,11 +21,14 @@ class TripController extends Controller
             'budgetLines',
             'members',
             'invites',
+            'picks.picker:id,name',
         ]);
 
         return view('trips.show', [
             'trip' => $trip,
             'role' => $trip->roleFor($request->user()),
+            'picks' => $trip->picks->keyBy('stop_id'),
+            'canPick' => $trip->canPick($request->user()),
             'aiEnabled' => filled(config('services.gemini.api_key')),
         ]);
     }

@@ -244,6 +244,15 @@
   .opt-card{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 14px 12px; cursor:pointer; transition:border-color 0.15s ease, background 0.15s ease;}
   .opt-card:hover{border-color:var(--pink-light);}
   .opt-card.pick{border-color:var(--pink); background:var(--panel-2);}
+  /* Phase 3 — weather swap prompt */
+  .wx-alert{margin:2px 0 10px; padding:10px 12px; border-radius:10px; font-size:13.5px; line-height:1.5;
+    background:rgba(113,86,168,0.08); border:1px solid rgba(113,86,168,0.25); color:var(--text);}
+  .wx-alert b{font-weight:600;}
+  .wx-alert .wx-swap{margin-top:8px; display:inline-flex; align-items:center; gap:6px; border:0; cursor:pointer;
+    background:var(--grad-soft, #8E3A73); color:#fff; font:600 12.5px/1 Inter,sans-serif; padding:8px 12px; border-radius:999px;}
+  .wx-alert .wx-delta{font-family:'JetBrains Mono',monospace; font-weight:500; opacity:0.9;}
+  .opt-card .wx-badge{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.04em; color:var(--text-dim); margin-left:6px;}
+  #pickDelta{color:var(--text-dim);}
   .opt-hint{font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--text-dim); margin:-18px 0 26px;}
   .opt-top{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
   .opt-name{font-weight:600; font-size:15px;}
@@ -542,26 +551,36 @@
           <a class="print-link" href="{{ route('trips.days.edit', [$trip, $day]) }}" style="margin-top:8px;">✏️ Edit day details</a>
         @endcan
 
-        @can('update', $trip)
-          @php $canRegen = $day->source !== 'ai' || $trip->canRegenerate(auth()->user()); @endphp
-          @if(($aiEnabled ?? false) && $canRegen)
-            <form method="POST" action="{{ route('trips.days.generate', [$trip, $day->id]) }}" class="ai-day"
-                  onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Drafting…';">
-              @csrf
-              <button type="submit" class="ai-btn"
-                      @if($day->source === 'ai') onclick="return confirm('Re-draft this day? It replaces the current stops.')"
-                      @elseif($day->source !== 'skeleton') onclick="return confirm('Draft this day with AI? It replaces the current stops.')" @endif>
-                ✨ {{ $day->source === 'ai' ? 'Re-draft' : 'Draft this day' }} with AI
-              </button>
-              <span class="ai-hint">stops, options, weather &amp; hiccups for {{ $day->area_label ?: $day->title }} on {{ $day->date->format('M j') }}</span>
-            </form>
-          @elseif($aiEnabled ?? false)
-            <div class="ai-day ai-paywall">
-              <button type="button" class="ai-btn" disabled>🔒 Re-draft with AI</button>
-              <span class="ai-hint">You've used this trip's free re-draft. <a href="{{ route('upgrade') }}">Upgrade to regenerate again →</a></span>
-            </div>
+        @if(in_array($day->ai_status, ['queued', 'running'], true))
+          <div class="ai-day ai-drafting" data-ai-status-url="{{ route('trips.days.ai-status', [$trip, $day->id]) }}">
+            <button type="button" class="ai-btn" disabled>✨ Drafting with AI…</button>
+            <span class="ai-hint">About a minute — this page updates by itself.</span>
+          </div>
+        @else
+          @if($day->ai_status === 'failed' && $day->ai_error)
+            @can('update', $trip)<div class="ai-hint" style="color:var(--pink); margin-top:8px;">⚠ {{ $day->ai_error }}</div>@endcan
           @endif
-        @endcan
+        @can('update', $trip)
+            @php $canRegen = $day->source !== 'ai' || $trip->canRegenerate(auth()->user()); @endphp
+            @if(($aiEnabled ?? false) && $canRegen)
+              <form method="POST" action="{{ route('trips.days.generate', [$trip, $day->id]) }}" class="ai-day"
+                    onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Starting…';">
+                @csrf
+                <button type="submit" class="ai-btn"
+                        @if($day->source === 'ai') onclick="return confirm('Re-draft this day? It replaces the current stops.')"
+                        @elseif($day->source !== 'skeleton') onclick="return confirm('Draft this day with AI? It replaces the current stops.')" @endif>
+                  ✨ {{ $day->source === 'ai' ? 'Re-draft' : 'Draft this day' }} with AI
+                </button>
+                <span class="ai-hint">stops, options, weather &amp; hiccups for {{ $day->area_label ?: $day->title }} on {{ $day->date->format('M j') }}</span>
+              </form>
+            @elseif($aiEnabled ?? false)
+              <div class="ai-day ai-paywall">
+                <button type="button" class="ai-btn" disabled>🔒 Re-draft with AI</button>
+                <span class="ai-hint">You've used this trip's free re-draft. <a href="{{ route('upgrade') }}">Upgrade to regenerate again →</a></span>
+              </div>
+            @endif
+          @endcan
+        @endif
 
         <div class="weather" data-forecast-date="{{ $day->forecast_date?->format('Y-m-d') }}"
              data-lat="{{ $day->lat ?? $trip->lat }}" data-lon="{{ $day->lon ?? $trip->lon }}">
@@ -600,7 +619,7 @@
 
       <div class="stops">
         @foreach($day->stops as $stop)
-        <div class="stop">
+        <div class="stop" data-time="{{ $stop->time }}">
           <div class="time">{{ $stop->time }}</div>
           <div>
             <div class="what">
@@ -613,13 +632,20 @@
 
             @if($stop->has_options && $stop->options->count())
             <div class="opt-label">{{ $stop->option_label ?? 'Options' }}</div>
-            <div class="opt-grid">
+            @php
+              $groupPick = $picks[$stop->id] ?? null;
+              $pickedId = $groupPick?->stop_option_id ?? $stop->options->firstWhere('is_default_pick', true)?->id;
+            @endphp
+            <div class="wx-alert" hidden></div>
+            <div class="opt-grid" data-stop-id="{{ $stop->id }}">
               @foreach($stop->options as $opt)
-              <div class="opt-card {{ $opt->is_default_pick ? 'pick' : '' }}" data-original="{{ $opt->is_default_pick ? 'true' : 'false' }}">
+              <div class="opt-card {{ $opt->id === $pickedId ? 'pick' : '' }}" data-option-id="{{ $opt->id }}" data-original="{{ $opt->is_default_pick ? 'true' : 'false' }}"
+                   data-cost="{{ $opt->costMidpoint() ?? '' }}" data-weather="{{ $opt->weatherFit($stop) }}" data-name="{{ $opt->name }}">
                 <div class="opt-top">
                   <span class="opt-name">{{ $opt->name }}</span>
                   @if($opt->is_sponsored)<span class="opt-tag sponsored">Sponsored</span>
-                  @elseif($opt->is_default_pick)<span class="opt-tag">Pick</span>@endif
+                  @elseif($groupPick && $opt->id === $pickedId)<span class="opt-tag">{{ $groupPick->picked_by === auth()->id() ? 'Your pick' : 'Picked by ' . ($groupPick->picker?->name ?? 'the group') }}</span>
+                  @elseif(! $groupPick && $opt->is_default_pick)<span class="opt-tag">Pick</span>@endif
                 </div>
                 <div class="opt-meta">
                   @if($opt->tier)<span>{{ $opt->tier }}</span>@endif
@@ -704,6 +730,12 @@
               @endforeach
             </div>
           @endforeach
+          <div class="cat" id="pickDeltaRow" hidden>
+            <div class="brow">
+              <div class="label">Changes from your picks &amp; weather swaps<small>vs. the original plan, updates as the group picks</small></div>
+              <div class="amount"><span class="cur">{{ $sym }}</span><input type="number" class="item" data-cat="picks" id="pickDelta" value="0" readonly tabindex="-1"></div>
+            </div>
+          </div>
           <div class="btotal-line"><span class="t-label">Total per person</span><span class="t-amount mono" id="grandTotal">{{ $sym }}0</span></div>
         </div>
 
@@ -736,6 +768,11 @@
 <script>
   window.T2G = {
     slug: @json($trip->slug),
+    partySize: @json((int) ($trip->party_size ?? 1)),
+    canPick: @json($canPick),
+    shared: @json($role !== null && ! $trip->isSample()),
+    me: @json(auth()->id()),
+    csrf: @json(csrf_token()),
     currencySymbol: @json($sym),
     sequence: @json($sequence),
     catMeta: @json(collect($catMeta)->mapWithKeys(fn ($m, $k) => [$m['slug'] => ['label' => $k, 'color' => $m['color']]])),
@@ -772,45 +809,126 @@
     panel.querySelector('.nav-next')?.addEventListener('click', () => { if (idx < T.sequence.length - 1) showDay(T.sequence[idx + 1]); });
   });
 
-  /* ===== Tap-to-pick options (per-device, per-trip) ===== */
+  /* ===== Picks =====
+     Members of a real trip share one pick per stop, stored on the server
+     (owners/editors choose, viewers watch). Everyone else — e.g. guests on
+     the public samples — keeps the old per-device picks in localStorage. */
   (function () {
-    const KEY = 't2g:' + T.slug + ':choices:v1';
-    let saved = {};
-    try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { saved = {}; }
-
     const grids = Array.from(document.querySelectorAll('.opt-grid'));
+    const byStop = Object.fromEntries(grids.map(g => [g.dataset.stopId, g]));
 
-    function selectCard(grid, card, persist) {
-      grid.querySelectorAll('.opt-card').forEach(c => {
-        c.classList.remove('pick');
-        if (c.dataset.original !== 'true') c.querySelector('.opt-tag')?.remove();
-      });
-      card.classList.add('pick');
-      if (!card.querySelector('.opt-tag')) {
-        const tag = document.createElement('span');
+    function tagFor(card, label) {
+      let tag = card.querySelector('.opt-tag:not(.sponsored)');
+      if (!tag && !card.querySelector('.opt-tag.sponsored')) {
+        tag = document.createElement('span');
         tag.className = 'opt-tag';
-        tag.textContent = card.dataset.original === 'true' ? 'Pick' : 'Your pick';
         card.querySelector('.opt-top').appendChild(tag);
-      } else {
-        card.querySelector('.opt-tag').textContent = card.dataset.original === 'true' ? 'Pick' : 'Your pick';
       }
-      if (persist) {
-        saved[grids.indexOf(grid)] = Array.from(grid.children).indexOf(card);
-        try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
-      }
+      if (tag) tag.textContent = label;
     }
 
-    grids.forEach((grid, gi) => {
-      Array.from(grid.children).forEach(card => {
-        card.addEventListener('click', () => selectCard(grid, card, true));
+    function show(grid, optionId, label) {
+      grid.querySelectorAll('.opt-card').forEach(c => {
+        c.classList.remove('pick');
+        const t = c.querySelector('.opt-tag:not(.sponsored)');
+        if (t) t.remove();
       });
-      if (saved[gi] !== undefined && grid.children[saved[gi]]) selectCard(grid, grid.children[saved[gi]], false);
+      let card = optionId ? grid.querySelector('.opt-card[data-option-id="' + optionId + '"]') : null;
+      if (!card) card = grid.querySelector('.opt-card[data-original="true"]');
+      if (!card) return;
+      card.classList.add('pick');
+      tagFor(card, label || 'Pick');
+    }
+
+    function labelFor(p) {
+      if (!p || !p.optionId) return 'Pick';
+      return p.byId === T.me ? 'Your pick' : 'Picked by ' + (p.by || 'the group');
+    }
+
+    if (!T.shared) {
+      // Per-device mode (public samples, guests).
+      const KEY = 't2g:' + T.slug + ':choices:v1';
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { saved = {}; }
+      grids.forEach((grid, gi) => {
+        Array.from(grid.children).forEach(card => card.addEventListener('click', () => {
+          show(grid, card.dataset.optionId, card.dataset.original === 'true' ? 'Pick' : 'Your pick');
+          saved[gi] = Array.from(grid.children).indexOf(card);
+          try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+        }));
+        const c = saved[gi] !== undefined ? grid.children[saved[gi]] : null;
+        if (c) show(grid, c.dataset.optionId, c.dataset.original === 'true' ? 'Pick' : 'Your pick');
+      });
+      document.getElementById('resetChoices')?.addEventListener('click', () => {
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        location.reload();
+      });
+      return;
+    }
+
+    // Shared mode.
+    document.getElementById('resetChoices')?.remove();
+    let current = {};
+
+    function apply(picks) {
+      current = picks || {};
+      grids.forEach(grid => show(grid, (current[grid.dataset.stopId] || {}).optionId, labelFor(current[grid.dataset.stopId])));
+    }
+
+    if (T.canPick) {
+      grids.forEach(grid => {
+        grid.querySelectorAll('.opt-card').forEach(card => card.addEventListener('click', async (e) => {
+          if (e.target.closest('a, button')) return;
+          const stopId = grid.dataset.stopId;
+          const prev = current[stopId];
+          const mine = { optionId: Number(card.dataset.optionId), byId: T.me, by: null };
+          current[stopId] = mine;
+          show(grid, mine.optionId, 'Your pick');
+          try {
+            const res = await fetch('/t/' + encodeURIComponent(T.slug) + '/stops/' + stopId + '/pick', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': T.csrf },
+              body: JSON.stringify({ option_id: mine.optionId }),
+            });
+            if (!res.ok) throw new Error(res.status);
+            current[stopId] = await res.json();
+            document.dispatchEvent(new CustomEvent('trip:picks', { detail: current }));
+          } catch (err) {
+            if (prev) current[stopId] = prev; else delete current[stopId];
+            show(grid, (current[stopId] || {}).optionId, labelFor(current[stopId]));
+          }
+        }));
+      });
+    } else {
+      grids.forEach(g => g.querySelectorAll('.opt-card').forEach(c => { c.style.cursor = 'default'; }));
+    }
+
+    // Live: Reverb pushes (when on) + a light poll so it works without it.
+    document.addEventListener('trip:activity', e => {
+      const d = e.detail || {};
+      if (d.type !== 'pick' || !d.payload) return;
+      const p = d.payload;
+      if (p.optionId) current[p.stopId] = p; else delete current[p.stopId];
+      const g = byStop[p.stopId];
+      if (g) show(g, (current[p.stopId] || {}).optionId, labelFor(current[p.stopId]));
+      document.dispatchEvent(new CustomEvent('trip:picks', { detail: current }));
     });
 
-    document.getElementById('resetChoices')?.addEventListener('click', () => {
-      try { localStorage.removeItem(KEY); } catch (e) {}
-      location.reload();
-    });
+    async function poll() {
+      if (document.hidden) return;
+      try {
+        const res = await fetch('/t/' + encodeURIComponent(T.slug) + '/picks', { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (JSON.stringify(data.picks) !== JSON.stringify(current)) {
+          apply(data.picks);
+          document.dispatchEvent(new CustomEvent('trip:picks', { detail: current }));
+        }
+      } catch (e) {}
+    }
+    poll();
+    setInterval(poll, 15000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
   })();
 
   /* ===== Thumbs up/down on places (signed-in users) ===== */
@@ -959,6 +1077,164 @@
         ? 'Days inside the ~16-day window show a live forecast for that day\'s actual area.'
         : 'These dates are outside the live ~16-day window — showing the planned notes instead.';
     });
+  })();
+
+  /* ===== Phase 3 — weather swaps + cost delta =====
+     Checks the hourly forecast at each stop's time; if the current pick is
+     outdoors and rain/storms/extreme heat are likely, offers the closest-priced
+     indoor/covered option in one tap and shows what it does to the budget. */
+  (function () {
+    const grids = Array.from(document.querySelectorAll('.opt-grid'));
+    if (!grids.length) return;
+    const sym = T.currencySymbol || '';
+    const money = n => (n > 0 ? '+' : n < 0 ? '−' : '±') + sym + Math.abs(Math.round(n)).toLocaleString();
+    const cost = c => (c && c.dataset.cost !== '' && c.dataset.cost != null) ? Number(c.dataset.cost) : null;
+    const original = g => g.querySelector('.opt-card[data-original="true"]') || g.querySelector('.opt-card');
+    const picked = g => g.querySelector('.opt-card.pick') || original(g);
+    const readOnly = T.shared && !T.canPick;
+
+    // Small "indoor / covered" badge on each sheltered option.
+    grids.forEach(g => g.querySelectorAll('.opt-card').forEach(c => {
+      const w = c.dataset.weather;
+      if (w !== 'indoor' && w !== 'covered') return;
+      const b = document.createElement('span');
+      b.className = 'wx-badge';
+      b.textContent = w === 'indoor' ? '☂ indoor' : '⛱ covered';
+      (c.querySelector('.opt-meta') || c.querySelector('.opt-top')).appendChild(b);
+    }));
+
+    function updateBudget() {
+      let delta = 0;
+      grids.forEach(g => {
+        const p = cost(picked(g)), o = cost(original(g));
+        if (p !== null && o !== null) delta += p - o;
+      });
+      const inp = document.getElementById('pickDelta');
+      if (!inp) return;
+      inp.value = Math.round(delta);
+      document.getElementById('pickDeltaRow').hidden = Math.round(delta) === 0;
+      inp.dispatchEvent(new Event('input'));
+    }
+
+    // Hourly forecast per day (Open-Meteo, keyless), keyed "YYYY-MM-DDTHH:00".
+    const days = Array.from(document.querySelectorAll('.day-panel')).map(panel => {
+      const w = panel.querySelector('.weather[data-forecast-date]');
+      if (!w || !w.dataset.forecastDate || !w.dataset.lat || !w.dataset.lon) return null;
+      return { panel, date: w.dataset.forecastDate, lat: +w.dataset.lat, lon: +w.dataset.lon };
+    }).filter(Boolean);
+    const hourly = {};
+
+    function risk(h) {
+      if (!h) return null;
+      if (h.code >= 95) return { icon: '⛈', text: 'thunderstorms likely' };
+      if ((h.rain != null && h.rain >= 50) || (h.code >= 61 && h.code <= 82)) {
+        return { icon: '🌧', text: (h.rain != null ? '~' + Math.round(h.rain) + '% chance of rain' : 'rain likely') };
+      }
+      if (h.temp != null && h.temp >= 35) return { icon: '🥵', text: 'feels like ' + Math.round(h.temp) + '°C' };
+      return null;
+    }
+
+    function bestAlternative(grid, current) {
+      const cands = Array.from(grid.querySelectorAll('.opt-card'))
+        .filter(c => c !== current && (c.dataset.weather === 'indoor' || c.dataset.weather === 'covered'));
+      if (!cands.length) return null;
+      const base = cost(current);
+      return cands.sort((a, b) => {
+        const rank = c => c.dataset.weather === 'indoor' ? 0 : 1;
+        const gap = c => (base === null || cost(c) === null) ? 1e9 : Math.abs(cost(c) - base);
+        return rank(a) - rank(b) || gap(a) - gap(b);
+      })[0];
+    }
+
+    function evaluate() {
+      days.forEach(d => {
+        d.panel.querySelectorAll('.stop').forEach(stop => {
+          const grid = stop.querySelector('.opt-grid');
+          const box = stop.querySelector('.wx-alert');
+          if (!grid || !box) return;
+          const m = /^(\d{1,2}):/.exec(stop.dataset.time || '');
+          const r = m ? risk(hourly[d.date + 'T' + m[1].padStart(2, '0') + ':00']) : null;
+          const cur = picked(grid);
+          if (!r || !cur || cur.dataset.weather !== 'outdoor') { box.hidden = true; box.textContent = ''; return; }
+
+          box.textContent = '';
+          const line = document.createElement('div');
+          line.append(r.icon + ' At ' + m[1].padStart(2, '0') + ':00 — ' + r.text + '. ');
+          const nm = document.createElement('b'); nm.textContent = cur.dataset.name || 'This pick';
+          line.append(nm, ' is outdoors.');
+          box.appendChild(line);
+
+          const alt = bestAlternative(grid, cur);
+          if (!alt) {
+            const p = document.createElement('div');
+            p.textContent = 'No indoor option for this stop — pack an umbrella or keep a plan B.';
+            box.appendChild(p);
+          } else {
+            const delta = (cost(alt) !== null && cost(cur) !== null) ? cost(alt) - cost(cur) : null;
+            const deltaTxt = delta === null ? '' : money(delta) + ' per person';
+            if (readOnly) {
+              const p = document.createElement('div');
+              p.textContent = 'Indoor option: ' + alt.dataset.name + (deltaTxt ? ' (' + deltaTxt + ')' : '') + ' — ask an editor to swap.';
+              box.appendChild(p);
+            } else {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'wx-swap';
+              btn.append('Swap to ' + alt.dataset.name);
+              if (deltaTxt) { const s2 = document.createElement('span'); s2.className = 'wx-delta'; s2.textContent = '· ' + deltaTxt; btn.append(s2); }
+              btn.addEventListener('click', () => { alt.click(); setTimeout(refresh, 0); });
+              box.appendChild(btn);
+            }
+          }
+          box.hidden = false;
+        });
+      });
+    }
+
+    function refresh() { evaluate(); updateBudget(); }
+
+    grids.forEach(g => g.addEventListener('click', () => setTimeout(refresh, 0)));
+    document.addEventListener('trip:picks', refresh);
+    updateBudget();
+
+    const groups = {};
+    days.forEach(d => {
+      const key = d.lat.toFixed(2) + ',' + d.lon.toFixed(2);
+      (groups[key] = groups[key] || { lat: d.lat, lon: d.lon, dates: [] }).dates.push(d.date);
+    });
+    Promise.all(Object.values(groups).map(g => {
+      const dates = g.dates.sort();
+      const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + g.lat + '&longitude=' + g.lon +
+        '&hourly=precipitation_probability,apparent_temperature,weathercode&timezone=auto' +
+        '&start_date=' + dates[0] + '&end_date=' + dates[dates.length - 1];
+      return fetch(url).then(r => r.ok ? r.json() : null).then(data => {
+        const h = data && data.hourly;
+        if (!h || !Array.isArray(h.time)) return;
+        h.time.forEach((t, i) => {
+          hourly[t] = { rain: h.precipitation_probability[i], temp: h.apparent_temperature[i], code: h.weathercode[i] };
+        });
+      }).catch(() => {});
+    })).then(refresh);
+  })();
+
+  /* ===== Background AI drafts: poll until done, then reload ===== */
+  (function () {
+    const boxes = Array.from(document.querySelectorAll('.ai-drafting[data-ai-status-url]'));
+    if (!boxes.length) return;
+    let tries = 0;
+    const tick = async () => {
+      tries++;
+      for (const box of boxes) {
+        try {
+          const res = await fetch(box.dataset.aiStatusUrl, { headers: { 'Accept': 'application/json' } });
+          if (!res.ok) continue;
+          const d = await res.json();
+          if (d.status === 'done' || d.status === 'failed') { location.reload(); return; }
+        } catch (e) {}
+      }
+      if (tries < 90) setTimeout(tick, tries < 6 ? 4000 : 8000);
+    };
+    setTimeout(tick, 4000);
   })();
 
   /* ===== Outfit photo lightbox ===== */

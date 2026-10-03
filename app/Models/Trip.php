@@ -58,6 +58,17 @@ class Trip extends Model
         return $this->hasManyThrough(Stop::class, TripDay::class);
     }
 
+    public function picks(): HasMany
+    {
+        return $this->hasMany(TripPick::class);
+    }
+
+    /** Owners/editors of a real trip choose for the group; samples stay per-device. */
+    public function canPick(?User $user): bool
+    {
+        return ! $this->isSample() && $this->canEdit($user);
+    }
+
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

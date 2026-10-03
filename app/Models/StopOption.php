@@ -28,6 +28,15 @@ class StopOption extends Model
         return $this->belongsTo(Place::class);
     }
 
+    /** Phase 3: indoor / covered / outdoor — explicit tag, else a keyword guess. */
+    public function weatherFit(?Stop $stop = null): string
+    {
+        $stop ??= $this->relationLoaded('stop') ? $this->stop : null;
+
+        return \App\Support\WeatherFit::normalize($this->weather_tag)
+            ?? \App\Support\WeatherFit::infer($this->name, $this->tier, $this->note, trim(($stop?->title ?? '') . ' ' . ($stop?->option_label ?? '')));
+    }
+
     /** Midpoint of the cost range, used to seed the budget worksheet. */
     public function costMidpoint(): ?int
     {

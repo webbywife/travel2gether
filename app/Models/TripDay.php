@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class TripDay extends Model
 {
     protected $fillable = [
+        'ai_status', 'ai_error',
         'trip_id', 'day_number', 'date', 'title', 'title_secondary', 'summary',
         'weather_tag', 'forecast_date', 'temp_high', 'temp_low', 'weather_note',
         'outfit_chips', 'outfit_photos', 'area_label', 'map_embed_url',
