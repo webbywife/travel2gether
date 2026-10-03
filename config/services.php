@@ -46,6 +46,12 @@ return [
         'maps_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
+    // Claude (Anthropic) — powers AI day drafts, Trippie and the day-details helper.
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
+    ],
+
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-3.6-flash'),

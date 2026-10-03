@@ -60,15 +60,16 @@ class TrippieAssistant
     private ?string $key;
     private string $model;
 
-    public function __construct()
+    public function __construct(private ?ClaudeClient $claude = null)
     {
+        $this->claude ??= app(ClaudeClient::class);
         $this->key = config('services.gemini.api_key');
         $this->model = config('services.gemini.model', 'gemini-3.6-flash');
     }
 
     public function enabled(): bool
     {
-        return filled($this->key);
+        return $this->claude->enabled() || filled($this->key);
     }
 
     /**
@@ -93,6 +94,10 @@ class TrippieAssistant
                 ->filter()
                 ->map(fn ($v, $k) => "- {$k}: " . (is_array($v) ? implode(', ', $v) : $v))
                 ->implode("\n");
+        }
+
+        if ($this->claude->enabled()) {
+            return $this->replyWithClaude($system, $history, $message);
         }
 
         $response = Http::timeout(30)->post(
@@ -130,6 +135,41 @@ class TrippieAssistant
         }
 
         return $this->splitEmotion($text);
+    }
+
+    /**
+     * @param  array<int, array{role: string, text: string}>  $history
+     * @return array{reply: string, emotion: string}
+     */
+    private function replyWithClaude(string $system, array $history, string $message): array
+    {
+        $messages = [];
+        foreach (array_slice($history, -10) as $turn) {
+            $text = trim((string) ($turn['text'] ?? ''));
+            if ($text === '') {
+                continue;
+            }
+            $role = ($turn['role'] ?? 'user') === 'model' ? 'assistant' : 'user';
+            if (! $messages && $role === 'assistant') {
+                continue; // the conversation must open with the user
+            }
+            $messages[] = ['role' => $role, 'content' => $text];
+        }
+        $messages[] = ['role' => 'user', 'content' => $message];
+
+        try {
+            $text = $this->claude->chat($system, $messages, effort: 'low', maxTokens: 2000);
+        } catch (\RuntimeException $e) {
+            return match ($e->getMessage()) {
+                'quota' => ['reply' => "You're quick! 😄 Give me a few seconds and ask again.", 'emotion' => 'worried'],
+                'refusal' => ['reply' => "That one's outside what I can help with — ask me anything about the trip! 🧭", 'emotion' => 'confused'],
+                default => ['reply' => "Hmm, I couldn't reach my travel notes just now — try again in a moment? 🧭", 'emotion' => 'confused'],
+            };
+        }
+
+        return $text === ''
+            ? ['reply' => "Hmm, I blanked for a sec — ask me again? 🧭", 'emotion' => 'confused']
+            : $this->splitEmotion($text);
     }
 
     private function isQuota(\Illuminate\Http\Client\Response $r): bool

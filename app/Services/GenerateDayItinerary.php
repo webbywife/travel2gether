@@ -8,7 +8,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Drafts one day of an itinerary with Gemini: stops with 3+ options each,
+ * Drafts one day of an itinerary with Claude (Gemini as a fallback): stops with 3+ options each,
  * a weather note grounded in real historical climate data for the day's
  * actual area + date, outfit chips, a rationale, and documented hiccups.
  * Also grounded with real POIs from Places search when a maps key is
@@ -16,12 +16,60 @@ use Illuminate\Support\Facades\Http;
  */
 class GenerateDayItinerary
 {
+    private const WEATHER = ['type' => 'string', 'enum' => ['indoor', 'covered', 'outdoor']];
+
+    /** Shape of one drafted day — mirrors what normalize() reads. */
+    private const DAY_SCHEMA = [
+        'type' => 'object',
+        'additionalProperties' => false,
+        'required' => ['weather_note', 'weather_tag', 'outfit_chips', 'summary', 'hiccups', 'stops'],
+        'properties' => [
+            'weather_note' => ['type' => 'string'],
+            'weather_tag' => self::WEATHER,
+            'outfit_chips' => ['type' => 'array', 'items' => ['type' => 'string']],
+            'summary' => ['type' => 'string'],
+            'hiccups' => ['type' => 'array', 'items' => ['type' => 'string']],
+            'stops' => [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object',
+                    'additionalProperties' => false,
+                    'required' => ['time', 'title', 'description', 'option_label', 'options'],
+                    'properties' => [
+                        'time' => ['type' => 'string'],
+                        'title' => ['type' => 'string'],
+                        'description' => ['type' => 'string'],
+                        'option_label' => ['type' => 'string'],
+                        'options' => [
+                            'type' => 'array',
+                            'items' => [
+                                'type' => 'object',
+                                'additionalProperties' => false,
+                                'required' => ['name', 'tier', 'note', 'cost_min', 'cost_max', 'weather', 'map_query'],
+                                'properties' => [
+                                    'name' => ['type' => 'string'],
+                                    'tier' => ['type' => 'string'],
+                                    'note' => ['type' => 'string'],
+                                    'cost_min' => ['type' => 'integer'],
+                                    'cost_max' => ['type' => 'integer'],
+                                    'weather' => self::WEATHER,
+                                    'map_query' => ['type' => 'string'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ];
+
     private ?string $key;
     private string $model;
 
     public function __construct(
         private PlacesService $places,
         private WeatherClimateService $weather,
+        private ClaudeClient $claude,
     ) {
         $this->key = config('services.gemini.api_key');
         $this->model = config('services.gemini.model', 'gemini-3.6-flash');
@@ -29,7 +77,7 @@ class GenerateDayItinerary
 
     public function enabled(): bool
     {
-        return filled($this->key);
+        return $this->claude->enabled() || filled($this->key);
     }
 
     /**
@@ -54,8 +102,24 @@ class GenerateDayItinerary
 
         $prompt = $this->prompt($trip, $day, $area, $prefs, $grounding, $climate);
 
-        // The model occasionally returns a truncated / degenerate blob, or a 429 under
-        // load — retry a few times with a short backoff.
+        if ($this->claude->enabled()) {
+            // Structured outputs: the reply is guaranteed to match DAY_SCHEMA.
+            $data = $this->claude->json(
+                system: 'You are the itinerary planner for Travel2gether, a group-trip planning app. '
+                    . 'Plan realistic, specific days using real, named places. Follow the rules in the request exactly.',
+                user: $prompt,
+                schema: self::DAY_SCHEMA,
+                effort: 'medium',
+            );
+            if (empty($data['stops'])) {
+                throw new \RuntimeException('The AI returned an empty draft.');
+            }
+
+            return $this->normalize($data, $climate);
+        }
+
+        // Gemini fallback. The model occasionally returns a truncated / degenerate
+        // blob, or a 429 under load — retry a few times with a short backoff.
         $data = null;
         for ($attempt = 0; $attempt < 3 && $data === null; $attempt++) {
             if ($attempt > 0) {

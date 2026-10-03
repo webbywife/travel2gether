@@ -98,6 +98,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:12,1')->name('trips.days.generate');
     Route::get('/t/{trip:slug}/days/{day}/ai-status', [TripDayController::class, 'aiStatus'])
         ->middleware('throttle:120,1')->name('trips.days.ai-status');
+    Route::post('/t/{trip:slug}/days/{day}/suggest', [TripDayController::class, 'suggest'])
+        ->middleware('throttle:10,1')->name('trips.days.suggest');
     Route::get('/t/{trip:slug}/days/{day}/edit', [TripDayController::class, 'edit'])->name('trips.days.edit');
     Route::patch('/t/{trip:slug}/days/{day}', [TripDayController::class, 'update'])->name('trips.days.update');
 

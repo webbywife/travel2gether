@@ -7,6 +7,7 @@ use App\Models\Trip;
 use App\Models\TripDay;
 use App\Services\GenerateDayItinerary;
 use App\Jobs\DraftDayWithAi;
+use App\Services\DayDetailsAssistant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,11 @@ class TripDayController extends Controller
         $this->authorize('update', $trip);
         abort_unless($day->trip_id === $trip->id, 404);
 
-        return view('trips.days.edit', ['trip' => $trip, 'day' => $day]);
+        return view('trips.days.edit', [
+            'trip' => $trip,
+            'day' => $day,
+            'aiHelper' => app(DayDetailsAssistant::class)->enabled(),
+        ]);
     }
 
     public function update(UpdateTripDayRequest $request, Trip $trip, TripDay $day): RedirectResponse
@@ -61,6 +66,29 @@ class TripDayController extends Controller
 
         return back()->with('status', "Drafting {$day->title} with AI — this takes about a minute. The page will update by itself.")
             ->withFragment((string) $day->day_number);
+    }
+
+    /** "✨ Help me with this day" — AI suggestions for the Edit day form (nothing is saved here). */
+    public function suggest(Request $request, Trip $trip, TripDay $day, DayDetailsAssistant $ai): JsonResponse
+    {
+        $this->authorize('update', $trip);
+        abort_unless($day->trip_id === $trip->id, 404);
+        abort_unless($ai->enabled(), 503, 'The AI helper is not configured.');
+
+        $data = $request->validate([
+            'wish' => ['nullable', 'string', 'max:200'],
+            'avoid' => ['nullable', 'array', 'max:6'],
+            'avoid.*' => ['string', 'max:120'],
+        ]);
+
+        try {
+            return response()->json($ai->suggest($day, $data['wish'] ?? null, $data['avoid'] ?? []));
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => match ($e->getMessage()) {
+                'quota' => 'The AI is busy — try again in a few seconds.',
+                default => 'The AI couldn\'t come up with suggestions just now — try again in a moment.',
+            }], 503);
+        }
     }
 
     /** Polled by the itinerary page while a day is being drafted. */
