@@ -190,7 +190,7 @@
 
   </div>
 
-  <p class="foot-note">Made with Travel2gether · travel2gether.webprvw.xyz</p>
+  <p class="foot-note">Made with Travel2gether · travel2gether.net</p>
 
 </body>
 </html>

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ploi deploy script for travel2gether.webprvw.xyz
+# Ploi deploy script for travel2gether.net
 set -e
 
 cd {SITE_ROOT}

@@ -32,7 +32,7 @@ class PlacesService
     ];
 
     /** The free OSM services ask clients to identify themselves. */
-    private const USER_AGENT = 'Travel2gether/1.0 (+https://travel2gether.webprvw.xyz)';
+    private const USER_AGENT = 'Travel2gether/1.0 (+https://travel2gether.net)';
 
     private ?string $key;
 
