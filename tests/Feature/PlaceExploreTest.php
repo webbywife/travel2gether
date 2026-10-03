@@ -76,6 +76,31 @@ class PlaceExploreTest extends TestCase
         $this->assertSame('GMP', $e['airports'][0]['provider_id']);
     }
 
+    public function test_a_half_failed_lookup_is_flagged_and_only_cached_briefly(): void
+    {
+        $photonSlow = true;
+        Http::fake(function ($request) use (&$photonSlow) {
+            if ($photonSlow && str_contains($request->url(), 'q=hotel')) {
+                return Http::response('slow', 504);
+            }
+
+            return Http::response(['features' => [
+                $this->feature('Bryant Park', 40.7536, -73.9832, 'leisure', 'park'),
+                $this->feature('Hotel Seville NoMad', 40.7451, -73.9874, 'tourism', 'hotel'),
+            ]]);
+        });
+
+        $e = app(PlacesService::class)->explore(40.7549, -73.9840);
+        $this->assertTrue($e['partial']);
+        $this->assertContains('Bryant Park', array_column($e['landmarks'], 'name'));
+
+        $photonSlow = false;
+        $this->travel(11)->minutes(); // the gap isn't remembered for a week
+        $e = app(PlacesService::class)->explore(40.7549, -73.9840);
+        $this->assertArrayNotHasKey('partial', $e);
+        $this->assertContains('Hotel Seville NoMad', array_column($e['hotels'], 'name'));
+    }
+
     public function test_explore_needs_a_signed_in_user_and_valid_coordinates(): void
     {
         $this->getJson('/places/explore?lat=35.69&lon=139.70')->assertUnauthorized();

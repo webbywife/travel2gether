@@ -308,64 +308,76 @@ class PlacesService
         if (! config('services.places.osm', true)) {
             return null;
         }
-        $key = 'places:osm:explore4:' . round($lat, 3) . ',' . round($lon, 3);
+        $key = 'places:osm:explore5:' . round($lat, 3) . ',' . round($lon, 3);
 
-        $result = Cache::remember($key, now()->addDays(7), function () use ($lat, $lon) {
-            $jobs = [];
-            foreach (self::EXPLORE as $group => [$words, $tags, , , $zoom]) {
-                foreach ($words as $w) {
-                    $qs = http_build_query(['q' => $w, 'limit' => 25, 'lang' => 'en', 'lat' => $lat, 'lon' => $lon,
-                        'location_bias_scale' => 0.1, 'zoom' => $zoom]);
-                    foreach ($tags as $t) {
-                        $qs .= '&osm_tag=' . rawurlencode($t);
-                    }
-                    $jobs[] = [$group, self::PHOTON_URL . '?' . $qs];
-                }
+        $result = Cache::get($key);
+        if ($result === null) {
+            $result = $this->exploreFromPhoton($lat, $lon);
+            if ($result !== null) {
+                // a lookup where some queries failed is kept briefly, so the gap isn't remembered for a week
+                Cache::put($key, $result, empty($result['partial']) ? now()->addDays(7) : now()->addMinutes(10));
             }
-
-            $responses = rescue(fn () => Http::pool(fn ($pool) => array_map(
-                fn ($j) => $pool->withHeaders(['User-Agent' => self::USER_AGENT])->timeout(8)->get($j[1]), $jobs)), [], false);
-
-            $out = ['hotels' => [], 'landmarks' => []];
-            $ok = 0;
-            foreach ($jobs as $i => [$group]) {
-                $res = $responses[$i] ?? null;
-                if (! $res instanceof \Illuminate\Http\Client\Response || ! $res->successful()) {
-                    continue;
-                }
-                $ok++;
-                foreach ($res->json('features', []) as $f) {
-                    $p = $this->normalizePhoton($f);
-                    if ($p['name'] === '' || $p['lat'] === null) {
-                        continue;
-                    }
-                    $p['km'] = round(self::km($lat, $lon, (float) $p['lat'], (float) $p['lon']), 1);
-                    $out[$group][] = $p;
-                }
-            }
-            if ($ok === 0) {
-                return null;
-            }
-
-            foreach (self::EXPLORE as $group => [, , $maxKm, $keep, ]) {
-                $out[$group] = collect($out[$group])
-                    ->filter(fn ($p) => $p['km'] <= $maxKm)
-                    // generic names ("Airport", "Park") and heliports aren't useful suggestions
-                    ->reject(fn ($p) => str_word_count($p['name']) < 2 && ! preg_match('/\d/', $p['name']))
-                    ->reject(fn ($p) => $group === 'airports' && stripos($p['name'], 'heliport') !== false)
-                    ->unique(fn ($p) => mb_strtolower($p['name']))
-                    ->sortBy('km')->take($keep)->values()->all();
-            }
-
-            return $out;
-        });
+        }
 
         if ($result === null) {
-            Cache::forget($key);
             $result = ['hotels' => [], 'landmarks' => [], 'partial' => true]; // airports still work offline
         }
 
         return ['airports' => self::nearestAirports($lat, $lon)] + $result;
+    }
+
+    /** Hotels + landmarks around a point from parallel Photon queries; null when Photon is unreachable. */
+    private function exploreFromPhoton(float $lat, float $lon): ?array
+    {
+        $jobs = [];
+        foreach (self::EXPLORE as $group => [$words, $tags, , , $zoom]) {
+            foreach ($words as $w) {
+                $qs = http_build_query(['q' => $w, 'limit' => 25, 'lang' => 'en', 'lat' => $lat, 'lon' => $lon,
+                    'location_bias_scale' => 0.1, 'zoom' => $zoom]);
+                foreach ($tags as $t) {
+                    $qs .= '&osm_tag=' . rawurlencode($t);
+                }
+                $jobs[] = [$group, self::PHOTON_URL . '?' . $qs];
+            }
+        }
+
+        $responses = rescue(fn () => Http::pool(fn ($pool) => array_map(
+            fn ($j) => $pool->withHeaders(['User-Agent' => self::USER_AGENT])->timeout(8)->get($j[1]), $jobs)), [], false);
+
+        $out = ['hotels' => [], 'landmarks' => []];
+        $ok = 0;
+        $failed = false;
+        foreach ($jobs as $i => [$group]) {
+            $res = $responses[$i] ?? null;
+            if (! $res instanceof \Illuminate\Http\Client\Response || ! $res->successful()) {
+                $failed = true;
+                continue;
+            }
+            $ok++;
+            foreach ($res->json('features', []) as $f) {
+                $p = $this->normalizePhoton($f);
+                if ($p['name'] === '' || $p['lat'] === null) {
+                    continue;
+                }
+                $p['km'] = round(self::km($lat, $lon, (float) $p['lat'], (float) $p['lon']), 1);
+                $out[$group][] = $p;
+            }
+        }
+        if ($ok === 0) {
+            return null;
+        }
+
+        foreach (self::EXPLORE as $group => [, , $maxKm, $keep, ]) {
+            $out[$group] = collect($out[$group])
+                ->filter(fn ($p) => $p['km'] <= $maxKm)
+                // generic names ("Airport", "Park") and heliports aren't useful suggestions
+                ->reject(fn ($p) => str_word_count($p['name']) < 2 && ! preg_match('/\d/', $p['name']))
+                ->reject(fn ($p) => $group === 'airports' && stripos($p['name'], 'heliport') !== false)
+                ->unique(fn ($p) => mb_strtolower($p['name']))
+                ->sortBy('km')->take($keep)->values()->all();
+        }
+
+        return $failed ? $out + ['partial' => true] : $out;
     }
 
     /**

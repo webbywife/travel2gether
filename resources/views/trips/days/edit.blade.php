@@ -339,7 +339,9 @@
           var ul = document.getElementById(id);
           if (!ul.children.length) { var e = document.createElement('li'); e.className = 'km'; e.textContent = 'None found nearby'; ul.appendChild(e); }
         });
-        note.textContent = d.partial ? 'Hotels and landmarks are temporarily unavailable — airports are shown.' : 'From OpenStreetMap and OurAirports · distances are straight-line.';
+        note.textContent = !d.partial ? 'From OpenStreetMap and OurAirports · distances are straight-line.'
+            : ((d.hotels || []).length || (d.landmarks || []).length) ? 'Some suggestions didn\'t load — reopen this day in a few minutes for more.'
+            : 'Hotels and landmarks are temporarily unavailable — airports are shown.';
       })
       .catch(function () { note.textContent = 'Nearby places are unavailable right now.'; });
   };
