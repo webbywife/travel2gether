@@ -233,7 +233,7 @@
       <a class="btn btn-ghost btn-lg" href="{{ route('trips.show', $sampleTrip) }}">See a sample itinerary</a>
     @endif
   </div>
-  <p class="trust reveal d3">No card required &nbsp;·&nbsp; <b>Your first full AI itinerary is on the house</b></p>
+  <p class="trust reveal d3">No card required &nbsp;·&nbsp; <b>Free while in beta — up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips</b></p>
   </div>
   <figure class="hero-photo reveal d1">
     <picture>

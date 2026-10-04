@@ -90,6 +90,10 @@ Route::middleware(['auth', 'throttle:40,1'])->group(function () {
     Route::get('/places/{placeId}', [PlacesController::class, 'show'])->name('places.show');
 });
 
+// Short, typeable link for TikTok videos (captions and comments there aren't clickable).
+// Only used on TikTok, so visits through it count as TikTok in the launch funnel.
+Route::redirect('/tokyo', '/t/tokyo-2026?ref=tiktok', 302);
+
 // Public / shared trip URL. Seoul 2026 is the seeded sample.
 Route::get('/t/{trip:slug}', [TripController::class, 'show'])->name('trips.show');
 Route::get('/t/{trip:slug}/print', [TripController::class, 'print'])->name('trips.print');

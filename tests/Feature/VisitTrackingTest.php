@@ -68,4 +68,9 @@ class VisitTrackingTest extends TestCase
 
         $this->assertDatabaseHas('visit_events', ['event' => 'signup', 'source' => 'ig']);
     }
+
+    public function test_the_short_tiktok_link_opens_the_tokyo_sample_tagged_as_tiktok(): void
+    {
+        $this->get('/tokyo')->assertRedirect('/t/tokyo-2026?ref=tiktok');
+    }
 }
