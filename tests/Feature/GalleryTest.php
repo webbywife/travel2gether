@@ -123,4 +123,12 @@ class GalleryTest extends TestCase
 
         $this->get(route('gallery.show', 'kyoto'))->assertOk()->assertDontSee('35.0', false);
     }
+
+    public function test_country_codes_and_names_count_as_one_country(): void
+    {
+        $this->assertSame('Japan', \App\Support\Gallery::countryName('JP'));
+        $this->assertSame('United States', \App\Support\Gallery::countryName('USA'));
+        $this->assertSame('United States', \App\Support\Gallery::countryName('US'));
+        $this->assertSame('Japan', \App\Support\Gallery::countryName('Japan'));
+    }
 }

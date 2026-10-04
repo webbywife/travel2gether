@@ -32,6 +32,21 @@ class Gallery
         return once(fn () => self::load());
     }
 
+    /** Photo metadata mixes "JP", "Japan", "US", "USA"… — one name per country so the count and labels agree. */
+    private const COUNTRY_ALIASES = [
+        'JP' => 'Japan', 'US' => 'United States', 'USA' => 'United States', 'KR' => 'South Korea', 'Korea' => 'South Korea',
+        'TW' => 'Taiwan', 'AU' => 'Australia', 'HK' => 'Hong Kong', 'PH' => 'Philippines', 'FR' => 'France', 'IT' => 'Italy',
+        'TH' => 'Thailand', 'SG' => 'Singapore', 'ES' => 'Spain', 'BE' => 'Belgium', 'NL' => 'Netherlands', 'ID' => 'Indonesia',
+        'UK' => 'United Kingdom', 'GB' => 'United Kingdom', 'VN' => 'Vietnam', 'CN' => 'China', 'MY' => 'Malaysia',
+    ];
+
+    public static function countryName(string $country): string
+    {
+        $country = trim($country);
+
+        return self::COUNTRY_ALIASES[$country] ?? $country;
+    }
+
     /** @return array<int, array<string, mixed>> */
     private static function load(): array
     {
@@ -51,7 +66,7 @@ class Gallery
                 ->map(fn ($p) => [
                     'slug' => $p['slug'],
                     'name' => (string) ($p['name'] ?? $p['slug']),
-                    'country' => (string) ($p['country'] ?? ''),
+                    'country' => self::countryName((string) ($p['country'] ?? '')),
                     'years' => array_values((array) ($p['years'] ?? [])),
                     'count' => count($p['photos']),
                     'photos' => collect($p['photos'])
