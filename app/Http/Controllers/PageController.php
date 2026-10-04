@@ -46,11 +46,12 @@ class PageController extends Controller
         ]);
     }
 
-    /** The seeded public sample trips, ordered oldest first (Seoul, then Tokyo). */
+    /** The seeded public sample trips — Tokyo first (the leisure trip), then Seoul. */
     private function samples(): Collection
     {
         return Trip::where('is_public', true)
             ->whereNull('created_by')
+            ->orderByRaw('slug = ? desc', ['tokyo-2026'])
             ->orderBy('id')
             ->get();
     }

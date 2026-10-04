@@ -90,6 +90,7 @@ class GoogleAuthController extends Controller
             if ($emailVerified) {
                 $user->forceFill(['email_verified_at' => now()])->save();
             }
+            \App\Support\VisitTracker::record($request, 'signup');
         }
 
         Auth::login($user, remember: $request->boolean('remember'));

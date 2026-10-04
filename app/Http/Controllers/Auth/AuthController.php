@@ -40,6 +40,7 @@ class AuthController extends Controller
         } else {
             $user = User::create($data);
             event(new Registered($user));   // sends the verification email
+            \App\Support\VisitTracker::record($request, 'signup');
             Auth::login($user);
             $request->session()->regenerate();
         }

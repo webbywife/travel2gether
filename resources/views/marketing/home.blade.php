@@ -1,6 +1,7 @@
 @extends('layouts.site')
 
-@section('title', 'Travel2gether — turn planning into the best part of the trip, together')
+@section('title', 'Travel2gether — plan the trip without the 200-message group chat')
+@section('meta_description', 'Tell us where, when and who’s coming. Get a full day-by-day plan your whole group can tap through and shape together. Free while in beta.')
 
 @push('parallax')
   @include('partials.parallax')
@@ -44,6 +45,10 @@
   .hero .sub{font-size:clamp(16px,2.1vw,20px); color:var(--text-dim); max-width:58ch; margin:0 auto 30px; line-height:1.6;}
   .cta-row{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:18px;}
   .btn-lg{font-size:16px; padding:15px 28px;}
+  .hiccups{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; max-width:1040px; margin:0 auto;}
+  .hiccups blockquote{margin:0; background:rgba(255,255,255,0.92); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:12px; padding:16px 18px; font-size:15.5px; line-height:1.55;}
+  .hiccups blockquote span{display:block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px;}
+  @media (max-width:820px){ .hiccups{grid-template-columns:1fr;} }
   .trust{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); letter-spacing:0.02em;}
   .trust b{color:var(--accent);}
   @media (max-width:520px){
@@ -216,20 +221,21 @@
 @section('content')
 <header class="hero">
   <div class="hero-copy">
-  <div class="kicker">AI-drafted · group-editable · shareable</div>
-  <h1 class="reveal">Turn planning into the best part of the trip — <span class="gtext">together</span>.</h1>
+  <div class="kicker">The group trip planner · free in beta</div>
+  <h1 class="reveal">Plan the trip without the <span class="gtext">200-message group chat</span>.</h1>
   <p class="sub reveal d1">
-    Tell Travel2gether where you're headed, when, and who's coming. Get a full day-by-day
-    itinerary back — meals, activities, cost tags, weather backups — that your whole group
-    taps through and shapes together.
+    Tell us where, when and who's coming. Get a full day-by-day plan your whole group
+    can tap through and shape together.
   </p>
   <div class="cta-row reveal d2">
-    <a class="btn btn-primary btn-lg" href="{{ route('register') }}">Plan my first trip — free</a>
     @if($sampleTrip ?? null)
-      <a class="btn btn-ghost btn-lg" href="{{ route('trips.show', $sampleTrip) }}">See a sample itinerary</a>
+      <a class="btn btn-primary btn-lg" href="{{ route('trips.show', $sampleTrip) }}">See a real {{ \Illuminate\Support\Str::before($sampleTrip->destination, ',') }} plan →</a>
+      <a class="btn btn-ghost btn-lg" href="{{ route('register') }}">Plan my trip — free</a>
+    @else
+      <a class="btn btn-primary btn-lg" href="{{ route('register') }}">Plan my trip — free</a>
     @endif
   </div>
-  <p class="trust reveal d3">No card required &nbsp;·&nbsp; <b>Your first full AI itinerary is on the house</b></p>
+  <p class="trust reveal d3">No sign-up to look &nbsp;·&nbsp; <b>Free while in beta — up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips</b></p>
   </div>
   <figure class="hero-photo reveal d1">
     <picture>
@@ -262,6 +268,19 @@
       </ul>
     </div>
   </div>
+</section>
+
+<section class="section section-tight reveal">
+  <h2 class="gtext">The part other planners leave out</h2>
+  <p class="section-sub">Every day comes with its hiccups — what could go wrong, written down before you go. Real ones from our Tokyo sample:</p>
+  <div class="hiccups">
+    <blockquote><span>Day 1 · Shinjuku</span>“teamLab Planets sells out days ahead — book before you fly.”</blockquote>
+    <blockquote><span>Day 2 · Okutama</span>“Okutama is cash country — draw money at Shinjuku before you leave; the ATMs up here are few and close early.”</blockquote>
+    <blockquote><span>Day 4 · Kamakura</span>“Sunday makes Kamakura busy and the Enoden slow — start at Tsurugaoka Hachimangū by 09:00.”</blockquote>
+  </div>
+  @if($sampleTrip ?? null)
+    <p style="text-align:center; margin-top:18px;"><a class="btn btn-ghost" href="{{ route('trips.show', $sampleTrip) }}">Read the whole plan →</a></p>
+  @endif
 </section>
 
 <section class="section section-tight reveal">
@@ -315,7 +334,7 @@
 @if(count($travelShots))
 <section class="section section-tight reveal">
   <h2 class="gtext">From my travels</h2>
-  <p class="section-sub">The places behind the itineraries — real photos from real trips.</p>
+  <p class="section-sub">Built by a traveller — every photo here is from my own trips across Japan, Korea, the US, Europe and the Philippines.</p>
   <div class="travel-strip">
     @foreach($travelShots as $shot)
       <a href="{{ route('gallery.show', $shot['slug']) }}" class="travel-shot">
@@ -387,8 +406,8 @@
 <section class="section section-tight reveal" style="padding-bottom:64px;">
   <div class="band">
     <div class="band-inner">
-      <h2>Your first trip is free.</h2>
-      <p>One complete AI-generated itinerary per account, no card required — enough to plan a real trip start to finish and see if it fits how your group works.</p>
+      <h2>Free while we're in beta.</h2>
+      <p>Plan up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips at a time — full day-by-day plans, group sharing, the budget and the weather backups. No card required.</p>
       <a class="btn btn-lg" href="{{ route('register') }}">Create my free account</a>
       <span class="fine">Takes 20 seconds · email and a password, that's it</span>
     </div>

@@ -31,6 +31,11 @@
   .member-row button{font-family:'Inter',sans-serif; font-size:12px; font-weight:600; border:1px solid var(--line); background:#fff; border-radius:999px; padding:5px 11px; cursor:pointer; color:var(--text-dim);}
   .member-row button:hover{border-color:var(--pink-light); color:var(--pink);}
   @media (max-width:680px){ .an-grid{grid-template-columns:1fr;} }
+  .funnel{width:100%; border-collapse:collapse; font-size:14px;}
+  .funnel th{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); text-align:right; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  .funnel td{text-align:right; padding:8px; border-bottom:1px solid var(--line);}
+  .funnel th:first-child, .funnel td:first-child{text-align:left;}
+  .funnel tr:last-child td{border-bottom:none;}
 </style>
 @endpush
 
@@ -45,6 +50,26 @@
     <div class="stat"><div class="num">{{ $totalSegments }}</div><div class="lbl">flight legs logged</div></div>
     <div class="stat"><div class="num">{{ $resolvedAirlinePct }}%</div><div class="lbl">airlines recognized</div></div>
     <div class="stat"><div class="num">{{ $resolvedAirportPct }}%</div><div class="lbl">airports recognized</div></div>
+  </div>
+
+  <h2>Where visitors come from · last 7 days</h2>
+  <div class="an-card" style="overflow-x:auto;">
+    @php $srcLabel = ['tiktok' => 'TikTok', 'ig' => 'Instagram', 'fb' => 'Facebook', 'threads' => 'Threads', 'x' => 'X', 'google' => 'Google', 'direct' => 'Direct / typed', 'other' => 'Other sites']; @endphp
+    @if (empty($funnel))
+      <p class="empty-note">No visits recorded yet. Share links with <code>?ref=tiktok</code> or <code>?ref=ig</code> to tell sources apart.</p>
+    @else
+      <table class="funnel">
+        <thead><tr><th>Source</th><th>Homepage</th><th>Sample trip</th><th>Gallery</th><th>Sign-up page</th><th>Signed up</th></tr></thead>
+        <tbody>
+          @foreach ($funnel as $src => $f)
+            <tr><td>{{ $srcLabel[$src] ?? $src }}</td>
+              @foreach (['landing', 'sample', 'gallery', 'register', 'signup'] as $ev)<td>{{ $f[$ev] ?? 0 }}</td>@endforeach
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+      <p class="empty-note" style="text-align:left; padding:10px 0 0;">Visitors, not page views — anonymous, no IPs stored. Bots and signed-in members aren't counted.</p>
+    @endif
   </div>
 
   <div class="an-grid">

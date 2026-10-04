@@ -44,6 +44,7 @@
       <tr><th>What</th><th>Purpose</th><th>Where</th></tr>
       <tr><td>Session cookie</td><td>Keeps you signed in</td><td>Cookie, expires when you log out or after inactivity</td></tr>
       <tr><td>CSRF token cookie</td><td>Blocks cross-site request forgery</td><td>Cookie, session-length</td></tr>
+      <tr><td>Visit counts</td><td>Which link brought you here (e.g. TikTok or Instagram), which pages you reached (home, a sample trip, sign-up), the date, and whether it was a phone</td><td>Anonymous counts on our server so we can tell what's working. No IP address, name or email is stored with them</td></tr>
       <tr><td>Trip picks</td><td>Which option the group chose for each stop</td><td>On trips you belong to: saved on our server with who picked it, so everyone on the trip sees the same picks. On the public sample trips: your browser's local storage only</td></tr>
       <tr><td>Trippie history</td><td>Keeps the chat visible while you browse</td><td>Your browser's session storage only, cleared when the tab closes</td></tr>
     </table>

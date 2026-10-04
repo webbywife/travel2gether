@@ -17,9 +17,11 @@ class TripPageTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('Turn planning into', false)
+            ->assertSee('200-message group chat', false)
             ->assertSee(route('register'), false)
-            ->assertSee(route('trips.show', 'seoul-2026'), false);
+            ->assertSee(route('trips.show', 'seoul-2026'), false)
+            ->assertSee('Free while in beta', false)
+            ->assertDontSee('One complete AI-generated itinerary', false); // the free plan is 3 trips, not 1
     }
 
     public function test_seoul_trip_renders_entirely_from_the_database(): void

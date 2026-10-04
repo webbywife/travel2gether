@@ -83,6 +83,30 @@ class AnalyticsController extends Controller
             'topDepartureAirports' => $topDepartureAirports,
             'byMonth' => $byMonth,
             'topDestinations' => $topDestinations,
+            'funnel' => $this->funnel(),
         ]);
+    }
+
+    /**
+     * Launch funnel for the last 7 days: per source, how many visitors reached
+     * each step (each visitor counts once per step per day).
+     *
+     * @return array<string, array<string, int>>
+     */
+    private function funnel(): array
+    {
+        $rows = \Illuminate\Support\Facades\DB::table('visit_events')
+            ->where('day', '>=', now()->subDays(6)->toDateString())
+            ->selectRaw('source, event, count(*) as n')
+            ->groupBy('source', 'event')
+            ->get();
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[$r->source][$r->event] = (int) $r->n;
+        }
+        uasort($out, fn ($a, $b) => ($b['landing'] ?? 0) + ($b['sample'] ?? 0) <=> ($a['landing'] ?? 0) + ($a['sample'] ?? 0));
+
+        return $out;
     }
 }
