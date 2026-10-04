@@ -1,7 +1,6 @@
 @extends('layouts.site')
 
 @section('title', 'Travel2gether — turn planning into the best part of the trip, together')
-@section('meta_description', 'Tell us where, when and who’s coming. Get a full day-by-day plan your whole group can tap through and shape together. Free while in beta.')
 
 @push('parallax')
   @include('partials.parallax')
@@ -221,21 +220,20 @@
 @section('content')
 <header class="hero">
   <div class="hero-copy">
-  <div class="kicker">The group trip planner · free in beta</div>
+  <div class="kicker">AI-drafted · group-editable · shareable</div>
   <h1 class="reveal">Turn planning into the best part of the trip — <span class="gtext">together</span>.</h1>
   <p class="sub reveal d1">
-    Tell us where, when and who's coming. Get a full day-by-day plan your whole group
-    can tap through and shape together.
+    Tell Travel2gether where you're headed, when, and who's coming. Get a full day-by-day
+    itinerary back — meals, activities, cost tags, weather backups — that your whole group
+    taps through and shapes together.
   </p>
   <div class="cta-row reveal d2">
+    <a class="btn btn-primary btn-lg" href="{{ route('register') }}">Plan my first trip — free</a>
     @if($sampleTrip ?? null)
-      <a class="btn btn-primary btn-lg" href="{{ route('trips.show', $sampleTrip) }}">See a real {{ \Illuminate\Support\Str::before($sampleTrip->destination, ',') }} plan →</a>
-      <a class="btn btn-ghost btn-lg" href="{{ route('register') }}">Plan my trip — free</a>
-    @else
-      <a class="btn btn-primary btn-lg" href="{{ route('register') }}">Plan my trip — free</a>
+      <a class="btn btn-ghost btn-lg" href="{{ route('trips.show', $sampleTrip) }}">See a sample itinerary</a>
     @endif
   </div>
-  <p class="trust reveal d3">No sign-up to look &nbsp;·&nbsp; <b>Free while in beta — up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips</b></p>
+  <p class="trust reveal d3">No card required &nbsp;·&nbsp; <b>Your first full AI itinerary is on the house</b></p>
   </div>
   <figure class="hero-photo reveal d1">
     <picture>

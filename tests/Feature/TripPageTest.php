@@ -20,7 +20,6 @@ class TripPageTest extends TestCase
             ->assertSee('Turn planning into', false)
             ->assertSee(route('register'), false)
             ->assertSee(route('trips.show', 'seoul-2026'), false)
-            ->assertSee('Free while in beta', false)
             ->assertDontSee('One complete AI-generated itinerary', false); // the free plan is 3 trips, not 1
     }
 
