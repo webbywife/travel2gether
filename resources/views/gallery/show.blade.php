@@ -26,6 +26,14 @@
   .ph-head h1{font-family:'Space Grotesk',sans-serif; font-size:clamp(28px,4vw,40px); margin:10px 0 4px; letter-spacing:-0.02em;}
   .ph-sub{color:var(--text-dim); font-size:15px; display:flex; gap:14px; flex-wrap:wrap; align-items:center;}
   .ph-sub .btn{margin-left:auto;}
+  .ph-guide{margin-top:18px; background:rgba(255,255,255,0.92); border:1px solid var(--line); border-radius:14px; padding:16px 18px;}
+  .ph-guide .g-facts{display:flex; flex-wrap:wrap; gap:10px 26px; margin-bottom:10px;}
+  .ph-guide .g-facts span{font-size:14px;}
+  .ph-guide .g-facts b{display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); font-weight:500; margin-bottom:2px;}
+  .ph-guide p{margin:0 0 14px; color:var(--text-dim); line-height:1.6; font-size:14.5px; max-width:75ch;}
+  .ph-guide .g-cta{display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center;}
+  .ph-guide .g-cta span{font-size:12.5px; color:var(--text-dim);}
+  @media (max-width:560px){ .ph-guide .g-cta .btn{width:100%; text-align:center;} }
 
   .wall{max-width:1120px; margin:0 auto; padding:0 24px 72px; columns:3 260px; column-gap:12px;}
   .wall button{display:block; width:100%; margin:0 0 12px; padding:0; border:0; background:var(--panel-2); border-radius:12px; overflow:hidden; cursor:zoom-in; break-inside:avoid;}
@@ -63,8 +71,26 @@
   <div class="ph-sub">
     @php $nVid = collect($place['photos'])->where('type', 'video')->count(); $nPh = count($place['photos']) - $nVid; @endphp
     <span>{{ $place['country'] }}@if($span) · {{ $span }}@endif · {{ $nPh }} {{ \Illuminate\Support\Str::plural('photo', $nPh) }}@if($nVid) · {{ $nVid }} {{ \Illuminate\Support\Str::plural('video', $nVid) }}@endif</span>
-    <a class="btn btn-ghost" href="{{ route('trips.create', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">Plan a trip here →</a>
+    <a class="btn {{ $guide ? 'btn-ghost' : 'btn-primary' }}" href="{{ route('trips.create', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">Plan a trip here →</a>
   </div>
+  @if ($guide || $visa)
+    <div class="ph-guide">
+      @if ($guide)
+        <div class="g-facts">
+          <span><b>Best time</b>{{ $guide['best_season'] }}</span>
+          <span><b>Ideal trip</b>{{ $guide['trip_length'] }}</span>
+          @if ($visa)<span><b>Philippine passport</b>{{ \App\Support\Destinations::visaLabel($visa['visa_status']) }}</span>@endif
+        </div>
+        <p>{{ $guide['overview'] }}</p>
+      @elseif ($visa)
+        <div class="g-facts"><span><b>Philippine passport</b>{{ \App\Support\Destinations::visaLabel($visa['visa_status']) }}</span></div>
+      @endif
+      <div class="g-cta">
+        <a class="btn btn-primary" href="{{ route('trips.create', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">Plan my {{ $place['name'] }} trip — free</a>
+        <span>Free while in beta · a day-by-day plan your group shapes together</span>
+      </div>
+    </div>
+  @endif
 </header>
 
 <div class="wall" id="wall">

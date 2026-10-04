@@ -27,6 +27,10 @@ class GalleryController extends Controller
         $place = Gallery::place($slug);
         abort_if($place === null, 404);
 
-        return view('gallery.show', ['place' => $place]);
+        // The curated guide (best season, trip length) and PH-passport visa note, when we have them.
+        $guide = \App\Support\Destinations::templateFor($place['name']);
+        $visa = \App\Support\Destinations::visaForCountry($place['country']);
+
+        return view('gallery.show', ['place' => $place, 'guide' => $guide, 'visa' => $visa]);
     }
 }

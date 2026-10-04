@@ -131,4 +131,16 @@ class GalleryTest extends TestCase
         $this->assertSame('United States', \App\Support\Gallery::countryName('US'));
         $this->assertSame('Japan', \App\Support\Gallery::countryName('Japan'));
     }
+
+    public function test_a_place_page_shows_its_guide_visa_and_a_plan_button(): void
+    {
+        $this->index([$this->kyoto()]);
+
+        $this->get(route('gallery.show', 'kyoto'))->assertOk()
+            ->assertSee('Best time')
+            ->assertSee('Ideal trip')
+            ->assertSee('Philippine passport')
+            ->assertSee('Plan my Kyoto trip — free')
+            ->assertSee(route('trips.create', ['destination' => 'Kyoto, Japan']), false);
+    }
 }
