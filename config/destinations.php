@@ -46,7 +46,7 @@ return [
 
     ['country' => 'Taiwan', 'region' => 'East Asia', 'flag' => '🇹🇼',
         'cities' => ['Taipei', 'Kaohsiung', 'Tainan', 'Hualien', 'Sun Moon Lake'],
-        'visa_status' => 'evisa', 'visa_note' => 'Visa-free entry via an online Travel Authorization Certificate, or with a qualifying US/Canada/Japan/Schengen/UK/Australia/NZ visa.'],
+        'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 14 days (trial programme extended to 31 Jul 2027 — re-check before booking).'],
 
     ['country' => 'Japan', 'region' => 'East Asia', 'flag' => '🇯🇵',
         'cities' => ['Tokyo', 'Kyoto', 'Osaka', 'Sapporo', 'Fukuoka'],
