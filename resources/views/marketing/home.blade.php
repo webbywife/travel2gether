@@ -1,6 +1,6 @@
 @extends('layouts.site')
 
-@section('title', 'Travel2gether — plan the trip without the 200-message group chat')
+@section('title', 'Travel2gether — turn planning into the best part of the trip, together')
 @section('meta_description', 'Tell us where, when and who’s coming. Get a full day-by-day plan your whole group can tap through and shape together. Free while in beta.')
 
 @push('parallax')
@@ -222,7 +222,7 @@
 <header class="hero">
   <div class="hero-copy">
   <div class="kicker">The group trip planner · free in beta</div>
-  <h1 class="reveal">Plan the trip without the <span class="gtext">200-message group chat</span>.</h1>
+  <h1 class="reveal">Turn planning into the best part of the trip — <span class="gtext">together</span>.</h1>
   <p class="sub reveal d1">
     Tell us where, when and who's coming. Get a full day-by-day plan your whole group
     can tap through and shape together.
