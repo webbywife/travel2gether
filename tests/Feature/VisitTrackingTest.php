@@ -80,4 +80,10 @@ class VisitTrackingTest extends TestCase
         $this->get('/nyc')->assertRedirect('/gallery/new-york-city?ref=tiktok');
         $this->get('/baguio')->assertRedirect('/gallery/cordillera-ph?ref=tiktok');
     }
+
+    public function test_pinterest_visitors_are_recognised(): void
+    {
+        $this->withHeader('Referer', 'https://www.pinterest.com/pin/123/')->get('/')->assertOk();
+        $this->assertSame('pinterest', DB::table('visit_events')->value('source'));
+    }
 }

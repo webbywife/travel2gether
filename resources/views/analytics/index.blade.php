@@ -54,7 +54,7 @@
 
   <h2>Where visitors come from · last 7 days</h2>
   <div class="an-card" style="overflow-x:auto;">
-    @php $srcLabel = ['tiktok' => 'TikTok', 'ig' => 'Instagram', 'fb' => 'Facebook', 'threads' => 'Threads', 'x' => 'X', 'google' => 'Google', 'direct' => 'Direct / typed', 'other' => 'Other sites']; @endphp
+    @php $srcLabel = ['tiktok' => 'TikTok', 'ig' => 'Instagram', 'fb' => 'Facebook', 'pinterest' => 'Pinterest', 'threads' => 'Threads', 'x' => 'X', 'google' => 'Google', 'direct' => 'Direct / typed', 'other' => 'Other sites']; @endphp
     @if (empty($funnel))
       <p class="empty-note">No visits recorded yet. Share links with <code>?ref=tiktok</code> or <code>?ref=ig</code> to tell sources apart.</p>
     @else

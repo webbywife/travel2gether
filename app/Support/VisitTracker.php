@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
  */
 class VisitTracker
 {
-    public const SOURCES = ['tiktok', 'ig', 'fb', 'threads', 'x', 'google', 'direct', 'other'];
+    public const SOURCES = ['tiktok', 'ig', 'fb', 'pinterest', 'threads', 'x', 'google', 'direct', 'other'];
 
     private const BOTS = '/bot|crawl|spider|slurp|preview|facebookexternalhit|meta-externalagent|embedly|curl|wget|python|go-http|headless|lighthouse/i';
 
@@ -57,6 +57,7 @@ class VisitTracker
         return match (true) {
             (bool) preg_match('/musical_ly|BytedanceWebview|TikTok/i', $ua), str_contains($host, 'tiktok') => 'tiktok',
             (bool) preg_match('/Instagram/i', $ua), str_contains($host, 'instagram') => 'ig',
+            (bool) preg_match('/Pinterest/i', $ua), str_contains($host, 'pinterest'), str_contains($host, 'pin.it') => 'pinterest',
             (bool) preg_match('/Barcelona/i', $ua), str_contains($host, 'threads') => 'threads',
             (bool) preg_match('/FBAN|FBAV|FB_IAB/i', $ua), str_contains($host, 'facebook'), str_contains($host, 'fb.me') => 'fb',
             str_contains($host, 't.co'), str_contains($host, 'x.com'), str_contains($host, 'twitter') => 'x',
