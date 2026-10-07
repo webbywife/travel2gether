@@ -193,7 +193,7 @@
     @auth
       <a class="btn btn-primary nav-cta" href="{{ route('trips.create') }}">New trip</a>
     @else
-      <a class="btn btn-primary nav-cta" href="{{ route('register') }}">Start planning</a>
+      <a class="btn btn-primary nav-cta" href="{{ route('trips.create') }}">Start planning</a>
     @endauth
     <button type="button" class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteLinks" aria-label="Open menu">
       <span></span><span></span><span></span>
@@ -213,7 +213,7 @@
         </form>
       @else
         <a href="{{ route('login') }}">Log in</a>
-        <a class="btn btn-primary" href="{{ route('register') }}">Start planning</a>
+        <a class="btn btn-primary" href="{{ route('trips.create') }}">Start planning</a>
       @endauth
     </div>
   </nav>

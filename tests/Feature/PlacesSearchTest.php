@@ -18,7 +18,7 @@ class PlacesSearchTest extends TestCase
         config(['services.google.maps_key' => 'test-maps-key']);
     }
 
-    public function test_search_requires_authentication(): void
+    public function test_guests_cannot_search_while_it_uses_the_paid_google_key(): void
     {
         $this->getJson('/places/search?q=ramen')->assertUnauthorized();
     }

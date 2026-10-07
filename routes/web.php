@@ -86,11 +86,12 @@ Route::middleware(['auth', 'can:admin'])->group(function () {
 Route::view('/upgrade', 'upgrade')->name('upgrade');
 
 // POI search / indexing for building itineraries (Google Places API New).
-Route::middleware(['auth', 'throttle:40,1'])->group(function () {
+// Search + explore are open to guests so the planner works before sign-up (free OSM/Photon lookups, rate-limited per IP).
+Route::middleware('throttle:40,1')->group(function () {
     Route::get('/places/search', [PlacesController::class, 'search'])->name('places.search');
     Route::get('/places/explore', [PlacesController::class, 'explore'])->middleware('throttle:12,1')->name('places.explore');
-    Route::get('/places/{placeId}', [PlacesController::class, 'show'])->name('places.show');
 });
+Route::get('/places/{placeId}', [PlacesController::class, 'show'])->middleware(['auth', 'throttle:40,1'])->name('places.show');
 
 // Short, typeable link for TikTok videos (captions and comments there aren't clickable).
 // Only used on TikTok, so visits through it count as TikTok in the launch funnel.
@@ -111,10 +112,12 @@ Route::get('/t/{trip:slug}/print', [TripController::class, 'print'])->name('trip
 Route::get('/t/{trip:slug}/calendar.ics', [TripCalendarController::class, 'show'])->middleware('throttle:30,1')->name('trips.calendar');
 Route::get('/t/{trip:slug}/picks', [TripPickController::class, 'index'])->middleware('throttle:60,1')->name('trips.picks.index');
 
+// The planner is open to guests: they fill it in first, and the trip is created once they sign up (see PendingTrip).
+Route::get('/trips/create', [TripBuilderController::class, 'create'])->name('trips.create');
+Route::post('/trips', [TripBuilderController::class, 'store'])->middleware('throttle:20,1')->name('trips.store');
+
 // Collaboration (Phase 2) — all require a signed-in user.
 Route::middleware('auth')->group(function () {
-    Route::get('/trips/create', [TripBuilderController::class, 'create'])->name('trips.create');
-    Route::post('/trips', [TripBuilderController::class, 'store'])->name('trips.store');
 
     Route::get('/t/{trip:slug}/edit', [TripController::class, 'edit'])->name('trips.edit');
     Route::patch('/t/{trip:slug}', [TripController::class, 'update'])->name('trips.update');

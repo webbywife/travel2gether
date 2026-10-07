@@ -132,9 +132,10 @@ class PlaceExploreTest extends TestCase
         $this->assertTrue(collect($e['airports'])->firstWhere('provider_id', 'CTS')['major']);
     }
 
-    public function test_explore_needs_a_signed_in_user_and_valid_coordinates(): void
+    public function test_guests_can_use_the_free_lookups_and_coordinates_are_validated(): void
     {
-        $this->getJson('/places/explore?lat=35.69&lon=139.70')->assertUnauthorized();
-        $this->actingAs(User::factory()->create())->getJson('/places/explore?lat=999&lon=0')->assertStatus(422);
+        Http::fake(['photon.komoot.io/*' => Http::response(['features' => [$this->feature('Sapporo', 43.06, 141.35, 'place', 'city', 'Sapporo')]])]);
+        $this->getJson('/places/search?q=sapporo&kind=destination')->assertOk()->assertJsonPath('results.0.name', 'Sapporo');
+        $this->getJson('/places/explore?lat=999&lon=0')->assertStatus(422);
     }
 }

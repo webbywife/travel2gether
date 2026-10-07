@@ -7,7 +7,11 @@
 <div class="card-wrap">
   <div class="card">
     <h1>Welcome back</h1>
-    <p class="lede">Log in to pick up where your group left off.</p>
+    @if ($pendingDest = \App\Support\PendingTrip::destination(request()))
+      <p class="lede">Log in and we'll save your {{ $pendingDest ?: 'new' }} trip to your account.</p>
+    @else
+      <p class="lede">Log in to pick up where your group left off.</p>
+    @endif
 
     @if (session('status'))
       <div class="form-ok" role="status">{{ session('status') }}</div>

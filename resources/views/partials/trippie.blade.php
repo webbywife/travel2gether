@@ -79,7 +79,7 @@
       <button type="button">Best area to stay in Kyoto?</button>
       <button type="button">Help me plan a beach trip</button>
     </div>
-    <a class="t-cta" href="{{ auth()->check() ? route('trips.create') : route('register') }}">✨ Ready? Let's build your trip →</a>
+    <a class="t-cta" href="{{ route('trips.create') }}">✨ Ready? Let's build your trip →</a>
     <form class="t-in" id="tForm">
       <input type="text" id="tInput" aria-label="Message Trippie" placeholder="Ask Trippie…" autocomplete="off" maxlength="1000" required>
       <button type="submit" id="tSend" aria-label="Send">➤</button>

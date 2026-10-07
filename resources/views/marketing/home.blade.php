@@ -235,7 +235,7 @@
     taps through and shapes together.
   </p>
   <div class="cta-row reveal d2">
-    <a class="btn btn-primary btn-lg" href="{{ route('register') }}">Plan my first trip — free</a>
+    <a class="btn btn-primary btn-lg" href="{{ route('trips.create') }}">Plan my first trip — free</a>
     @if($sampleTrip ?? null)
       <a class="btn btn-ghost btn-lg" href="{{ route('trips.show', $sampleTrip) }}">See a sample itinerary</a>
     @endif
@@ -413,8 +413,8 @@
     <div class="band-inner">
       <h2>Free while we're in beta.</h2>
       <p>Plan up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips at a time — full day-by-day plans, group sharing, the budget and the weather backups. No card required.</p>
-      <a class="btn btn-lg" href="{{ route('register') }}">Create my free account</a>
-      <span class="fine">Takes 20 seconds · email and a password, that's it</span>
+      <a class="btn btn-lg" href="{{ route('trips.create') }}">Start planning — free</a>
+      <span class="fine">No account needed to start · save your trip with a free account when it's ready</span>
     </div>
   </div>
 </section>

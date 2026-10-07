@@ -6,6 +6,8 @@ use App\Actions\CreateTrip;
 use App\Http\Requests\StoreTripRequest;
 use App\Models\User;
 use App\Support\Destinations;
+use App\Support\PendingTrip;
+use App\Support\VisitTracker;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -30,6 +32,13 @@ class TripBuilderController extends Controller
 
     public function store(StoreTripRequest $request, CreateTrip $create): RedirectResponse
     {
+        if (! $request->user()) {
+            PendingTrip::hold($request, $request->validated());
+            VisitTracker::record($request, 'drafted');
+
+            return redirect()->route('register');
+        }
+
         if ($limit = $this->limitReached($request)) {
             return $limit;
         }
@@ -41,10 +50,10 @@ class TripBuilderController extends Controller
             ->with('status', 'Trip created. Fill in each day, invite your group, or draft a day with AI.');
     }
 
-    /** Null when under the free-tier trip cap; otherwise a redirect to /upgrade. */
+    /** Null for guests and when under the free-tier trip cap; otherwise a redirect to /upgrade. */
     private function limitReached(Request $request): ?RedirectResponse
     {
-        if (! $request->user()->hasReachedTripLimit()) {
+        if (! $request->user()?->hasReachedTripLimit()) {
             return null;
         }
 

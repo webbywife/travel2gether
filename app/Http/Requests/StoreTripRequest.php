@@ -8,9 +8,10 @@ use Illuminate\Validation\Validator;
 
 class StoreTripRequest extends FormRequest
 {
+    /** Guests may submit too: their trip is held in the session until they sign up (PendingTrip). */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return true;
     }
 
     public function rules(): array

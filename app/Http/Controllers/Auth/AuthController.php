@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Notifications\RegistrationAttempted;
+use App\Support\PendingTrip;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,6 +44,10 @@ class AuthController extends Controller
             \App\Support\VisitTracker::record($request, 'signup');
             Auth::login($user);
             $request->session()->regenerate();
+
+            if ($trip = PendingTrip::claim($request, $user)) {
+                return redirect()->route('trips.show', $trip)->with('status', 'Your trip is saved. Invite your group, or draft a day with AI. (We also sent you a link to confirm your email.)');
+            }
         }
 
         return redirect()->route('register.pending')->with('pending_email', $data['email']);
@@ -67,6 +72,10 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+
+        if ($trip = PendingTrip::claim($request, $request->user())) {
+            return redirect()->route('trips.show', $trip)->with('status', 'Your trip is saved. Invite your group, or draft a day with AI.');
+        }
 
         return redirect()->intended(route('dashboard'));
     }

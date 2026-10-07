@@ -18,6 +18,8 @@ class PlacesController extends Controller
         ]);
 
         abort_unless($places->enabled(), 503, 'Place search is not configured.');
+        // Guests may search only while it's the free OSM lookup — never on the paid Google key.
+        abort_if(! $request->user() && $places->usesGoogle(), 401);
 
         return response()->json([
             'query' => $data['q'],

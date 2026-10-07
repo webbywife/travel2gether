@@ -59,11 +59,11 @@
       <p class="empty-note">No visits recorded yet. Share links with <code>?ref=tiktok</code> or <code>?ref=ig</code> to tell sources apart.</p>
     @else
       <table class="funnel">
-        <thead><tr><th>Source</th><th>Homepage</th><th>Sample trip</th><th>Gallery</th><th>Sign-up page</th><th>Signed up</th></tr></thead>
+        <thead><tr><th>Source</th><th>Homepage</th><th>Sample trip</th><th>Gallery</th><th>Opened planner</th><th>Finished planner</th><th>Sign-up page</th><th>Signed up</th></tr></thead>
         <tbody>
           @foreach ($funnel as $src => $f)
             <tr><td>{{ $srcLabel[$src] ?? $src }}</td>
-              @foreach (['landing', 'sample', 'gallery', 'register', 'signup'] as $ev)<td>{{ $f[$ev] ?? 0 }}</td>@endforeach
+              @foreach (['landing', 'sample', 'gallery', 'planner', 'drafted', 'register', 'signup'] as $ev)<td>{{ $f[$ev] ?? 0 }}</td>@endforeach
             </tr>
           @endforeach
         </tbody>

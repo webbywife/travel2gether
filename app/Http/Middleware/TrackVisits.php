@@ -19,6 +19,7 @@ class TrackVisits
             $event = match ($request->route()?->getName()) {
                 'home' => 'landing',
                 'register' => 'register',
+                'trips.create' => 'planner',
                 'gallery', 'gallery.show' => 'gallery',
                 'trips.show' => ($t = $request->route('trip')) instanceof Trip && $t->created_by === null ? 'sample' : null,
                 default => null,

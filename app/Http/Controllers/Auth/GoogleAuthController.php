@@ -96,6 +96,10 @@ class GoogleAuthController extends Controller
         Auth::login($user, remember: $request->boolean('remember'));
         $request->session()->regenerate();
 
+        if ($trip = \App\Support\PendingTrip::claim($request, $user)) {
+            return redirect()->route('trips.show', $trip)->with('status', 'Your trip is saved. Invite your group, or draft a day with AI.');
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 }

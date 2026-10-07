@@ -64,6 +64,9 @@
 @section('content')
 <div class="build">
   <h1><span class="gtext">Plan a new trip</span></h1>
+  @guest
+    <p class="lede" style="margin-bottom:8px;"><strong>No account needed to start.</strong> Fill it in first; you'll only sign up to save it.</p>
+  @endguest
   <p class="lede">Give the bones — flights, dates, where you're staying, the areas you want. You'll get an editable day-by-day skeleton to fill in (or draft with AI) and share with your group.</p>
 
   @if ($errors->any())
@@ -227,8 +230,11 @@
 
     <div class="actions">
       <button type="submit" class="btn btn-primary btn-lg">Create the trip</button>
-      <a href="{{ route('dashboard') }}" style="font-size:13.5px;color:var(--text-dim);">Cancel</a>
+      <a href="{{ auth()->check() ? route('dashboard') : route('home') }}" style="font-size:13.5px;color:var(--text-dim);">Cancel</a>
     </div>
+    @guest
+      <p class="hint" style="margin-top:10px;">Next step: a free account to save your trip, so you can open it and invite your group. It takes 20 seconds, and no card is needed.</p>
+    @endguest
   </form>
 </div>
 

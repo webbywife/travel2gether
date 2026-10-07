@@ -38,10 +38,54 @@ class TripBuilderTest extends TestCase
         ], $overrides);
     }
 
-    public function test_the_builder_requires_auth(): void
+    public function test_guests_can_fill_in_the_planner_and_save_it_by_signing_up(): void
     {
-        $this->get(route('trips.create'))->assertRedirect(route('login'));
-        $this->post(route('trips.store'), $this->payload())->assertRedirect(route('login'));
+        $this->get(route('trips.create'))->assertOk()->assertSee('No account needed to start');
+
+        $this->post(route('trips.store'), $this->payload())->assertRedirect(route('register'));
+        $this->assertDatabaseCount('trips', 0);   // nothing saved (and no AI) for guests
+        $this->get(route('register'))->assertOk()->assertSee('Save your Kyoto, Japan trip');
+
+        $res = $this->post(route('register'), [
+            'name' => 'Mia', 'email' => 'mia@example.com',
+            'password' => 'a-long-password-1', 'password_confirmation' => 'a-long-password-1',
+        ]);
+
+        $trip = \App\Models\Trip::sole();
+        $res->assertRedirect(route('trips.show', $trip));
+        $this->assertSame('mia@example.com', $trip->owner->email);
+        $this->assertSame('Kyoto, Japan', $trip->destination);
+        $this->assertCount(5, $trip->days);
+    }
+
+    public function test_a_guest_with_an_account_gets_the_trip_when_they_log_in(): void
+    {
+        $user = \App\Models\User::factory()->create(['password' => 'a-long-password-1']);
+        $this->post(route('trips.store'), $this->payload());
+
+        $this->get(route('login'))->assertSee('save your Kyoto, Japan trip');
+        $this->post(route('login'), ['email' => $user->email, 'password' => 'a-long-password-1'])
+            ->assertRedirect(route('trips.show', \App\Models\Trip::sole()));
+        $this->assertSame($user->id, \App\Models\Trip::sole()->created_by);
+    }
+
+    public function test_a_guest_trip_is_dropped_when_the_account_is_already_at_the_free_limit(): void
+    {
+        $user = \App\Models\User::factory()->create(['password' => 'a-long-password-1']);
+        for ($i = 0; $i < \App\Models\User::FREE_TRIP_LIMIT; $i++) {
+            app(\App\Actions\CreateTrip::class)($this->payload(['title' => "Trip {$i}"]), $user);
+        }
+        $this->post(route('trips.store'), $this->payload());
+
+        $this->post(route('login'), ['email' => $user->email, 'password' => 'a-long-password-1'])->assertRedirect(route('dashboard'));
+        $this->assertSame(\App\Models\User::FREE_TRIP_LIMIT, \App\Models\Trip::count());
+    }
+
+    public function test_guest_planner_input_is_still_validated(): void
+    {
+        $this->from(route('trips.create'))->post(route('trips.store'), $this->payload(['departure_date' => '2027-03-30']))
+            ->assertRedirect(route('trips.create'))->assertSessionHasErrors('departure_date');
+        $this->get(route('register'))->assertDontSee('Save your');
     }
 
     public function test_the_builder_offers_destination_search_and_starting_suggestions(): void
