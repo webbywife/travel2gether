@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations');
+Route::get('/destinations/{slug}', [DestinationController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('destinations.show');
+Route::get('/sitemap.xml', \App\Http\Controllers\SitemapController::class)->name('sitemap');
 Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery');
 Route::get('/gallery/{slug}', [GalleryController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('gallery.show');
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('privacy');

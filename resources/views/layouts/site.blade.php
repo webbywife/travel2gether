@@ -8,6 +8,8 @@
 @include('partials.favicon')
 {{-- Link previews (Facebook, Messenger, Viber, X, LinkedIn…) --}}
 <link rel="canonical" href="{{ url()->current() }}">
+@hasSection('robots')<meta name="robots" content="@yield('robots')">@endif
+@stack('head')
 <meta property="og:site_name" content="Travel2gether">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url()->current() }}">

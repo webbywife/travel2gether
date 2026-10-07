@@ -65,6 +65,18 @@ class Destinations
         return config('destination_templates', []);
     }
 
+    /** URL slug for a template ("Kamakura & Enoshima" → "kamakura-enoshima"); same as its gallery slug. */
+    public static function slug(array $template): string
+    {
+        return Str::slug($template['destination']);
+    }
+
+    /** @return array<string, mixed>|null */
+    public static function bySlug(string $slug): ?array
+    {
+        return collect(self::templates())->first(fn ($t) => self::slug($t) === $slug);
+    }
+
     /** @return array<int, string> */
     public static function categories(): array
     {

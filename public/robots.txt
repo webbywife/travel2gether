@@ -1,2 +1,9 @@
 User-agent: *
-Disallow:
+Disallow: /dashboard
+Disallow: /analytics
+Disallow: /trips/
+Disallow: /places/
+Disallow: /auth/
+Allow: /
+
+Sitemap: https://travel2gether.net/sitemap.xml

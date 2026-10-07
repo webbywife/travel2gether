@@ -1,7 +1,7 @@
 @extends('layouts.site')
 
-@section('title', 'Get inspired · Travel2gether')
-@section('meta_description', 'Forty destination templates across every continent — category, best season, trip length and a visa note for a Philippine passport.')
+@section('title', 'Where to travel next: 40 destination guides for Filipino travellers · Travel2gether')
+@section('meta_description', 'Forty destination guides — Japan, Korea, Southeast Asia, Europe, the US and more — with the best time to visit, how many days you need, and visa status for a Philippine passport.')
 
 @push('styles')
 <style>
@@ -82,7 +82,7 @@
           <span class="cat-tag">{{ $t['category'] }}</span>
           <span class="continent-tag">{{ $t['continent'] }}</span>
         </div>
-        <h3>{{ $t['destination'] }}</h3>
+        <h3><a href="{{ route('destinations.show', $photoSlug) }}" style="color:inherit; text-decoration:none;">{{ $t['destination'] }}</a></h3>
         <div class="place">{{ $t['country'] }} · {{ $t['region'] }}</div>
         @if($visa)
           <span class="visa-pill {{ $visa['visa_status'] }}">🛂 {{ \App\Support\Destinations::visaLabel($visa['visa_status']) }}</span>
@@ -94,6 +94,7 @@
         <p class="overview">{{ $t['overview'] }}</p>
         <div class="cta-row-tpl">
           <a class="cta" href="{{ route('trips.create', ['destination' => $t['destination'] . ', ' . $t['country']]) }}">Plan this trip →</a>
+          <a class="cta photos" href="{{ route('destinations.show', $photoSlug) }}">Guide</a>
           @if($myCount)<a class="cta photos" href="{{ route('gallery.show', $photoSlug) }}">📷 {{ $myCount }} of my photos</a>@endif
         </div>
       </div>

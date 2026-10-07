@@ -32,7 +32,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>{{ $trip->title }}@if($trip->tagline) — {{ $trip->tagline }}@endif</title>
+@php $isSample = $trip->is_public && $trip->created_by === null; @endphp
+<title>@if($isSample){{ $trip->days->count() }}-day {{ \Illuminate\Support\Str::before($trip->destination, ',') }} itinerary — {{ $trip->title }}@if($trip->tagline): {{ $trip->tagline }}@endif · Travel2gether @else{{ $trip->title }}@if($trip->tagline) — {{ $trip->tagline }}@endif @endif</title>
+<link rel="canonical" href="{{ route('trips.show', $trip) }}">
+@unless($isSample)<meta name="robots" content="noindex">@endunless
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 @include('partials.favicon')

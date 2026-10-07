@@ -1,6 +1,13 @@
 @extends('layouts.site')
 
 @section('title', 'Travel2gether — turn planning into the best part of the trip, together')
+@push('head')
+<script type="application/ld+json">{!! json_encode([
+    ['@context' => 'https://schema.org', '@type' => 'WebSite', 'name' => 'Travel2gether', 'url' => url('/')],
+    ['@context' => 'https://schema.org', '@type' => 'Organization', 'name' => 'Travel2gether', 'url' => url('/'),
+     'logo' => asset('android-chrome-512x512.png'), 'sameAs' => ['https://www.instagram.com/traveleyz', 'https://www.tiktok.com/@traveleyz']],
+], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) !!}</script>
+@endpush
 
 @push('parallax')
   @include('partials.parallax')

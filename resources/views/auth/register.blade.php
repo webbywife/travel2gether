@@ -1,6 +1,7 @@
 @extends('layouts.site')
 
 @section('title', 'Create your account · Travel2gether')
+@section('robots', 'noindex')
 @section('meta_description', 'Sign up for Travel2gether — your first full AI-generated itinerary is free, no card required.')
 
 @section('content')

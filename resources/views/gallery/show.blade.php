@@ -14,9 +14,9 @@
   ])->values();
 @endphp
 
-@section('title', $place['name'] . ' — photos · Travel2gether')
+@section('title', $place['name'] . ' travel photos' . ($place['country'] && $place['country'] !== $place['name'] ? ', ' . $place['country'] : '') . ' — real trip photos · Travel2gether')
 @section('og_image', Gallery::cover($place['slug'], false))
-@section('meta_description', count($place['photos']) . ' photos and videos from ' . $place['name'] . ($place['country'] ? ', ' . $place['country'] : '') . ', taken on real trips.')
+@section('meta_description', count($place['photos']) . ' photos and videos from ' . $place['name'] . ($place['country'] ? ', ' . $place['country'] : '') . ', taken on real trips' . (\App\Support\Destinations::bySlug($place['slug']) ? ' — plus when to go, how many days, and visa for Filipinos.' : '.'))
 
 @push('styles')
 <style>
@@ -81,7 +81,7 @@
           <span><b>Ideal trip</b>{{ $guide['trip_length'] }}</span>
           @if ($visa)<span><b>Philippine passport</b>{{ \App\Support\Destinations::visaLabel($visa['visa_status']) }}</span>@endif
         </div>
-        <p>{{ $guide['overview'] }}</p>
+        <p>{{ $guide['overview'] }} @if(\App\Support\Destinations::bySlug($place['slug']))<a href="{{ route('destinations.show', $place['slug']) }}">Full {{ $place['name'] }} guide →</a>@endif</p>
       @elseif ($visa)
         <div class="g-facts"><span><b>Philippine passport</b>{{ \App\Support\Destinations::visaLabel($visa['visa_status']) }}</span></div>
       @endif

@@ -1,6 +1,7 @@
 @extends('layouts.site')
 
 @section('title', 'Forgot password · Travel2gether')
+@section('robots', 'noindex')
 
 @section('content')
 <div class="card-wrap">
