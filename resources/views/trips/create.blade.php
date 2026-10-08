@@ -64,6 +64,9 @@
 @section('content')
 <div class="build">
   <h1><span class="gtext">Plan a new trip</span></h1>
+  @if (session('status'))
+    <p class="lede" role="status" style="background:rgba(59,167,118,0.1); border:1px solid #8fd3b4; color:#2f6d54; border-radius:12px; padding:12px 16px; font-size:14px;">{{ session('status') }}</p>
+  @endif
   @guest
     <p class="lede" style="margin-bottom:8px;"><strong>No account needed to start.</strong> Fill it in first; you'll only sign up to save it.</p>
   @endguest

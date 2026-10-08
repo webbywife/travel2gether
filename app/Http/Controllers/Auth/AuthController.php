@@ -48,6 +48,9 @@ class AuthController extends Controller
             if ($trip = PendingTrip::claim($request, $user)) {
                 return redirect()->route('trips.show', $trip)->with('status', 'Your trip is saved. Invite your group, or draft a day with AI. (We also sent you a link to confirm your email.)');
             }
+
+            // Straight into planning: the account works now, and the email link can wait.
+            return redirect()->route('trips.create')->with('status', "Welcome, {$user->name}! Your account is ready, so let's plan your first trip. (We also sent you a link to confirm your email.)");
         }
 
         return redirect()->route('register.pending')->with('pending_email', $data['email']);

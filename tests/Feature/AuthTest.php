@@ -37,7 +37,7 @@ class AuthTest extends TestCase
         Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
     }
 
-    public function test_registering_lands_on_the_check_your_email_screen_and_sends_verification(): void
+    public function test_registering_goes_straight_to_the_planner_and_sends_verification(): void
     {
         Notification::fake();
 
@@ -46,9 +46,10 @@ class AuthTest extends TestCase
             'email' => 'newbie@example.com',
             'password' => 'correct-horse-battery-staple',
             'password_confirmation' => 'correct-horse-battery-staple',
-        ])->assertRedirect(route('register.pending'));
+        ])->assertRedirect(route('trips.create'));
 
         $this->assertAuthenticated();
+        $this->get(route('trips.create'))->assertSee('Welcome, Newbie!');
         $user = User::firstWhere('email', 'newbie@example.com');
         $this->assertNotNull($user);
         $this->assertNull($user->email_verified_at);
