@@ -790,6 +790,18 @@
 </div>
 
 <script>
+  // Counts (anonymously, once a day) that a visitor reached the hiccups — see Analytics.
+  (function () {
+    var box = document.querySelector('.hiccup, .stop-hiccup');
+    if (!box || !('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (es) {
+      if (!es.some(function (e) { return e.isIntersecting; })) return;
+      io.disconnect();
+      var f = new FormData(); f.append('_token', @json(csrf_token()));
+      navigator.sendBeacon(@json(route('trips.seen-hiccups', $trip)), f);
+    }, { threshold: 0.6 });
+    io.observe(box);
+  })();
   window.T2G = {
     slug: @json($trip->slug),
     partySize: @json((int) ($trip->party_size ?? 1)),

@@ -84,7 +84,33 @@ class AnalyticsController extends Controller
             'byMonth' => $byMonth,
             'topDestinations' => $topDestinations,
             'funnel' => $this->funnel(),
+            'group' => $this->groupUse(),
         ]);
+    }
+
+    /**
+     * Do groups actually use the group features? Members' own trips only:
+     * the samples and the admins' trips are left out so testing doesn't count.
+     *
+     * @return array<string, int>
+     */
+    private function groupUse(): array
+    {
+        $adminIds = User::whereIn('email', config('app.admin_emails', []))->pluck('id');
+        $trips = Trip::whereNotNull('created_by')->whereNotIn('created_by', $adminIds)->pluck('id');
+
+        return [
+            'trips' => $trips->count(),
+            'invites' => \App\Models\TripInvite::whereIn('trip_id', $trips)->count(),
+            'joined' => DB::table('trip_user')->whereIn('trip_id', $trips)->where('role', '!=', 'owner')->count(),
+            'groupTrips' => DB::table('trip_user')->whereIn('trip_id', $trips)->where('role', '!=', 'owner')
+                ->select('trip_id')->groupBy('trip_id')->havingRaw('count(*) >= 2')->get()->count(),
+            'picks' => \App\Models\TripPick::whereIn('trip_id', $trips)->count(),
+            'pickTrips' => \App\Models\TripPick::whereIn('trip_id', $trips)->whereNotNull('picked_by')
+                ->select('trip_id')->groupBy('trip_id')->havingRaw('count(distinct picked_by) >= 2')->get()->count(),
+            'hiccups' => DB::table('visit_events')->where('event', 'hiccups')
+                ->where('day', '>=', now()->subDays(6)->toDateString())->count(),
+        ];
     }
 
     /**

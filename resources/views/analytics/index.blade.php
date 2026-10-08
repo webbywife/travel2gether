@@ -52,6 +52,17 @@
     <div class="stat"><div class="num">{{ $resolvedAirportPct }}%</div><div class="lbl">airports recognized</div></div>
   </div>
 
+  <h2>Do groups use it? · members' trips, excluding yours and the samples</h2>
+  <div class="stat-grid">
+    <div class="stat"><div class="num">{{ $group['invites'] }}</div><div class="lbl">invites sent</div></div>
+    <div class="stat"><div class="num">{{ $group['joined'] }}</div><div class="lbl">friends who joined a trip</div></div>
+    <div class="stat"><div class="num">{{ $group['groupTrips'] }}</div><div class="lbl">trips with 3+ people</div></div>
+    <div class="stat"><div class="num">{{ $group['picks'] }}</div><div class="lbl">picks made</div></div>
+    <div class="stat"><div class="num">{{ $group['pickTrips'] }}</div><div class="lbl">trips where 2+ people picked</div></div>
+    <div class="stat"><div class="num">{{ $group['hiccups'] }}</div><div class="lbl">visitors who reached the hiccups (7 days)</div></div>
+  </div>
+  <p class="empty-note" style="padding:10px 0 0; text-align:left;">Out of {{ $group['trips'] }} member {{ \Illuminate\Support\Str::plural('trip', $group['trips']) }}. "Trips where 2+ people picked" is the number that shows the group feature working.</p>
+
   <h2>Where visitors come from · last 7 days</h2>
   <div class="an-card" style="overflow-x:auto;">
     @php $srcLabel = ['tiktok' => 'TikTok', 'ig' => 'Instagram', 'fb' => 'Facebook', 'pinterest' => 'Pinterest', 'threads' => 'Threads', 'x' => 'X', 'google' => 'Google', 'direct' => 'Direct / typed', 'other' => 'Other sites']; @endphp

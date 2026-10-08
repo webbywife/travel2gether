@@ -124,4 +124,14 @@ class TripController extends Controller
 
         return redirect()->route('dashboard')->with('status', "Deleted \"{$title}\".");
     }
+
+    /** Beacon from the trip page: this visitor scrolled to a "Possible hiccups" box (counted once a day, anonymously). */
+    public function seenHiccups(Request $request, Trip $trip): \Illuminate\Http\Response
+    {
+        if (! $request->user()?->isAdmin()) {
+            \App\Support\VisitTracker::record($request, 'hiccups');
+        }
+
+        return response()->noContent();
+    }
 }

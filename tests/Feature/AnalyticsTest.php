@@ -60,4 +60,29 @@ class AnalyticsTest extends TestCase
             ->assertSee('MNL', false)
             ->assertSee('KIX', false);
     }
+
+    public function test_group_use_counts_members_trips_but_not_the_admins_or_samples(): void
+    {
+        config(['app.admin_emails' => ['admin@example.com']]);
+        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $owner = User::factory()->create();
+        $payload = ['destination' => 'Kyoto, Japan', 'arrival_date' => '2027-04-01', 'departure_date' => '2027-04-03',
+            'segments' => [['from' => 'MNL', 'to' => 'KIX'], ['from' => 'KIX', 'to' => 'MNL']], 'areas' => [['name' => 'Gion']]];
+        $mine = app(\App\Actions\CreateTrip::class)($payload, $owner);
+        $adminTrip = app(\App\Actions\CreateTrip::class)($payload, $admin);
+
+        foreach ([$mine, $adminTrip] as $trip) {
+            \App\Models\TripInvite::create(['trip_id' => $trip->id, 'created_by' => $trip->created_by]);
+        }
+        foreach (User::factory()->count(2)->create() as $friend) {
+            $mine->members()->attach($friend->id, ['role' => 'editor']);
+        }
+
+        $this->post(route('trips.seen-hiccups', $mine))->assertNoContent();
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('visit_events')->where('event', 'hiccups')->count());
+
+        $this->actingAs($admin)->get(route('analytics'))->assertOk()
+            ->assertSee('Do groups use it?')
+            ->assertViewHas('group', fn ($g) => $g['trips'] === 1 && $g['invites'] === 1 && $g['joined'] === 2 && $g['groupTrips'] === 1 && $g['hiccups'] === 1);
+    }
 }
