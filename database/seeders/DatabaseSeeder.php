@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             Seoul2026Seeder::class,
             Tokyo2026Seeder::class,
+            Singapore2027Seeder::class,
+            Kyoto2026Seeder::class,
+            Osaka2027Seeder::class,
         ]);
     }
 }
