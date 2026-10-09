@@ -31,11 +31,19 @@ class CreateTrip
             'hotel_name' => null, 'hotel_address' => null, 'hotel_lat' => null, 'hotel_lon' => null,
             'budget_per_person' => null,
         ];
+        // Every flight leg has every field (a quick plan may send none of them).
+        $blankLeg = array_fill_keys(['from', 'to', 'date', 'depart', 'arrive', 'terminal', 'airline', 'flight_no'], null);
+        $data['segments'] = [($data['segments'][0] ?? []) + $blankLeg, ($data['segments'][1] ?? []) + $blankLeg];
 
         return DB::transaction(function () use ($data, $owner) {
             $arrival = Carbon::parse($data['arrival_date']);
             $departure = Carbon::parse($data['departure_date']);
             $areas = collect($data['areas'])->filter(fn ($a) => filled($a['name'] ?? null))->values();
+            if ($areas->isEmpty()) {
+                // Quick plan: no areas given, so every day starts from the destination itself.
+                $areas = collect([['name' => trim(Str::before($data['destination'], ',')),
+                    'lat' => $data['dest_lat'] ?? null, 'lon' => $data['dest_lon'] ?? null]]);
+            }
 
             $trip = Trip::create([
                 'slug' => $this->uniqueSlug($data['title'] ?: $data['destination']),

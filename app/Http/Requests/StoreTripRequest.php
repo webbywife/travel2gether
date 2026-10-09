@@ -35,6 +35,9 @@ class StoreTripRequest extends FormRequest
             'segments.*.airline' => ['nullable', 'string', 'max:60'],
             'segments.*.flight_no' => ['nullable', 'string', 'max:20'],
 
+            'dest_lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'dest_lon' => ['nullable', 'numeric', 'between:-180,180'],
+
             'hotel_name' => ['nullable', 'string', 'max:160'],
             'hotel_address' => ['nullable', 'string', 'max:255'],
             'hotel_lat' => ['nullable', 'numeric', 'between:-90,90'],
@@ -63,11 +66,6 @@ class StoreTripRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                $areas = collect($this->input('areas', []))->filter(fn ($a) => filled($a['name'] ?? null));
-                if ($areas->isEmpty()) {
-                    $validator->errors()->add('areas', 'Add at least one area you want to visit.');
-                }
-
                 try {
                     $span = Carbon::parse($this->input('arrival_date'))->diffInDays(Carbon::parse($this->input('departure_date')));
                     if ($span > 30) {

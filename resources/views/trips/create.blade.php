@@ -49,6 +49,16 @@
   .form-error ul{margin:0; padding-left:18px;}
   .actions{display:flex; gap:12px; align-items:center; margin:6px 0 60px;}
   @media (max-width:620px){ .g2,.g3{grid-template-columns:1fr;} }
+  .build, .build form{max-width:100%; overflow-wrap:anywhere;}
+  .grid > *{min-width:0;}
+  .in{min-width:0; max-width:100%;}
+  details.opt{margin:4px 0 6px;}
+  details.opt > summary{cursor:pointer; list-style:none; font-weight:600; font-size:15px; color:var(--pink); padding:12px 0;}
+  details.opt > summary::-webkit-details-marker{display:none;}
+  details.opt > summary span{font-weight:400; color:var(--text-dim); font-size:13.5px;}
+  details.opt.more{margin:0 0 18px;}
+  details.opt.more > summary{border:1px dashed var(--line); border-radius:14px; padding:14px 18px; background:rgba(255,255,255,0.7);}
+  @media (max-width:620px){ .build{padding:0 16px;} .step{padding:18px 16px;} .shop-row .amt input{width:76px;} }
   .start{background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:0 0 14px;}
   .start-head{font-weight:600; font-size:14px; margin-bottom:8px;}
   .start-note{font-size:12.5px; color:var(--text-dim); margin:4px 0;}
@@ -70,7 +80,7 @@
   @guest
     <p class="lede" style="margin-bottom:8px;"><strong>No account needed to start.</strong> Fill it in first; you'll only sign up to save it.</p>
   @endguest
-  <p class="lede">Give the bones — flights, dates, where you're staying, the areas you want. You'll get an editable day-by-day skeleton to fill in (or draft with AI) and share with your group.</p>
+  <p class="lede">Just the destination and your dates to start. You'll get a day-by-day plan to fill in (or draft with AI) and share with your group.</p>
 
   @if ($errors->any())
     <div class="form-error"><ul>@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
@@ -120,6 +130,8 @@
         <div><label class="f" for="f-departure-date">Departure date *</label><input id="f-departure-date" class="in" type="date" name="departure_date" value="{{ old('departure_date') }}" required></div>
       </div>
 
+      <details class="opt" @if(old('segments.0.from') || old('segments.0.airline')) open @endif>
+      <summary>✈️ Add your flights <span>(optional)</span></summary>
       @foreach (['Outbound flight', 'Return flight'] as $s => $lbl)
         <div class="flight">
           <h4>{{ $lbl }}</h4>
@@ -135,6 +147,7 @@
           <p class="hint" style="margin:10px 0 0;">The date shown on the flight pass is filled in automatically from your arrival/departure dates above.</p>
         </div>
       @endforeach
+      </details>
 
       <datalist id="airportsList">
         @foreach ($airports ?? [] as $a)
@@ -148,6 +161,9 @@
       </datalist>
     </div>
 
+    <details class="opt more" @if($errors->any() || old('hotel_name') || old('areas.0.name')) open @endif>
+    <summary>➕ Add more details <span>(optional): hotel, areas, interests, budget</span></summary>
+    <p class="hint" style="margin:4px 0 14px;">Skip this and we'll start from the destination itself. You can change everything later, with your group.</p>
     <div class="step">
       <h2><span class="n">03</span>Where you're staying</h2>
       <p class="hint">Search for the hotel — the day skeleton anchors bag-drop and checkout to it, and the map uses its location.</p>
@@ -230,6 +246,8 @@
         </div>
       @endforeach
     </div>
+
+    </details>
 
     <div class="actions">
       <button type="submit" class="btn btn-primary btn-lg">Create the trip</button>

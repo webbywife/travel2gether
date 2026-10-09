@@ -204,17 +204,20 @@ class TripBuilderTest extends TestCase
         $this->assertSame('Arashiyama Ryokan', $days->last()->hotel_name);
     }
 
-    public function test_at_least_one_area_is_required(): void
+    public function test_a_quick_plan_needs_only_the_destination_and_dates(): void
     {
         $user = User::factory()->create();
-        $payload = $this->payload();
-        $payload['areas'] = [['name' => ''], ['name' => '  ']];
 
-        $this->actingAs($user)
-            ->from(route('trips.create'))
-            ->post(route('trips.store'), $payload)
-            ->assertRedirect(route('trips.create'))
-            ->assertSessionHasErrors('areas');
+        $this->actingAs($user)->post(route('trips.store'), [
+            'destination' => 'Sapporo, Japan', 'dest_lat' => 43.06, 'dest_lon' => 141.35,
+            'arrival_date' => '2027-02-05', 'departure_date' => '2027-02-08',
+            'segments' => [['from' => ''], ['from' => '']],
+        ])->assertRedirect();
+
+        $trip = Trip::where('created_by', $user->id)->firstOrFail();
+        $this->assertCount(4, $trip->days);
+        $this->assertEqualsWithDelta(43.06, (float) $trip->lat, 0.001);   // the map starts at the destination
+        $this->get(route('trips.create'))->assertSee('Add more details');
     }
 
     public function test_departure_must_be_after_arrival(): void
