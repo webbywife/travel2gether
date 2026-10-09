@@ -20,6 +20,10 @@ class DatabaseSeeder extends Seeder
             Singapore2027Seeder::class,
             Kyoto2026Seeder::class,
             Osaka2027Seeder::class,
+            NewYork2026Seeder::class,
+            GrandCanyon2027Seeder::class,
+            Paris2027Seeder::class,
+            Rome2027Seeder::class,
         ]);
     }
 }

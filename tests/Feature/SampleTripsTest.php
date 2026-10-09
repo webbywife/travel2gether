@@ -20,6 +20,10 @@ class SampleTripsTest extends TestCase
             'singapore' => [Singapore2027Seeder::class, 'singapore-2027', 4, 'Garden Rhapsody'],
             'kyoto' => [Kyoto2026Seeder::class, 'kyoto-2026', 4, 'Kiyomizu-dera'],
             'osaka' => [Osaka2027Seeder::class, 'osaka-2027', 4, 'Tōdai-ji'],
+            'new york' => [\Database\Seeders\NewYork2026Seeder::class, 'new-york-2026', 5, 'Rockefeller'],
+            'grand canyon' => [\Database\Seeders\GrandCanyon2027Seeder::class, 'grand-canyon-2027', 4, 'Antelope Canyon'],
+            'paris' => [\Database\Seeders\Paris2027Seeder::class, 'paris-2027', 5, 'Sainte-Chapelle'],
+            'rome' => [\Database\Seeders\Rome2027Seeder::class, 'rome-2027', 4, 'Sistine Chapel'],
         ];
     }
 
