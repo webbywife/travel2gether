@@ -135,7 +135,8 @@
     font-family:'Caveat',cursive; font-size:30px; font-weight:700;
     color:var(--accent); transform:rotate(-1.5deg); margin-left:8px; line-height:1;
   }
-  .sb-tabs{display:flex; gap:6px;}
+  .sb-tabs{display:flex; flex-wrap:wrap; gap:6px; max-width:100%;}
+  @media (max-width:640px){ .sb-tabs{flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch;} .sb-tab{flex:0 0 auto;} }
   .sb-tab{
     font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.04em;
     padding:5px 11px; border-radius:999px; border:1px solid var(--line); background:#fff;
@@ -301,7 +302,7 @@
             <button type="button" class="sb-tab {{ $loop->first ? 'on' : '' }}"
                     data-src="{{ route('trips.show', $s) }}"
                     data-label="{{ strtolower($s->destination) }} — plan ✎"
-                    data-href="{{ route('trips.show', $s) }}">{{ $s->title }}</button>
+                    data-href="{{ route('trips.show', $s) }}" title="{{ $s->title }}">{{ str_replace(' National Park', '', \Illuminate\Support\Str::before($s->destination, ',')) }}</button>
           @endforeach
         </div>
       @endif
