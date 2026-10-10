@@ -52,5 +52,16 @@ class SampleTripsTest extends TestCase
             ->assertSee('Sample plan')
             ->assertSee('<link rel="canonical"', false);
         $this->get('/sitemap.xml')->assertSee(route('trips.show', $trip), false);
+        $this->get(route('samples'))->assertOk()->assertSee($trip->title)->assertSee('Sample trips');
+    }
+
+    public function test_every_page_shares_the_same_site_header(): void
+    {
+        $this->seed(Singapore2027Seeder::class);
+        foreach (['/', route('samples'), route('destinations'), route('trips.create'), route('trips.show', 'singapore-2027')] as $url) {
+            $this->get($url)->assertOk()
+                ->assertSee('class="navbar"', false)
+                ->assertSee('href="' . route('samples') . '">Sample trips</a>', false);
+        }
     }
 }

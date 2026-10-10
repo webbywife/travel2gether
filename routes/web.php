@@ -23,6 +23,7 @@ use App\Http\Controllers\TrippieController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
+Route::get('/sample-trips', [PageController::class, 'sampleTrips'])->name('samples');
 Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations');
 Route::get('/destinations/{slug}', [DestinationController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('destinations.show');
 Route::get('/sitemap.xml', \App\Http\Controllers\SitemapController::class)->name('sitemap');

@@ -76,28 +76,6 @@
   }
   .page, .site-foot{position:relative; z-index:1;}
 
-  .navbar{
-    position:sticky; top:0; z-index:10000;
-    background:rgba(255,255,255,0.78);
-    -webkit-backdrop-filter:saturate(160%) blur(12px);
-    backdrop-filter:saturate(160%) blur(12px);
-    border-bottom:1px solid var(--line);
-  }
-  .site-nav{
-    max-width:1120px; margin:0 auto; padding:15px 24px;
-    display:flex; align-items:center; justify-content:space-between; gap:16px;
-  }
-  .brand{display:flex; align-items:center; gap:9px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; text-decoration:none; letter-spacing:-0.015em;}
-  .brand-mark{height:38px; width:auto; display:block;}
-  .brand .gtext{padding-right:1px;}
-  .brand-word{height:28px; width:auto; display:block;}
-  @media (max-width:480px){ .brand-word{height:20px;} }
-  .site-nav .links{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
-  .site-nav .links a{color:var(--text-dim); text-decoration:none; font-size:14.5px; font-weight:500;}
-  .site-nav .links a:hover{color:var(--text);}
-  .site-nav .links a.btn-primary{color:#fff;}
-  .site-nav .links a.btn-primary:hover{color:#fff;}
-  .site-nav .links a.btn-ghost{color:var(--pink);}
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
     font-family:'Inter',sans-serif; font-size:14.5px; font-weight:600;
@@ -146,29 +124,6 @@
   .btn-google svg{width:18px; height:18px; flex-shrink:0;}
   .or-divider{display:flex; align-items:center; gap:12px; color:var(--text-dim); font-size:12px; letter-spacing:0.08em; text-transform:uppercase; margin:0 0 16px;}
   .or-divider::before, .or-divider::after{content:""; flex:1; height:1px; background:var(--line);}
-  @media (max-width:560px){ .site-nav{padding:12px 16px;} }
-
-  /* Mobile menu: logo · main button · ☰ on one line, the rest in a drop-down */
-  .nav-cta, .nav-toggle{display:none;}
-  @media (max-width:860px){
-    .site-nav{flex-wrap:nowrap; position:relative;}
-    .brand{margin-right:auto;}
-    .nav-cta{display:inline-flex; padding:9px 16px; font-size:14px; white-space:nowrap;}
-    .nav-toggle{display:inline-flex; flex-direction:column; justify-content:center; gap:5px; width:42px; height:42px; flex-shrink:0;
-      padding:0 10px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,0.7); cursor:pointer;}
-    .nav-toggle span{display:block; height:2px; border-radius:2px; background:var(--text); transition:transform .2s ease, opacity .2s ease;}
-    .site-nav.open .nav-toggle span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-    .site-nav.open .nav-toggle span:nth-child(2){opacity:0;}
-    .site-nav.open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-    .site-nav .links{display:none; position:absolute; top:100%; left:0; right:0; flex-direction:column; align-items:stretch; gap:0;
-      background:rgba(255,255,255,0.98); border-bottom:1px solid var(--line); box-shadow:0 18px 30px -18px rgba(36,30,35,0.25); padding:6px 16px 14px;}
-    .site-nav.open .links{display:flex;}
-    .site-nav .links a, .site-nav .links .links-logout{padding:13px 4px !important; font-size:16px !important; border-bottom:1px solid var(--line); text-align:left;}
-    .site-nav .links form{display:block !important;}
-    .site-nav .links .btn-primary{display:none;}   /* already in the bar */
-    .site-nav .links a:last-of-type{border-bottom:0;}
-  }
-  @media (max-width:380px){ .nav-cta{padding:8px 12px; font-size:13px;} }
 
   /* Smooth section-to-section navigation + scroll reveal */
   html{scroll-behavior:smooth; scroll-padding-top:84px;}
@@ -185,50 +140,7 @@
 </head>
 <body>
 @stack('parallax')
-<header class="navbar">
-  <nav class="site-nav">
-    <a class="brand" href="{{ route('home') }}" aria-label="Travel2gether — home">
-      <img class="brand-word" src="{{ asset('img/wordmark.png') }}" width="152" height="28" alt="Travel2gether">
-    </a>
-    @auth
-      <a class="btn btn-primary nav-cta" href="{{ route('trips.create') }}">New trip</a>
-    @else
-      <a class="btn btn-primary nav-cta" href="{{ route('trips.create') }}">Start planning</a>
-    @endauth
-    <button type="button" class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteLinks" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-    <div class="links" id="siteLinks">
-      <a href="{{ route('home') }}#how">How it works</a>
-      <a href="{{ route('destinations') }}">Destinations</a>
-      @if(\App\Support\Gallery::places())<a href="{{ route('gallery') }}">Gallery</a>@endif
-      @if($sampleTrip ?? null)<a href="{{ route('trips.show', $sampleTrip) }}">Sample trip</a>@endif
-      @auth
-        <a href="{{ route('dashboard') }}">My trips</a>
-        <a href="{{ route('profile.edit') }}">Profile</a>
-        @can('admin')<a href="{{ route('analytics') }}">Analytics</a>@endcan
-        <a class="btn btn-primary" href="{{ route('trips.create') }}">New trip</a>
-        <form method="POST" action="{{ route('logout') }}" style="display:inline;">@csrf
-          <button type="submit" class="links-logout" style="background:none;border:none;color:var(--text-dim);font:inherit;font-size:14.5px;cursor:pointer;padding:0;">Log out</button>
-        </form>
-      @else
-        <a href="{{ route('login') }}">Log in</a>
-        <a class="btn btn-primary" href="{{ route('trips.create') }}">Start planning</a>
-      @endauth
-    </div>
-  </nav>
-</header>
-<script>
-(function () {
-  var nav = document.querySelector('.site-nav'), btn = document.getElementById('navToggle');
-  if (!nav || !btn) return;
-  function set(open) { nav.classList.toggle('open', open); btn.setAttribute('aria-expanded', open); btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu'); }
-  btn.addEventListener('click', function () { set(!nav.classList.contains('open')); });
-  document.getElementById('siteLinks').addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
-  document.addEventListener('click', function (e) { if (!nav.contains(e.target)) set(false); });
-})();
-</script>
+@include('partials.site-header')
 
 <div class="page">
 @yield('content')

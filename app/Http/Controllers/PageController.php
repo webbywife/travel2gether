@@ -20,6 +20,24 @@ class PageController extends Controller
         ]);
     }
 
+    /** All the public sample itineraries, grouped by region. */
+    public function sampleTrips(): View
+    {
+        $region = fn (Trip $t) => match (trim(\Illuminate\Support\Str::afterLast($t->destination, ','))) {
+            'USA', 'United States' => 'USA',
+            'France', 'Italy', 'Spain', 'United Kingdom', 'Germany', 'Greece' => 'Europe',
+            default => 'Asia',
+        };
+        $samples = Trip::where('is_public', true)->whereNull('created_by')
+            ->withCount('days')
+            ->orderByRaw('slug = ? desc', ['tokyo-2026'])->orderBy('id')
+            ->get();
+
+        return view('samples.index', [
+            'groups' => $samples->groupBy($region)->sortBy(fn ($g, $k) => array_search($k, ['Asia', 'USA', 'Europe'])),
+        ]);
+    }
+
     public function dashboard(Request $request): View
     {
         $user = $request->user();
