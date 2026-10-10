@@ -15,6 +15,7 @@ class SitemapController extends Controller
         $urls = [
             [route('home'), '1.0'],
             [route('destinations'), '0.9'],
+            [route('samples'), '0.9'],
         ];
         foreach (Destinations::templates() as $t) {
             $urls[] = [route('destinations.show', Destinations::slug($t)), '0.8'];
