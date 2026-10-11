@@ -104,7 +104,10 @@ class StopPhotoFinder
                 $this->pexelsCalls++;
                 $res = rescue(fn () => Http::withHeaders(['Authorization' => $key])->timeout(8)
                     ->get(self::PEXELS_URL, ['query' => $q, 'per_page' => 1, 'orientation' => 'landscape']), null, false);
-                $p = $res?->successful() ? ($res->json('photos.0') ?? null) : null;
+                if (! $res?->successful()) {
+                    return null; // rate limit or outage: not cached, so a later run can retry
+                }
+                $p = $res->json('photos.0');
 
                 return $p ? [
                     'url' => (string) data_get($p, 'src.medium'),
@@ -119,6 +122,12 @@ class StopPhotoFinder
         }
 
         return null;
+    }
+
+    /** How many Pexels searches this finder has made (cache hits don't count). */
+    public function pexelsCalls(): int
+    {
+        return $this->pexelsCalls;
     }
 
     private static function norm(string $s): string
