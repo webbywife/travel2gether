@@ -97,6 +97,7 @@ Route::get('/places/{placeId}', [PlacesController::class, 'show'])->middleware([
 // Short, typeable link for TikTok videos (captions and comments there aren't clickable).
 // Only used on TikTok, so visits through it count as TikTok in the launch funnel.
 Route::redirect('/tokyo', '/t/tokyo-2026?ref=tiktok', 302);
+Route::redirect('/newyork', '/t/new-york-2026?ref=tiktok', 302);
 foreach ([
     'seoul' => 'seoul', 'nami' => 'gapyeong-nami-island', 'kyoto' => 'kyoto', 'osaka' => 'osaka', 'fukuoka' => 'fukuoka',
     'kamakura' => 'kamakura-enoshima', 'fuji' => 'mt-fuji-five-lakes', 'hakone' => 'hakone', 'taipei' => 'taipei-keelung',
