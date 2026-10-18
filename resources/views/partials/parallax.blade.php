@@ -33,7 +33,7 @@
   {{-- airplane (top view, climbing, with a dashed trail) --}}
   <div class="p" data-speed="0.26" style="top:14vh; right:6%; width:160px; height:118px;">
     <span class="pi"><svg viewBox="0 0 150 110" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M6 100 C 28 96, 46 84, 60 70" stroke-dasharray="3 6"/>
+      <path id="pxPlaneTrail" d="M6 100 C 28 96, 46 84, 60 70" stroke-dasharray="3 6"/>
       <g transform="translate(98 44) rotate(50) scale(1.2) translate(-30 -40)">
         <path d="M30 2c3 0 5 5 5 12v18l26 15v7l-26-8v20l8 7v6l-13-4-13 4v-6l8-7V46L-1 54v-7l26-15V14c0-7 2-12 5-12Z"/>
         <path d="M25 18h10"/>

@@ -56,6 +56,11 @@
   .hp-plane path{fill:#fff; stroke:#C22A66; stroke-width:1.4; stroke-linejoin:round;}
   html[data-motion="reduce"] .hp-plane{display:none;}
   @media (prefers-reduced-motion: reduce){ html:not([data-motion="full"]) .hp-plane{display:none;} }
+  .hp-link{position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; overflow:visible; display:none;}
+  .hp-link path{fill:none; stroke:#C22A66; stroke-width:2; stroke-dasharray:3 6; stroke-linecap:round; opacity:0; transition:opacity .8s ease;}
+  .hp-link.on path{opacity:.7;}
+  @media (min-width:900px){ #pxPlaneTrail.hp-replaced{display:none;} }
+  @media (min-width:900px){ .hp-link{display:block;} }
   .hero-orig .kicker{display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.18em; text-transform:uppercase; color:#9E4A6E;
     border:1px solid rgba(36,30,35,0.10); background:rgba(255,255,255,0.7); border-radius:999px; padding:7px 14px; margin-bottom:24px;}
   .hero-orig h1{font-family:'Space Grotesk',sans-serif; font-weight:700 !important; font-size:clamp(34px, 5.6vw, 58px); line-height:1.05; letter-spacing:-0.025em;
@@ -294,6 +299,8 @@
       <figcaption>Grand Canyon, Arizona</figcaption>
     </figure>
   </header>
+  {{-- connects the photo's route to the airplane doodle (positions measured live; desktop only) --}}
+  <svg class="hp-link" id="hpLink" aria-hidden="true"><path id="hpLinkPath"/></svg>
 </div>
 
 {{-- ================= MARQUEE ================= --}}
@@ -560,6 +567,31 @@
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
+  }
+
+  // Dashed connector: route's end pin -> start of the airplane doodle's trail. Both move (parallax,
+  // polaroid tilt/hover), so it's re-measured every frame while the hero is on screen.
+  var link = document.getElementById('hpLink'), linkPath = document.getElementById('hpLinkPath');
+  var pinEnd = document.querySelector('.hp-pin-end'), trail = document.getElementById('pxPlaneTrail');
+  if (link && pinEnd && trail && trail.getScreenCTM) {
+    var heroOn = true;
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { heroOn = e[0].isIntersecting; }).observe(link);
+    setTimeout(function () { link.classList.add('on'); }, 2400);   // after the photo route has drawn in
+    trail.classList.add('hp-replaced');                                // the connector takes over the doodle's own short trail
+    (function tick() {
+      if (heroOn && getComputedStyle(link).display !== 'none') {
+        var box = link.getBoundingClientRect(), r = pinEnd.getBoundingClientRect();
+        var ctm = trail.getScreenCTM(), p0 = trail.getPointAtLength(trail.getTotalLength());   // the plane's tail
+        if (ctm && r.width) {
+          var x1 = r.left + r.width / 2 - box.left, y1 = r.top + r.height / 2 - box.top;
+          var x2 = ctm.a * p0.x + ctm.c * p0.y + ctm.e - box.left, y2 = ctm.b * p0.x + ctm.d * p0.y + ctm.f - box.top;
+          var dx = x2 - x1;
+          linkPath.setAttribute('d', 'M' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' C ' + (x1 + dx * 0.15).toFixed(1) + ' ' + (y1 - 90).toFixed(1)
+            + ', ' + (x2 - 46).toFixed(1) + ' ' + (y2 + 34).toFixed(1) + ', ' + x2.toFixed(1) + ' ' + y2.toFixed(1));
+        }
+      }
+      requestAnimationFrame(tick);
+    })();
   }
 
   // Live sample switcher
