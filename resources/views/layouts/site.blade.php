@@ -20,7 +20,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#FFFFFF; --panel:#FFF8FA; --panel-2:#FDEAF1;
@@ -41,7 +41,7 @@
   body{
     margin:0;
     color:var(--text);
-    font-family:'Inter', sans-serif;
+    font-family:'Inter Tight', sans-serif;
     font-size:17px;
     line-height:1.6;
     background: linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), radial-gradient(circle at 12% 8%, rgba(225, 74, 128, 0.05), transparent 40%), radial-gradient(circle at 88% 18%, rgba(180, 143, 217, 0.05), transparent 40%), url(/img/bg-pattern.webp), var(--bg);
@@ -52,7 +52,7 @@
     border-top: 5px solid #bf2a64;
   }
   a{color:var(--pink);}
-  .mono{font-family:'JetBrains Mono',monospace;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
 
   /* Parallax travel doodles behind everything */
   .parallax-root{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
@@ -78,7 +78,7 @@
 
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
-    font-family:'Inter',sans-serif; font-size:14.5px; font-weight:600;
+    font-family:'Inter Tight',sans-serif; font-size:14.5px; font-weight:600;
     padding:11px 20px; border-radius:999px; text-decoration:none; cursor:pointer;
     border:1px solid transparent; transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
   }
@@ -93,18 +93,18 @@
     display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
     color:var(--text-dim); font-size:13.5px;
   }
-  .stamp{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--pink); border:1px solid var(--pink); border-radius:999px; padding:7px 14px; letter-spacing:0.06em;}
+  .stamp{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--pink); border:1px solid var(--pink); border-radius:999px; padding:7px 14px; letter-spacing:0.06em;}
 
   /* Auth + narrow content pages */
   .card-wrap{max-width:428px; margin:56px auto 0;}
   .card{background:rgba(255,255,255,0.94); border:1px solid var(--line); border-radius:20px; padding:32px; box-shadow:var(--shadow-md);}
-  .card h1{font-family:'Space Grotesk',sans-serif; font-size:27px; margin:0 0 6px; letter-spacing:-0.015em;}
+  .card h1{font-family:'Inter Tight',sans-serif; font-size:27px; margin:0 0 6px; letter-spacing:-0.015em;}
   .card .lede{color:var(--text-dim); font-size:14.5px; margin:0 0 22px;}
   .field{margin-bottom:16px;}
   .field label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:5px; letter-spacing:0.02em;}
   .field input{
     width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:10px;
-    background:var(--panel); font-family:'Inter',sans-serif; font-size:15px; color:var(--text);
+    background:var(--panel); font-family:'Inter Tight',sans-serif; font-size:15px; color:var(--text);
   }
   .field input:focus{outline:2px solid var(--pink-light); border-color:var(--pink);}
   .form-row{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; font-size:13.5px; color:var(--text-dim);}
@@ -117,7 +117,7 @@
   .btn-google{
     display:flex; align-items:center; justify-content:center; gap:10px; width:100%;
     padding:11px 12px; border-radius:10px; border:1px solid var(--line); background:#fff;
-    color:var(--text); font-family:'Inter',sans-serif; font-size:14.5px; font-weight:600;
+    color:var(--text); font-family:'Inter Tight',sans-serif; font-size:14.5px; font-weight:600;
     text-decoration:none; cursor:pointer; margin-bottom:16px;
   }
   .btn-google:hover{background:var(--panel); border-color:var(--pink-light);}
@@ -135,8 +135,9 @@
     .reveal{opacity:1 !important; transform:none !important; transition:none !important;}
   }
 </style>
-<noscript><style>.reveal{opacity:1 !important; transform:none !important;}</style></noscript>
 @stack('styles')
+<link rel="stylesheet" href="{{ asset('css/t2g.css') }}?v={{ filemtime(public_path('css/t2g.css')) }}">
+<noscript><style>.reveal,[data-stagger]>*{opacity:1 !important; transform:none !important;} [data-split] .w>span{transform:none !important;} .unveil{clip-path:none !important;}</style></noscript>
 </head>
 <body>
 @stack('parallax')
@@ -146,31 +147,9 @@
 @yield('content')
 </div>
 
-<footer class="site-foot">
-  <span>Travel2gether — AI-drafted itineraries your group shapes together. · <a href="{{ route('privacy') }}" style="color:inherit;">Privacy &amp; cookies</a></span>
-  <span class="stamp">PLAN · TOGETHER · {{ date('Y') }}</span>
-</footer>
+@include('partials.site-footer')
 
-<script>
-(function () {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  var els = document.querySelectorAll('.reveal');
-  if (!els.length || !('IntersectionObserver' in window)) {
-    els.forEach(function (e) { e.classList.add('is-visible'); });
-    return;
-  }
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
-    });
-  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
-  els.forEach(function (e) { io.observe(e); });
-  // Safety net: never leave content hidden.
-  window.addEventListener('load', function () {
-    setTimeout(function () { els.forEach(function (e) { e.classList.add('is-visible'); }); }, 2500);
-  });
-})();
-</script>
+<script src="{{ asset('js/t2g.js') }}?v={{ filemtime(public_path('js/t2g.js')) }}" defer></script>
 @include('partials.trippie')
 @include('partials.cookie-notice')
 </body>

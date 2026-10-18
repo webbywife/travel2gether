@@ -6,17 +6,17 @@
 @push('styles')
 <style>
   .legal{max-width:760px; margin:44px auto 80px; padding:0 24px;}
-  .legal h1{font-family:'Space Grotesk',sans-serif; font-size:30px; margin:0 0 6px; letter-spacing:-0.015em;}
+  .legal h1{font-family:'Inter Tight',sans-serif; font-size:30px; margin:0 0 6px; letter-spacing:-0.015em;}
   .legal .updated{color:var(--text-dim); font-size:13px; margin:0 0 28px;}
   .legal section{background:rgba(255,255,255,0.9); border:1px solid var(--line); border-radius:16px; padding:22px 24px; margin-bottom:16px; box-shadow:var(--shadow-sm);}
-  .legal h2{font-family:'Space Grotesk',sans-serif; font-size:17px; margin:0 0 10px; letter-spacing:-0.01em;}
+  .legal h2{font-family:'Inter Tight',sans-serif; font-size:17px; margin:0 0 10px; letter-spacing:-0.01em;}
   .legal p{margin:0 0 10px; color:var(--text); font-size:14.5px; line-height:1.65;}
   .legal p:last-child{margin-bottom:0;}
   .legal ul{margin:0 0 10px; padding-left:20px; font-size:14.5px; line-height:1.65;}
   .legal li{margin-bottom:6px;}
   .legal table{width:100%; border-collapse:collapse; font-size:13.5px; margin:4px 0 10px;}
   .legal th, .legal td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
-  .legal th{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-dim);}
+  .legal th{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-dim);}
   .legal .note{background:var(--panel); border-left:3px solid var(--pink); border-radius:0 10px 10px 0; padding:10px 14px; font-size:13px; color:var(--text-dim);}
 </style>
 @endpush

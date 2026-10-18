@@ -20,16 +20,16 @@
 
   $ld = [
       [
-          '@context' => 'https://schema.org', '@type' => 'TouristDestination',
+          "\x40context" => 'https://schema.org', '@type' => 'TouristDestination',
           'name' => "{$name}, {$t['country']}", 'description' => $t['overview'], 'url' => url()->current(),
           'containedInPlace' => ['@type' => 'Country', 'name' => $t['country']],
       ] + ($cover ? ['image' => $cover] : []),
       [
-          '@context' => 'https://schema.org', '@type' => 'FAQPage',
+          "\x40context" => 'https://schema.org', '@type' => 'FAQPage',
           'mainEntity' => array_map(fn ($f) => ['@type' => 'Question', 'name' => $f['q'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']]], $faq),
       ],
       [
-          '@context' => 'https://schema.org', '@type' => 'BreadcrumbList',
+          "\x40context" => 'https://schema.org', '@type' => 'BreadcrumbList',
           'itemListElement' => [
               ['@type' => 'ListItem', 'position' => 1, 'name' => 'Destinations', 'item' => route('destinations')],
               ['@type' => 'ListItem', 'position' => 2, 'name' => $name, 'item' => url()->current()],
@@ -53,17 +53,17 @@
   .dg{max-width:900px; margin:0 auto; padding:36px 24px 64px;}
   .dg-crumb{font-size:13px; color:var(--text-dim);}
   .dg-crumb a{color:var(--text-dim);}
-  .dg h1{font-family:'Space Grotesk',sans-serif; font-size:clamp(30px,4.4vw,46px); margin:10px 0 4px; letter-spacing:-0.02em;}
+  .dg h1{font-family:'Inter Tight',sans-serif; font-size:clamp(30px,4.4vw,46px); margin:10px 0 4px; letter-spacing:-0.02em;}
   .dg .sub{color:var(--text-dim); margin:0 0 22px;}
   .dg-cover{width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:16px; display:block; margin-bottom:22px;}
   .dg-facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-bottom:22px;}
   .dg-fact{background:rgba(255,255,255,0.92); border:1px solid var(--line); border-radius:14px; padding:14px 16px;}
-  .dg-fact b{display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); font-weight:500; margin-bottom:4px;}
+  .dg-fact b{display:block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); font-weight:500; margin-bottom:4px;}
   .dg-fact span{font-size:15px;}
   .dg-overview{font-size:17px; line-height:1.65; margin:0 0 24px;}
   .dg-cta{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin:0 0 30px; display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; justify-content:space-between;}
   .dg-cta p{margin:0; color:var(--text-dim); font-size:14.5px; max-width:52ch;}
-  .dg h2{font-family:'Space Grotesk',sans-serif; font-size:22px; margin:32px 0 12px;}
+  .dg h2{font-family:'Inter Tight',sans-serif; font-size:22px; margin:32px 0 12px;}
   .dg-photos{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
   .dg-photos img{width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block;}
   .dg-faq details{border-bottom:1px solid var(--line); padding:12px 0;}

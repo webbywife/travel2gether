@@ -5,7 +5,7 @@
 @push('styles')
 <style>
   .build{max-width:640px; margin:40px auto 0; padding:0 24px;}
-  .build h1{font-family:'Space Grotesk',sans-serif; font-size:28px; margin:0 0 6px; letter-spacing:-0.015em;}
+  .build h1{font-family:'Inter Tight',sans-serif; font-size:28px; margin:0 0 6px; letter-spacing:-0.015em;}
   .build .lede{color:var(--text-dim); margin:0 0 26px;}
   .step{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,0.94); box-shadow:var(--shadow-sm); padding:24px; margin-bottom:18px;}
   .grid{display:grid; gap:12px;}
@@ -32,7 +32,7 @@
   .loc-err{font-size:12.5px; margin:4px 0 0; color:var(--pink); font-weight:600;}
   .ps-menu .cat{display:inline-block; font-size:11px; font-weight:600; color:var(--lavender); background:rgba(113,86,168,.1); border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:1px;}
   .near{margin-top:16px; border:1px solid var(--line); border-radius:14px; padding:14px 16px; background:var(--panel);}
-  .near h3{font-family:'Space Grotesk',sans-serif; font-size:15px; margin:0 0 10px;}
+  .near h3{font-family:'Inter Tight',sans-serif; font-size:15px; margin:0 0 10px;}
   .near-cols{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
   .near h4{font-size:12.5px; margin:0 0 6px; color:var(--text-dim); font-weight:600;}
   .near h4 small{font-weight:400;}
@@ -48,7 +48,7 @@
 
   /* ✨ AI helper */
   .ai-help{border:1px solid rgba(113,86,168,0.28); background:linear-gradient(180deg, rgba(253,234,241,0.65), rgba(255,255,255,0.94));}
-  .ai-help h2{font-family:'Space Grotesk',sans-serif; font-size:17px; margin:0 0 4px;}
+  .ai-help h2{font-family:'Inter Tight',sans-serif; font-size:17px; margin:0 0 4px;}
   .ai-help p{margin:0 0 12px; font-size:13.5px; color:var(--text-dim);}
   .ai-row{display:flex; gap:10px; flex-wrap:wrap;}
   .ai-row .in{flex:1; min-width:200px;}

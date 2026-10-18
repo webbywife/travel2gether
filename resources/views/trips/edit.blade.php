@@ -5,7 +5,7 @@
 @push('styles')
 <style>
   .build{max-width:640px; margin:40px auto 0; padding:0 24px;}
-  .build h1{font-family:'Space Grotesk',sans-serif; font-size:28px; margin:0 0 6px; letter-spacing:-0.015em;}
+  .build h1{font-family:'Inter Tight',sans-serif; font-size:28px; margin:0 0 6px; letter-spacing:-0.015em;}
   .build .lede{color:var(--text-dim); margin:0 0 26px;}
   .step{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,0.94); box-shadow:var(--shadow-sm); padding:24px; margin-bottom:18px;}
   .grid{display:grid; gap:12px;}
@@ -100,7 +100,7 @@
 @unless($trip->isSample())
 <div class="build" style="margin-top:-30px;">
   <div class="step" style="border-color:rgba(194,42,102,0.35);">
-    <h2 style="font-family:'Space Grotesk',sans-serif; font-size:17px; margin:0 0 6px; color:var(--pink);">Delete this trip</h2>
+    <h2 style="font-family:'Inter Tight',sans-serif; font-size:17px; margin:0 0 6px; color:var(--pink);">Delete this trip</h2>
     <p style="font-size:13.5px; color:var(--text-dim); margin:0 0 12px;">Removes every day, stop, pick and collaborator for good. This can't be undone. Type <b>{{ $trip->title }}</b> to confirm.</p>
     @error('confirm_title')<div class="form-error">{{ $message }}</div>@enderror
     <form method="POST" action="{{ route('trips.destroy', $trip) }}" style="display:flex; gap:10px; flex-wrap:wrap;">

@@ -5,9 +5,9 @@
 @push('styles')
 <style>
   .prof{max-width:640px; margin:44px auto 60px; padding:0 24px;}
-  .prof h1{font-family:'Space Grotesk',sans-serif; font-size:28px; margin:0 0 6px;}
+  .prof h1{font-family:'Inter Tight',sans-serif; font-size:28px; margin:0 0 6px;}
   .prof .lede{color:var(--text-dim); margin:0 0 26px;}
-  .prof h2{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin:32px 0 14px;}
+  .prof h2{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin:32px 0 14px;}
   .card{border:1px solid var(--line); border-radius:16px; background:rgba(255,255,255,0.94); box-shadow:var(--shadow-sm); padding:22px;}
   .flash{background:rgba(59,167,118,0.1); border:1px solid #8fd3b4; color:#2f6d54; border-radius:12px; padding:12px 16px; font-size:14px; margin-bottom:20px;}
   .form-error{background:rgba(225,74,128,0.08); border:1px solid var(--pink-light); color:var(--accent); border-radius:10px; padding:12px 14px; font-size:13.5px; margin-bottom:18px;}
@@ -17,8 +17,8 @@
   .in:focus{outline:2px solid var(--pink-light); border-color:var(--pink);}
   .avatar-row{display:flex; align-items:center; gap:14px; margin-bottom:18px;}
   .avatar-row img{width:56px; height:56px; border-radius:50%; object-fit:cover;}
-  .avatar-fallback{width:56px; height:56px; border-radius:50%; background:var(--grad-soft); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px;}
-  .google-tag{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); background:var(--panel); border-radius:999px; padding:4px 10px; display:inline-block; margin-top:2px;}
+  .avatar-fallback{width:56px; height:56px; border-radius:50%; background:var(--grad-soft); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Inter Tight',sans-serif; font-weight:700; font-size:20px;}
+  .google-tag{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-dim); background:var(--panel); border-radius:999px; padding:4px 10px; display:inline-block; margin-top:2px;}
   .trip-mini{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:14px;}
   .trip-mini:last-child{border-bottom:none;}
   .trip-mini a{font-size:12.5px;}

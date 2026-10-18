@@ -1,6 +1,6 @@
 {{-- The one site header: used by layouts.site and by the trip pages, so every page shares it. Self-contained styles. --}}
 <style>
-  .navbar{--nav-grad:linear-gradient(135deg, #C22A66, #8E3A73); --nav-line:rgba(36,30,35,0.10); font-family:'Inter',sans-serif; line-height:1.6;}
+  .navbar{--nav-grad:linear-gradient(135deg, #C22A66, #8E3A73); --nav-line:rgba(36,30,35,0.10); font-family:'Inter Tight',sans-serif; line-height:1.6;}
   .navbar{
     position:sticky; top:0; z-index:10000;
     background:rgba(255,255,255,0.78);
@@ -12,7 +12,7 @@
     max-width:1120px; margin:0 auto; padding:15px 24px;
     display:flex; align-items:center; justify-content:space-between; gap:16px;
   }
-  .brand{display:flex; align-items:center; gap:9px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; text-decoration:none; letter-spacing:-0.015em;}
+  .brand{display:flex; align-items:center; gap:9px; font-family:'Inter Tight',sans-serif; font-weight:700; font-size:20px; text-decoration:none; letter-spacing:-0.015em;}
   .brand-mark{height:38px; width:auto; display:block;}
   .brand .gtext{padding-right:1px;}
   .brand-word{height:28px; width:auto; display:block;}
@@ -25,7 +25,7 @@
   .site-nav .links a.btn-ghost{color:var(--pink);}
   .navbar .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
-    font-family:'Inter',sans-serif; font-size:14.5px; font-weight:600; line-height:1.2;
+    font-family:'Inter Tight',sans-serif; font-size:14.5px; font-weight:600; line-height:1.2;
     padding:11px 20px; border-radius:999px; text-decoration:none; cursor:pointer;
     border:1px solid transparent; transition:transform .15s ease, box-shadow .15s ease;
   }

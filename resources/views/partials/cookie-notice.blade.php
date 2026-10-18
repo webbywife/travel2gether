@@ -11,7 +11,7 @@
     position:fixed; left:16px; right:16px; bottom:16px; z-index:11000; max-width:560px; margin:0 auto;
     display:flex; align-items:center; gap:14px; flex-wrap:wrap;
     background:#241E23; color:#fff; border-radius:14px; padding:14px 16px;
-    box-shadow:0 20px 50px -18px rgba(0,0,0,0.5); font-family:'Inter',system-ui,sans-serif;
+    box-shadow:0 20px 50px -18px rgba(0,0,0,0.5); font-family:'Inter Tight',system-ui,sans-serif;
     animation:cn-up .3s ease both;
   }
   .cookie-notice p{margin:0; font-size:13px; line-height:1.55; flex:1; min-width:220px;}

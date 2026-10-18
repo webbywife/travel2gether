@@ -1,7 +1,7 @@
 @if(app(\App\Services\TrippieAssistant::class)->enabled())
 <style>
   #trippie, #trippie *{box-sizing:border-box;}
-  #trippie{position:fixed; right:20px; bottom:20px; z-index:12000; font-family:'Inter',system-ui,sans-serif;}
+  #trippie{position:fixed; right:20px; bottom:20px; z-index:12000; font-family:'Inter Tight',system-ui,sans-serif;}
   #trippie .t-launch{
     display:flex; align-items:center; gap:9px; border:0; cursor:pointer; padding:11px 16px 11px 12px;
     border-radius:999px; color:#fff; font-size:14px; font-weight:700; letter-spacing:-0.01em;

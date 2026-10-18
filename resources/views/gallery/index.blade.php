@@ -6,11 +6,11 @@
 @push('styles')
 <style>
   .gal-hero{max-width:900px; margin:0 auto; padding:48px 24px 12px; text-align:center;}
-  .gal-hero h1{font-family:'Space Grotesk',sans-serif; font-size:clamp(28px,4vw,42px); margin:0 0 12px; letter-spacing:-0.02em;}
+  .gal-hero h1{font-family:'Inter Tight',sans-serif; font-size:clamp(28px,4vw,42px); margin:0 0 12px; letter-spacing:-0.02em;}
   .gal-hero p{color:var(--text-dim); max-width:58ch; margin:0 auto;}
   .gal-stats{display:flex; justify-content:center; gap:28px; margin:22px 0 4px; flex-wrap:wrap;}
-  .gal-stats b{display:block; font-family:'Space Grotesk',sans-serif; font-size:26px; color:var(--pink); line-height:1.1;}
-  .gal-stats span{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim);}
+  .gal-stats b{display:block; font-family:'Inter Tight',sans-serif; font-size:26px; color:var(--pink); line-height:1.1;}
+  .gal-stats span{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim);}
 
   .gal-tools{max-width:1120px; margin:20px auto 22px; padding:0 24px; display:flex; justify-content:center;}
   .gal-tools input{width:min(420px,100%); font:15px Inter,sans-serif; padding:11px 16px; border-radius:999px; border:1px solid var(--line); background:#fff;}
@@ -22,9 +22,9 @@
   .place-card:hover{transform:translateY(-3px); box-shadow:var(--shadow-md);}
   .place-card img{width:100%; height:100%; object-fit:cover; display:block;}
   .place-card .shade{position:absolute; inset:auto 0 0 0; padding:44px 16px 14px; background:linear-gradient(transparent, rgba(20,12,18,0.78));}
-  .place-card h3{font-family:'Space Grotesk',sans-serif; font-size:18px; margin:0; line-height:1.2; letter-spacing:-0.01em;}
+  .place-card h3{font-family:'Inter Tight',sans-serif; font-size:18px; margin:0; line-height:1.2; letter-spacing:-0.01em;}
   .place-card .meta{font-size:12.5px; opacity:0.88; margin-top:3px;}
-  .place-card .count{position:absolute; top:12px; right:12px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
+  .place-card .count{position:absolute; top:12px; right:12px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700;
     background:rgba(255,255,255,0.92); color:var(--pink); border-radius:999px; padding:4px 9px;}
   .gal-empty{text-align:center; color:var(--text-dim); padding:40px 24px 80px;}
   @media (max-width:560px){ .place-grid{grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 56px;} .place-card h3{font-size:15px;} .place-card .meta{display:none;} }

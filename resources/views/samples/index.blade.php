@@ -15,28 +15,28 @@
 @push('styles')
 <style>
   .sx-hero{max-width:900px; margin:0 auto; padding:48px 24px 8px; text-align:center;}
-  .sx-hero h1{font-family:'Space Grotesk',sans-serif; font-size:clamp(28px,4vw,42px); margin:0 0 12px; letter-spacing:-0.02em;}
+  .sx-hero h1{font-family:'Inter Tight',sans-serif; font-size:clamp(28px,4vw,42px); margin:0 0 12px; letter-spacing:-0.02em;}
   .sx-hero p{color:var(--text-dim); max-width:62ch; margin:0 auto;}
   .sx-tabs{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:26px auto 30px; padding:0 24px;}
-  .sx-tabs button{font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.03em; padding:8px 15px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--text-dim); cursor:pointer;}
+  .sx-tabs button{font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.03em; padding:8px 15px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--text-dim); cursor:pointer;}
   .sx-tabs button:hover{border-color:var(--pink-light); color:var(--text);}
   .sx-tabs button.on{background:var(--grad-soft); color:#fff; border-color:transparent;}
 
   .sx-region{max-width:1120px; margin:0 auto; padding:0 24px 34px;}
-  .sx-region h2{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin:0 0 14px;}
+  .sx-region h2{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin:0 0 14px;}
   .sx-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:18px;}
   .sx-card{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,0.95); box-shadow:var(--shadow-sm); overflow:hidden; display:flex; flex-direction:column; transition:transform .16s ease, box-shadow .16s ease;}
   .sx-card:hover{transform:translateY(-3px); box-shadow:var(--shadow-md);}
   .sx-photo{position:relative; aspect-ratio:16/10; background:var(--grad); display:block; overflow:hidden;}
   .sx-photo img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
-  .sx-photo .sx-days{position:absolute; left:12px; top:12px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; background:rgba(255,255,255,0.94); color:var(--accent); border-radius:999px; padding:5px 11px;}
+  .sx-photo .sx-days{position:absolute; left:12px; top:12px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; background:rgba(255,255,255,0.94); color:var(--accent); border-radius:999px; padding:5px 11px;}
   .sx-photo .sx-mine{position:absolute; right:12px; top:12px; font-size:11px; font-weight:600; background:rgba(36,30,35,0.72); color:#fff; border-radius:999px; padding:5px 10px;}
   .sx-body{padding:18px 20px 20px; display:flex; flex-direction:column; flex:1;}
-  .sx-body h3{font-family:'Space Grotesk',sans-serif; font-size:20px; margin:0 0 3px; letter-spacing:-0.01em;}
+  .sx-body h3{font-family:'Inter Tight',sans-serif; font-size:20px; margin:0 0 3px; letter-spacing:-0.01em;}
   .sx-body h3 a{color:inherit; text-decoration:none;}
   .sx-meta{font-size:12.5px; color:var(--text-dim); margin-bottom:10px;}
   .sx-pills{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;}
-  .sx-pill{font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; border-radius:999px; padding:3px 9px; background:var(--panel-2); color:var(--accent);}
+  .sx-pill{font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; border-radius:999px; padding:3px 9px; background:var(--panel-2); color:var(--accent);}
   .sx-pill.visa_free{background:rgba(59,167,118,0.12); color:#2f6d54;}
   .sx-pill.evisa{background:rgba(113,86,168,0.12); color:#5a4488;}
   .sx-pill.required{background:rgba(194,42,102,0.1); color:var(--accent);}

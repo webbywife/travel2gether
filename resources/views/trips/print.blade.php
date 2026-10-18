@@ -12,7 +12,7 @@
 @include('partials.favicon')
 <title>{{ $trip->title }} — printable scrapbook</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --pink:#C22A66; --lavender:#7156A8; --text:#241E23; --text-dim:#6B5860;
@@ -20,12 +20,12 @@
   }
   *{box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
   body{
-    margin:0; background:#EDE7DD; color:var(--text); font-family:'Inter',sans-serif;
+    margin:0; background:#EDE7DD; color:var(--text); font-family:'Inter Tight',sans-serif;
     font-size:15px; line-height:1.6; padding:32px 16px 60px;
   }
   .toolbar{max-width:820px; margin:0 auto 18px; display:flex; justify-content:flex-end; gap:10px;}
   .toolbar button, .toolbar a{
-    font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600; color:#fff;
+    font-family:'Inter Tight',sans-serif; font-size:13.5px; font-weight:600; color:#fff;
     background:linear-gradient(102deg,#C22A66,#6E54A6); border:none; border-radius:999px;
     padding:9px 18px; cursor:pointer; text-decoration:none; display:inline-block;
   }
@@ -49,23 +49,23 @@
   .tape.l{left:30px; transform:rotate(-5deg);}
   .tape.r{right:30px; transform:rotate(4deg);}
 
-  .cover h1{font-family:'Space Grotesk',sans-serif; font-size:34px; margin:6px 0 4px; letter-spacing:-0.01em;}
-  .cover .dest{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--pink);}
+  .cover h1{font-family:'Inter Tight',sans-serif; font-size:34px; margin:6px 0 4px; letter-spacing:-0.01em;}
+  .cover .dest{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--pink);}
   .cover .dates{color:var(--text-dim); margin:8px 0 0;}
   .cover .brand{display:flex; align-items:center; gap:8px; margin-bottom:18px;}
   .cover .brand img{height:30px; width:auto;}
-  .cover .brand span{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px;}
+  .cover .brand span{font-family:'Inter Tight',sans-serif; font-weight:700; font-size:16px;}
   .scrap-label{font-family:'Caveat',cursive; font-size:24px; color:var(--pink); transform:rotate(-1.5deg); display:inline-block; margin:0 0 6px;}
   .visa-line{display:inline-block; font-size:12.5px; background:rgba(194,42,102,0.08); color:var(--pink); border-radius:999px; padding:5px 12px; margin-top:12px;}
 
   .day-head{display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
-  .day-head h2{font-family:'Space Grotesk',sans-serif; font-size:22px; margin:0; letter-spacing:-0.01em;}
-  .day-head .date{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-dim); letter-spacing:0.06em; text-transform:uppercase;}
+  .day-head h2{font-family:'Inter Tight',sans-serif; font-size:22px; margin:0; letter-spacing:-0.01em;}
+  .day-head .date{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--text-dim); letter-spacing:0.06em; text-transform:uppercase;}
   .weather-line{font-size:13px; color:var(--text-dim); margin:-8px 0 14px;}
 
   .stop{padding:10px 0; border-bottom:1px dashed var(--line);}
   .stop:last-child{border-bottom:none;}
-  .stop .time{font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--pink); font-weight:600; margin-right:8px;}
+  .stop .time{font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--pink); font-weight:600; margin-right:8px;}
   .stop .title{font-weight:600;}
   .stop .desc{color:var(--text-dim); font-size:13.5px; margin-top:3px;}
   .stop .pick{margin-top:6px; font-size:12.5px; background:rgba(113,86,168,0.08); color:var(--lavender); display:inline-block; border-radius:8px; padding:4px 10px;}
@@ -76,12 +76,12 @@
   .fav-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;}
   .fav{border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:#fff;}
   .fav .name{font-weight:600;}
-  .fav .score{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--pink);}
+  .fav .score{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--pink);}
 
   .budget-table{width:100%; border-collapse:collapse; margin-top:8px;}
   .budget-table th, .budget-table td{text-align:left; padding:7px 8px; font-size:13.5px; border-bottom:1px solid var(--line);}
-  .budget-table th{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim);}
-  .budget-table .amt{text-align:right; font-family:'JetBrains Mono',monospace;}
+  .budget-table th{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim);}
+  .budget-table .amt{text-align:right; font-family:'IBM Plex Mono',monospace;}
   .cat-row td{font-weight:600; background:rgba(194,42,102,0.04);}
   .grand{font-weight:700;}
 

@@ -6,7 +6,7 @@
 @push('styles')
 <style>
   .dest-hero{max-width:900px; margin:0 auto; padding:48px 24px 8px; text-align:center;}
-  .dest-hero h1{font-family:'Space Grotesk',sans-serif; font-size:clamp(28px,4vw,42px); margin:0 0 12px; letter-spacing:-0.02em;}
+  .dest-hero h1{font-family:'Inter Tight',sans-serif; font-size:clamp(28px,4vw,42px); margin:0 0 12px; letter-spacing:-0.02em;}
   .dest-hero p{color:var(--text-dim); max-width:60ch; margin:0 auto;}
   .visa-key{display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:22px 0 6px; font-size:12.5px;}
   .visa-key span{display:inline-flex; align-items:center; gap:6px; color:var(--text-dim);}
@@ -14,7 +14,7 @@
   .visa-note{max-width:820px; margin:18px auto 32px; padding:12px 16px; border:1px solid var(--line); background:var(--panel); border-radius:12px; font-size:12.5px; color:var(--text-dim); text-align:center;}
 
   .cat-tabs{max-width:1120px; margin:0 auto 28px; padding:0 24px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
-  .cat-tabs button{font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.03em; padding:8px 15px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--text-dim); cursor:pointer;}
+  .cat-tabs button{font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.03em; padding:8px 15px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--text-dim); cursor:pointer;}
   .cat-tabs button:hover{border-color:var(--pink-light); color:var(--text);}
   .cat-tabs button.on{background:var(--grad-soft); color:#fff; border-color:transparent;}
 
@@ -24,11 +24,11 @@
   .tpl-photo{width:100%; aspect-ratio:16/10; object-fit:cover; display:block; background:var(--panel-2);}
   .tpl-body{padding:20px; display:flex; flex-direction:column; flex:1;}
   .tpl-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
-  .cat-tag{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; font-weight:700; color:var(--lavender); background:rgba(113,86,168,0.1); border-radius:999px; padding:4px 10px;}
-  .continent-tag{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-dim);}
-  .tpl-card h3{font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0 0 2px; letter-spacing:-0.01em;}
+  .cat-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; font-weight:700; color:var(--lavender); background:rgba(113,86,168,0.1); border-radius:999px; padding:4px 10px;}
+  .continent-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-dim);}
+  .tpl-card h3{font-family:'Inter Tight',sans-serif; font-size:19px; margin:0 0 2px; letter-spacing:-0.01em;}
   .tpl-card .place{font-size:12.5px; color:var(--text-dim); margin-bottom:10px;}
-  .visa-pill{display:inline-flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; border-radius:999px; padding:3px 9px; margin-bottom:10px; align-self:flex-start;}
+  .visa-pill{display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; border-radius:999px; padding:3px 9px; margin-bottom:10px; align-self:flex-start;}
   .visa-pill.visa_free{background:rgba(59,167,118,0.12); color:#2f6d54;}
   .visa-pill.evisa{background:rgba(113,86,168,0.12); color:#5a4488;}
   .visa-pill.required{background:rgba(194,42,102,0.1); color:var(--accent);}

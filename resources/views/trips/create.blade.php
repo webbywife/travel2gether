@@ -5,11 +5,11 @@
 @push('styles')
 <style>
   .build{max-width:780px; margin:40px auto 0; padding:0 24px;}
-  .build h1{font-family:'Space Grotesk',sans-serif; font-size:30px; margin:0 0 6px; letter-spacing:-0.015em;}
+  .build h1{font-family:'Inter Tight',sans-serif; font-size:30px; margin:0 0 6px; letter-spacing:-0.015em;}
   .build .lede{color:var(--text-dim); margin:0 0 26px;}
   .step{border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,0.94); box-shadow:var(--shadow-sm); padding:24px; margin-bottom:18px;}
-  .step > h2{font-family:'Space Grotesk',sans-serif; font-size:17px; margin:0 0 4px; letter-spacing:-0.01em;}
-  .step > h2 .n{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--pink); margin-right:8px;}
+  .step > h2{font-family:'Inter Tight',sans-serif; font-size:17px; margin:0 0 4px; letter-spacing:-0.01em;}
+  .step > h2 .n{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--pink); margin-right:8px;}
   .step > .hint{color:var(--text-dim); font-size:13px; margin:0 0 16px;}
   .grid{display:grid; gap:12px;}
   .g2{grid-template-columns:1fr 1fr;}
@@ -18,7 +18,7 @@
   .in{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel); font:inherit; font-size:14.5px; color:var(--text);}
   .in:focus{outline:2px solid var(--pink-light); border-color:var(--pink);}
   .flight{border:1px dashed var(--line); border-radius:12px; padding:14px; margin-bottom:12px;}
-  .flight h4{margin:0 0 10px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim);}
+  .flight h4{margin:0 0 10px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim);}
   .ps{position:relative;}
   .ps-menu{position:absolute; z-index:30; left:0; right:0; top:calc(100% + 4px); background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow-md); overflow:hidden; display:none;}
   .ps-menu.on{display:block;}
