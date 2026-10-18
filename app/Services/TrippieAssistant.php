@@ -100,8 +100,8 @@ class TrippieAssistant
             return $this->replyWithClaude($system, $history, $message);
         }
 
-        $response = Http::timeout(30)->post(
-            "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key={$this->key}",
+        $response = Http::withHeaders(['x-goog-api-key' => (string) $this->key])->timeout(30)->post(
+            "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent",
             [
                 'systemInstruction' => ['parts' => [['text' => $system]]],
                 'contents' => $contents,

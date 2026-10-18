@@ -20,6 +20,9 @@ class SecurityHeaders
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
             'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
             'Cross-Origin-Opener-Policy' => 'same-origin-allow-popups',
+            // Structural CSP only: blocks plugins, <base> hijacking and foreign framing.
+            // Scripts/styles are not restricted here (inline scripts + CDNs would need nonces first).
+            'Content-Security-Policy' => "object-src 'none'; base-uri 'self'; frame-ancestors 'self'",
         ];
         if ($request->isSecure() && app()->environment('production')) {
             $headers['Strict-Transport-Security'] = 'max-age=31536000';

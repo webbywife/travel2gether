@@ -92,7 +92,7 @@ Route::middleware('throttle:40,1')->group(function () {
     Route::get('/places/search', [PlacesController::class, 'search'])->name('places.search');
     Route::get('/places/explore', [PlacesController::class, 'explore'])->middleware('throttle:12,1')->name('places.explore');
 });
-Route::get('/places/{placeId}', [PlacesController::class, 'show'])->middleware(['auth', 'throttle:40,1'])->name('places.show');
+Route::get('/places/{placeId}', [PlacesController::class, 'show'])->where('placeId', '[A-Za-z0-9_-]{1,300}')->middleware(['auth', 'throttle:40,1'])->name('places.show');
 
 // Short, typeable link for TikTok videos (captions and comments there aren't clickable).
 // Only used on TikTok, so visits through it count as TikTok in the launch funnel.

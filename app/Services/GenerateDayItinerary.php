@@ -138,8 +138,8 @@ class GenerateDayItinerary
     /** @return array<string, mixed>|null */
     private function callOnce(string $prompt): ?array
     {
-        $response = Http::timeout(45)->post(
-            "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key={$this->key}",
+        $response = Http::withHeaders(['x-goog-api-key' => (string) $this->key])->timeout(45)->post(
+            "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent",
             [
                 'contents' => [['role' => 'user', 'parts' => [['text' => $prompt]]]],
                 'generationConfig' => [
