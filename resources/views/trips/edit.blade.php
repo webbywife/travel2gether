@@ -73,7 +73,8 @@
     var q = destInput.value.trim().toLowerCase();
     if (!q) { visaHint.style.display = 'none'; return; }
     var hit = DESTS.find(function (d) {
-      return q.indexOf(d.country.toLowerCase()) !== -1 || d.cities.some(function (c) { return q.indexOf(c.toLowerCase().split(' (')[0]) !== -1; });
+      return (d.aliases || []).some(function (a) { return q.indexOf(a.toLowerCase()) !== -1; })
+        || q.indexOf(d.country.toLowerCase()) !== -1 || d.cities.some(function (c) { return q.indexOf(c.toLowerCase().split(' (')[0]) !== -1; });
     });
     if (!hit) { visaHint.style.display = 'none'; return; }
     visaHint.style.color = visaColor[hit.visa_status] || '#6B5860';
