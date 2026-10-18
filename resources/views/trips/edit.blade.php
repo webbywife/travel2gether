@@ -45,7 +45,7 @@
         <div><label class="f" for="f-party-size">Travellers</label><input id="f-party-size" class="in" type="number" name="party_size" value="{{ old('party_size', $trip->party_size) }}" min="1" max="20"></div>
         <div><label class="f" for="f-currency">Currency</label>
           <select id="f-currency" class="in" name="currency">
-            @foreach (['USD','PHP','EUR','JPY','KRW','GBP','SGD','AUD'] as $c)
+            @foreach (\App\Services\ExchangeRates::CURRENCIES as $c)
               <option value="{{ $c }}" @selected(old('currency', $trip->currency) === $c)>{{ $c }}</option>
             @endforeach
           </select>

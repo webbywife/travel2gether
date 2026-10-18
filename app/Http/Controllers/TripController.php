@@ -30,6 +30,7 @@ class TripController extends Controller
             'picks' => $trip->picks->keyBy('stop_id'),
             'canPick' => $trip->canPick($request->user()),
             'aiEnabled' => app(\App\Services\GenerateDayItinerary::class)->enabled(),
+            'phpRate' => app(\App\Services\ExchangeRates::class)->rate($trip->currency ?: 'USD', 'PHP'),
         ]);
     }
 
@@ -74,11 +75,16 @@ class TripController extends Controller
     {
         $data = $request->validated();
 
+        // A new currency converts the trip's amounts at today's rate (never just relabels them).
+        $newCurrency = $data['currency'] ?? $trip->currency;
+        if ($newCurrency !== $trip->currency && ! app(\App\Actions\ConvertTripCurrency::class)($trip, $newCurrency)) {
+            return back()->withInput()->withErrors(['currency' => "Couldn't get today's exchange rate, so the currency wasn't changed. Please try again in a minute."]);
+        }
+
         $trip->update([
             'title' => ($data['title'] ?? '') ?: "{$trip->owner->name}'s {$data['destination']} trip",
             'destination' => $data['destination'],
             'party_size' => $data['party_size'] ?? $trip->party_size,
-            'currency' => $data['currency'] ?? $trip->currency,
             'hotel_name' => $data['hotel_name'] ?? null,
             'hotel_address' => $data['hotel_address'] ?? null,
         ]);

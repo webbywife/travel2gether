@@ -17,7 +17,7 @@ class UpdateTripRequest extends FormRequest
             'title' => ['nullable', 'string', 'max:120'],
             'destination' => ['required', 'string', 'max:120'],
             'party_size' => ['nullable', 'integer', 'between:1,20'],
-            'currency' => ['nullable', 'in:USD,PHP,EUR,JPY,KRW,GBP,SGD,AUD'],
+            'currency' => ['nullable', \Illuminate\Validation\Rule::in(\App\Services\ExchangeRates::CURRENCIES)],
             'hotel_name' => ['nullable', 'string', 'max:160'],
             'hotel_address' => ['nullable', 'string', 'max:255'],
         ];

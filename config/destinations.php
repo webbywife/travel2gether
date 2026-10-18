@@ -22,110 +22,110 @@
 
 return [
 
-    ['country' => 'Thailand', 'region' => 'Southeast Asia', 'flag' => '🇹🇭',
+    ['country' => 'Thailand', 'currency' => 'THB', 'region' => 'Southeast Asia', 'flag' => '🇹🇭',
         'cities' => ['Bangkok', 'Chiang Mai', 'Phuket', 'Krabi', 'Ayutthaya'],
         'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 30 days (ASEAN).'],
 
-    ['country' => 'Malaysia', 'region' => 'Southeast Asia', 'flag' => '🇲🇾',
+    ['country' => 'Malaysia', 'currency' => 'MYR', 'region' => 'Southeast Asia', 'flag' => '🇲🇾',
         'cities' => ['Kuala Lumpur', 'Penang', 'Langkawi', 'Malacca', 'Kota Kinabalu'],
         'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 30 days (ASEAN).'],
 
-    ['country' => 'Singapore', 'region' => 'Southeast Asia', 'flag' => '🇸🇬',
+    ['country' => 'Singapore', 'currency' => 'SGD', 'region' => 'Southeast Asia', 'flag' => '🇸🇬',
         'cities' => ['Marina Bay', 'Sentosa', 'Chinatown', 'Orchard Road', 'Kampong Glam'],
         'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 30 days (ASEAN).'],
 
-    ['country' => 'Indonesia', 'region' => 'Southeast Asia', 'flag' => '🇮🇩',
+    ['country' => 'Indonesia', 'currency' => 'IDR', 'region' => 'Southeast Asia', 'flag' => '🇮🇩',
         'cities' => ['Bali (Ubud & Seminyak)', 'Jakarta', 'Yogyakarta', 'Bandung', 'Lombok'],
         'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 30 days (ASEAN).'],
 
-    ['country' => 'Vietnam', 'region' => 'Southeast Asia', 'flag' => '🇻🇳',
+    ['country' => 'Vietnam', 'currency' => 'VND', 'region' => 'Southeast Asia', 'flag' => '🇻🇳',
         'cities' => ['Hanoi', 'Ho Chi Minh City', 'Da Nang', 'Hoi An', 'Ha Long Bay'],
         'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 21 days (ASEAN).'],
 
-    ['country' => 'Hong Kong SAR', 'region' => 'East Asia', 'flag' => '🇭🇰',
+    ['country' => 'Hong Kong SAR', 'currency' => 'HKD', 'region' => 'East Asia', 'flag' => '🇭🇰',
         'cities' => ['Hong Kong Island', 'Kowloon', 'Lantau Island', 'New Territories'],
         // Matched before "China", so "Hong Kong, China" isn't read as mainland China (visa required).
         'aliases' => ['Hong Kong', 'HKSAR'],
         'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 14 days.'],
 
-    ['country' => 'Macao SAR', 'region' => 'East Asia', 'flag' => '🇲🇴',
+    ['country' => 'Macao SAR', 'currency' => 'MOP', 'region' => 'East Asia', 'flag' => '🇲🇴',
         'cities' => ['Macao Peninsula', 'Taipa', 'Cotai', 'Coloane'],
         'aliases' => ['Macao', 'Macau'],
         'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 30 days.'],
 
-    ['country' => 'Taiwan', 'region' => 'East Asia', 'flag' => '🇹🇼',
+    ['country' => 'Taiwan', 'currency' => 'TWD', 'region' => 'East Asia', 'flag' => '🇹🇼',
         'cities' => ['Taipei', 'Kaohsiung', 'Tainan', 'Hualien', 'Sun Moon Lake'],
         'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 14 days (trial programme extended to 31 Jul 2027 — re-check before booking).'],
 
-    ['country' => 'Japan', 'region' => 'East Asia', 'flag' => '🇯🇵',
+    ['country' => 'Japan', 'currency' => 'JPY', 'region' => 'East Asia', 'flag' => '🇯🇵',
         'cities' => ['Tokyo', 'Kyoto', 'Osaka', 'Sapporo', 'Fukuoka'],
         'visa_status' => 'required', 'visa_note' => 'Tourist visa required, applied for through the Japan Visa Application Centre. Since May 2026 an eVisa also covers package tours run by designated agencies.'],
 
-    ['country' => 'South Korea', 'region' => 'East Asia', 'flag' => '🇰🇷',
+    ['country' => 'South Korea', 'currency' => 'KRW', 'region' => 'East Asia', 'flag' => '🇰🇷',
         'cities' => ['Seoul', 'Busan', 'Jeju Island', 'Gyeongju', 'Incheon'],
         'visa_status' => 'required', 'visa_note' => 'Tourist visa required.'],
 
-    ['country' => 'China', 'region' => 'East Asia', 'flag' => '🇨🇳',
+    ['country' => 'China', 'currency' => 'CNY', 'region' => 'East Asia', 'flag' => '🇨🇳',
         'cities' => ['Beijing', 'Shanghai', "Xi'an", 'Chengdu', 'Guilin'],
         'visa_status' => 'required', 'visa_note' => 'Tourist visa required. Visa-free transit (up to 240 hours) may apply when connecting through China to a third country.'],
 
-    ['country' => 'United Arab Emirates', 'region' => 'Middle East', 'flag' => '🇦🇪',
+    ['country' => 'United Arab Emirates', 'currency' => 'AED', 'region' => 'Middle East', 'flag' => '🇦🇪',
         'cities' => ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ras Al Khaimah'],
         'visa_status' => 'required', 'visa_note' => 'Visa required, unless you hold a valid US, UK or EU visa or residence permit (or a US Green Card) — then a visa on arrival is available (since June 2026).'],
 
-    ['country' => 'France', 'region' => 'Europe', 'flag' => '🇫🇷',
+    ['country' => 'France', 'currency' => 'EUR', 'region' => 'Europe', 'flag' => '🇫🇷',
         'cities' => ['Paris', 'Nice', 'Lyon', 'Bordeaux', 'Marseille'],
         'visa_status' => 'required', 'visa_note' => 'Schengen visa required.'],
 
-    ['country' => 'Spain', 'region' => 'Europe', 'flag' => '🇪🇸',
+    ['country' => 'Spain', 'currency' => 'EUR', 'region' => 'Europe', 'flag' => '🇪🇸',
         'cities' => ['Barcelona', 'Madrid', 'Seville', 'Valencia', 'Granada'],
         'visa_status' => 'required', 'visa_note' => 'Schengen visa required.'],
 
-    ['country' => 'Italy', 'region' => 'Europe', 'flag' => '🇮🇹',
+    ['country' => 'Italy', 'currency' => 'EUR', 'region' => 'Europe', 'flag' => '🇮🇹',
         'cities' => ['Rome', 'Florence', 'Venice', 'Milan', 'Naples'],
         'visa_status' => 'required', 'visa_note' => 'Schengen visa required.'],
 
-    ['country' => 'Germany', 'region' => 'Europe', 'flag' => '🇩🇪',
+    ['country' => 'Germany', 'currency' => 'EUR', 'region' => 'Europe', 'flag' => '🇩🇪',
         'cities' => ['Berlin', 'Munich', 'Hamburg', 'Cologne', 'Frankfurt'],
         'visa_status' => 'required', 'visa_note' => 'Schengen visa required.'],
 
-    ['country' => 'Greece', 'region' => 'Europe', 'flag' => '🇬🇷',
+    ['country' => 'Greece', 'currency' => 'EUR', 'region' => 'Europe', 'flag' => '🇬🇷',
         'cities' => ['Athens', 'Santorini', 'Mykonos', 'Crete', 'Rhodes'],
         'visa_status' => 'required', 'visa_note' => 'Schengen visa required.'],
 
-    ['country' => 'Austria', 'region' => 'Europe', 'flag' => '🇦🇹',
+    ['country' => 'Austria', 'currency' => 'EUR', 'region' => 'Europe', 'flag' => '🇦🇹',
         'cities' => ['Vienna', 'Salzburg', 'Innsbruck', 'Hallstatt'],
         'visa_status' => 'required', 'visa_note' => 'Schengen visa required.'],
 
-    ['country' => 'Netherlands', 'region' => 'Europe', 'flag' => '🇳🇱',
+    ['country' => 'Netherlands', 'currency' => 'EUR', 'region' => 'Europe', 'flag' => '🇳🇱',
         'cities' => ['Amsterdam', 'Rotterdam', 'The Hague', 'Utrecht', 'Giethoorn'],
         'visa_status' => 'required', 'visa_note' => 'Schengen visa required.'],
 
-    ['country' => 'Portugal', 'region' => 'Europe', 'flag' => '🇵🇹',
+    ['country' => 'Portugal', 'currency' => 'EUR', 'region' => 'Europe', 'flag' => '🇵🇹',
         'cities' => ['Lisbon', 'Porto', 'Sintra', 'the Algarve', 'Madeira'],
         'visa_status' => 'required', 'visa_note' => 'Schengen visa required.'],
 
-    ['country' => 'Turkey', 'region' => 'Europe/Asia', 'flag' => '🇹🇷',
+    ['country' => 'Turkey', 'currency' => 'TRY', 'region' => 'Europe/Asia', 'flag' => '🇹🇷',
         'cities' => ['Istanbul', 'Cappadocia', 'Antalya', 'Izmir', 'Pamukkale'],
         'visa_status' => 'required', 'visa_note' => 'Visa required. An online e-Visa is available only if you hold a valid US, UK, Schengen or Irish visa or residence permit; otherwise apply at the embassy.'],
 
-    ['country' => 'United Kingdom', 'region' => 'Europe', 'flag' => '🇬🇧',
+    ['country' => 'United Kingdom', 'currency' => 'GBP', 'region' => 'Europe', 'flag' => '🇬🇧',
         'cities' => ['London', 'Edinburgh', 'Manchester', 'Bath', 'Liverpool'],
         'visa_status' => 'required', 'visa_note' => 'UK Standard Visitor visa required.'],
 
-    ['country' => 'United States', 'region' => 'Americas', 'flag' => '🇺🇸',
+    ['country' => 'United States', 'currency' => 'USD', 'region' => 'Americas', 'flag' => '🇺🇸',
         'cities' => ['New York City', 'Los Angeles', 'San Francisco', 'Las Vegas', 'Honolulu'],
         'visa_status' => 'required', 'visa_note' => 'B1/B2 visitor visa required, including an interview.'],
 
-    ['country' => 'Canada', 'region' => 'Americas', 'flag' => '🇨🇦',
+    ['country' => 'Canada', 'currency' => 'CAD', 'region' => 'Americas', 'flag' => '🇨🇦',
         'cities' => ['Toronto', 'Vancouver', 'Montreal', 'Banff', 'Quebec City'],
         'visa_status' => 'required', 'visa_note' => 'Visitor visa required. Flying in with a valid US non-immigrant visa (or a Canadian visa from the last 10 years)? An eTA may be enough instead.'],
 
-    ['country' => 'Mexico', 'region' => 'Americas', 'flag' => '🇲🇽',
+    ['country' => 'Mexico', 'currency' => 'MXN', 'region' => 'Americas', 'flag' => '🇲🇽',
         'cities' => ['Mexico City', 'Cancún', 'Playa del Carmen', 'Oaxaca', 'Tulum'],
         'visa_status' => 'required', 'visa_note' => 'Visa required, unless you hold a valid US, Canadian, UK, Japanese or Schengen visa or residence permit.'],
 
-    ['country' => 'Australia', 'region' => 'Oceania', 'flag' => '🇦🇺',
+    ['country' => 'Australia', 'currency' => 'AUD', 'region' => 'Oceania', 'flag' => '🇦🇺',
         'cities' => ['Sydney', 'Melbourne', 'Brisbane', 'Gold Coast', 'Perth'],
         'visa_status' => 'evisa', 'visa_note' => 'Visitor visa (subclass 600) applied for online.'],
 

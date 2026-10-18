@@ -20,7 +20,7 @@ class StoreTripRequest extends FormRequest
             'destination' => ['required', 'string', 'max:120'],
             'title' => ['nullable', 'string', 'max:120'],
             'party_size' => ['nullable', 'integer', 'between:1,20'],
-            'currency' => ['nullable', 'in:USD,PHP,EUR,JPY,KRW,GBP,SGD,AUD'],
+            'currency' => ['nullable', \Illuminate\Validation\Rule::in(\App\Services\ExchangeRates::CURRENCIES)],
 
             'arrival_date' => ['required', 'date'],
             'departure_date' => ['required', 'date', 'after:arrival_date'],

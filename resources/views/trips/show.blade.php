@@ -1,7 +1,11 @@
 @php
     /** @var \App\Models\Trip $trip */
     $currency = $trip->currency ?? 'USD';
-    $sym = ['USD' => '$', 'PHP' => '₱', 'KRW' => '₩', 'EUR' => '€', 'GBP' => '£'][$currency] ?? ($currency . ' ');
+    $sym = ['USD' => '$', 'PHP' => '₱', 'KRW' => '₩', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥', 'HKD' => 'HK$', 'SGD' => 'S$',
+        'AUD' => 'A$', 'CAD' => 'C$', 'TWD' => 'NT$', 'THB' => '฿', 'VND' => '₫', 'TRY' => '₺'][$currency] ?? ($currency . ' ');
+    // Live rate to pesos for the budget's "total in PHP" (null when no rate source answered — then we show "—").
+    $isPhp = $currency === 'PHP';
+    $fxRate = ($phpRate ?? null)['rate'] ?? null;
 
     $budgetByCat = $trip->budgetLines->groupBy('category');
 
@@ -304,6 +308,7 @@
   .ctrl input[type=number]{width:68px; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:'IBM Plex Mono', monospace; font-size:14.5px; padding:7px 9px; text-align:right;}
   .ctrl input[type=number]:focus{outline:1px solid var(--pink);}
 
+  .fx-note{display:block; font-size:11px; color:var(--text-dim); margin-top:4px; font-family:'IBM Plex Mono',monospace;}
   .budget-stats{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px;}
   .bstat{background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:14px; text-align:center;}
   .bstat .num{font-family:'Inter Tight',sans-serif; font-weight:700; font-size:22px; color:var(--accent);}
@@ -742,12 +747,15 @@
       <div class="ctrl-row">
         <div class="ctrl"><label for="travelers">Travelers</label><input type="number" id="travelers" value="{{ $trip->party_size ?? 1 }}" min="1" step="1"></div>
         <div class="ctrl"><label for="days">Trip length (days)</label><input type="number" id="days" value="{{ $trip->days->count() }}" min="1" step="1"></div>
-        <div class="ctrl"><label for="fxrate">{{ $currency }} → PHP rate</label><input type="number" id="fxrate" value="58" min="1" step="0.5"></div>
+        @unless($isPhp)
+        <div class="ctrl"><label for="fxrate">1 {{ $currency }} in PHP</label><input type="number" id="fxrate" value="{{ $fxRate ? round($fxRate, $fxRate < 1 ? 4 : 2) : '' }}" min="0" step="any" placeholder="today's rate">
+          <small class="fx-note">@if($fxRate)Live rate · {{ $phpRate['date'] }} · @if($phpRate['source'] === 'ExchangeRate-API')<a href="https://www.exchangerate-api.com" rel="noopener" target="_blank">Rates by Exchange Rate API</a>@else{{ $phpRate['source'] }}@endif @else{{ "Couldn't load today's rate — type it in" }}@endif</small></div>
+        @endunless
       </div>
 
       <div class="budget-stats">
         <div class="bstat"><div class="num mono" id="statTotal">{{ $sym }}0</div><div class="lbl">total (per person)</div></div>
-        <div class="bstat"><div class="num mono" id="statTotalPhp">₱0</div><div class="lbl">total in PHP</div></div>
+        @unless($isPhp)<div class="bstat"><div class="num mono" id="statTotalPhp">—</div><div class="lbl">total in PHP (per person)</div></div>@endunless
         <div class="bstat"><div class="num mono" id="statGroup">{{ $sym }}0</div><div class="lbl">total, all travelers</div></div>
         <div class="bstat"><div class="num mono" id="statPerDay">{{ $sym }}0</div><div class="lbl">avg. per day</div></div>
       </div>
@@ -1041,7 +1049,7 @@
   function recalc() {
     const travelers = parseFloat(document.getElementById('travelers').value) || 1;
     const days = parseFloat(document.getElementById('days').value) || 1;
-    const fx = parseFloat(document.getElementById('fxrate').value) || 58;
+    const fxEl = document.getElementById('fxrate'), fx = fxEl ? parseFloat(fxEl.value) : NaN;
 
     const totals = {};
     catKeys.forEach(k => totals[k] = 0);
@@ -1058,7 +1066,8 @@
     const grand = Object.values(totals).reduce((a, b) => a + b, 0);
     document.getElementById('grandTotal').textContent = fmt(grand);
     document.getElementById('statTotal').textContent = fmt(grand);
-    document.getElementById('statTotalPhp').textContent = fmtPhp(grand * fx);
+    const phpStat = document.getElementById('statTotalPhp');
+    if (phpStat) phpStat.textContent = fx > 0 ? fmtPhp(grand * fx) : '—';   // never guess a rate
     document.getElementById('statGroup').textContent = fmt(grand * travelers);
     document.getElementById('statPerDay').textContent = fmt(grand / days);
 
@@ -1078,7 +1087,7 @@
     });
   }
 
-  document.querySelectorAll('.item, #travelers, #days, #fxrate').forEach(el => el.addEventListener('input', recalc));
+  document.querySelectorAll('.item, #travelers, #days, #fxrate').forEach(el => el && el.addEventListener('input', recalc));
   recalc();
 
   /* ===== Live weather (Open-Meteo, no key) — per day's own area ===== */

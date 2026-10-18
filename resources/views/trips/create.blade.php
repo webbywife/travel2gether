@@ -114,7 +114,7 @@
         <div><label class="f" for="f-party-size">Travellers</label><input id="f-party-size" class="in" type="number" name="party_size" value="{{ old('party_size', 2) }}" min="1" max="20"></div>
         <div><label class="f" for="f-currency">Currency</label>
           <select id="f-currency" class="in" name="currency">
-            @foreach (['USD','PHP','EUR','JPY','KRW','GBP','SGD','AUD'] as $c)
+            @foreach (\App\Services\ExchangeRates::CURRENCIES as $c)
               <option value="{{ $c }}" @selected(old('currency','USD')===$c)>{{ $c }}</option>
             @endforeach
           </select>
@@ -232,7 +232,7 @@
       <h2><span class="n">06</span>Budget &amp; shopping</h2>
       <p class="hint">Rough numbers are fine — they seed the budget worksheet, which stays editable.</p>
       <div style="max-width:280px; margin-bottom:16px;">
-        <label class="f" for="f-budget-per-person">Target budget per person ({{ old('currency','USD') }})</label>
+        <label class="f" for="f-budget-per-person">Target budget per person (<span id="budgetCur">{{ old('currency','USD') }}</span>)</label>
         <input id="f-budget-per-person" class="in" type="number" name="budget_per_person" value="{{ old('budget_per_person') }}" min="0" placeholder="optional">
       </div>
       <p class="hint" style="margin-bottom:6px;">Planning to shop? Tick what for, and a rough spend:</p>
@@ -503,10 +503,20 @@
         || q.indexOf(d.country.toLowerCase()) !== -1 || d.cities.some(function (c) { return q.indexOf(c.toLowerCase().split(' (')[0]) !== -1; });
     });
     if (!hit) { visaHint.style.display = 'none'; return; }
+    pickLocalCurrency(hit);
     visaHint.style.color = visaColor[hit.visa_status] || '#6B5860';
     visaHint.innerHTML = '🛂 <strong>' + (visaLabel[hit.visa_status] || 'Check visa') + '</strong> for a Philippine passport — ' + hit.visa_note;
     visaHint.style.display = 'block';
   }
+  // ---- currency: default to the destination's local one until the planner picks one themselves ----
+  var curSel = document.getElementById('f-currency'), budgetCur = document.getElementById('budgetCur');
+  var curTouched = @json((bool) old('currency'));
+  function syncBudgetCur() { if (budgetCur && curSel) budgetCur.textContent = curSel.value; }
+  function pickLocalCurrency(dest) {
+    if (curTouched || !curSel || !dest.currency || !curSel.querySelector('option[value="' + dest.currency + '"]')) return;
+    curSel.value = dest.currency; syncBudgetCur();
+  }
+  if (curSel) curSel.addEventListener('change', function () { curTouched = true; syncBudgetCur(); });
   if (destInput) { destInput.addEventListener('input', checkVisa); checkVisa(); }
 
   // ---- recommended-template hint ----
