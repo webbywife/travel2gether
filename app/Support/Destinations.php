@@ -31,6 +31,11 @@ class Destinations
         }
 
         foreach (self::all() as $entry) {
+            foreach ($entry['aliases'] ?? [] as $alias) {
+                if (Str::contains($needle, Str::lower($alias))) {
+                    return $entry;
+                }
+            }
             if (Str::contains($needle, Str::lower($entry['country']))) {
                 return $entry;
             }
@@ -110,7 +115,8 @@ class Destinations
         $country = Str::lower($country);
 
         foreach (self::all() as $entry) {
-            if (Str::lower($entry['country']) === $country) {
+            if (Str::lower($entry['country']) === $country
+                || in_array($country, array_map([Str::class, 'lower'], $entry['aliases'] ?? []), true)) {
                 return $entry;
             }
         }

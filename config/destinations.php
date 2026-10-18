@@ -42,7 +42,14 @@ return [
 
     ['country' => 'Hong Kong SAR', 'region' => 'East Asia', 'flag' => '🇭🇰',
         'cities' => ['Hong Kong Island', 'Kowloon', 'Lantau Island', 'New Territories'],
+        // Matched before "China", so "Hong Kong, China" isn't read as mainland China (visa required).
+        'aliases' => ['Hong Kong', 'HKSAR'],
         'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 14 days.'],
+
+    ['country' => 'Macao SAR', 'region' => 'East Asia', 'flag' => '🇲🇴',
+        'cities' => ['Macao Peninsula', 'Taipa', 'Cotai', 'Coloane'],
+        'aliases' => ['Macao', 'Macau'],
+        'visa_status' => 'visa_free', 'visa_note' => 'Visa-free for up to 30 days.'],
 
     ['country' => 'Taiwan', 'region' => 'East Asia', 'flag' => '🇹🇼',
         'cities' => ['Taipei', 'Kaohsiung', 'Tainan', 'Hualien', 'Sun Moon Lake'],

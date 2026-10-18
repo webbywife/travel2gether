@@ -70,4 +70,13 @@ class DestinationsTest extends TestCase
             ->assertOk()
             ->assertDontSee('for a PH passport', false);
     }
+
+    public function test_hong_kong_and_macao_are_not_read_as_mainland_china(): void
+    {
+        foreach (['Hong Kong', 'Hong Kong, China', 'Kowloon, Hong Kong', 'Macau, China'] as $place) {
+            $this->assertSame('visa_free', \App\Support\Destinations::match($place)['visa_status'] ?? null, $place);
+        }
+        $this->assertSame('required', \App\Support\Destinations::match('Beijing, China')['visa_status']);
+        $this->assertSame('visa_free', \App\Support\Destinations::visaForCountry('Hong Kong')['visa_status'] ?? null);
+    }
 }
