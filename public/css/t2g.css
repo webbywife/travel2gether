@@ -38,25 +38,8 @@ body{
   -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
   font-feature-settings:"ss01","cv11";
 }
-/* Animated gradient gridlines behind every page: a slow pink→lavender sweep seen
-   only through 1px grid lines, faded toward the edges. Replaces all background doodles. */
-body::before{
-  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-  background:linear-gradient(115deg, #C22A66 0%, #9E4A6E 25%, #7156A8 50%, #F6A9C6 75%, #C22A66 100%);
-  background-size:300% 300%;
-  -webkit-mask-image:linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px);
-  -webkit-mask-size:72px 72px;
-  mask-image:linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px);
-  mask-size:72px 72px;
-  opacity:.16;
-  animation:t2g-grid 24s ease-in-out infinite alternate;
-}
-/* fades the grid out toward the edges so it stays a whisper behind content */
-body::after{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-  background:radial-gradient(ellipse 85% 75% at 50% 30%, transparent 25%, var(--paper) 90%);}
-@keyframes t2g-grid{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+/* Old floating background doodles are retired. */
 .parallax-root{display:none !important;}
-@media print{ body::before, body::after{display:none;} }
 
 h1,h2,h3,h4{font-family:var(--f-sans); font-weight:500 !important; letter-spacing:-0.025em;}
 .mono, code, kbd{font-family:var(--f-mono);}

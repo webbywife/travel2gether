@@ -29,6 +29,13 @@
   .stage-photo{position:relative; height:clamp(320px, 22rem + 18vw, 680px); overflow:hidden; border-radius:var(--r); background:var(--paper-2);}
   .stage-photo img{position:absolute; inset:-12% 0; width:100%; height:124%; object-fit:cover; object-position:50% 68%; will-change:transform;}
   .stage-photo::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(36,30,35,0) 55%, rgba(36,30,35,.45));}
+  /* animated gradient gridlines over the hero photo only (30px cells) */
+  .stage-photo::before{content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(115deg, #F6A9C6 0%, #fff 25%, #B48FD9 50%, #F6A9C6 75%, #fff 100%); background-size:300% 300%;
+    -webkit-mask-image:linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px);
+    -webkit-mask-size:30px 30px; mask-image:linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px);
+    mask-size:30px 30px; opacity:.28; animation:t2g-grid 18s ease-in-out infinite alternate;}
+  @keyframes t2g-grid{0%{background-position:0% 50%}100%{background-position:100% 50%}}
   .stage-cap{position:absolute; left:20px; bottom:18px; z-index:2; color:#fff; font-family:var(--f-mono); font-size:.75rem; letter-spacing:.08em; text-transform:uppercase;}
   .route{position:absolute; inset:0; z-index:1; width:100%; height:100%; pointer-events:none;}
   .route path{fill:none; stroke:#fff; stroke-width:2; stroke-dasharray:2 9; stroke-linecap:round; opacity:.9;}
