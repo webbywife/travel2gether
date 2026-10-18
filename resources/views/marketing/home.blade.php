@@ -10,59 +10,56 @@
 @endpush
 
 @push('styles')
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400&family=Caveat:wght@500&display=swap" rel="stylesheet">
 <style>
   .page{overflow-x:clip;}
 
-  /* ---------- hero ---------- */
-  .hero{position:relative; text-align:center; padding:clamp(4.5rem, 3rem + 6vw, 8.5rem) 16px 0;}
-  .hero .chip{margin-bottom:28px;}
-  .hero h1{font-size:var(--fs-h1); line-height:.98; margin:0 auto 26px; max-width:13ch; color:var(--ink);}
-  .hero h1 .gtext{padding-right:.04em;}
-  .hero .lead{font-size:var(--fs-lead); color:var(--text-dim); max-width:46ch; margin:0 auto 34px; line-height:1.5;}
-  .cta-row{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
-  .trust{margin:22px 0 0; font-family:var(--f-mono); font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-dim);}
-  .trust b{color:var(--pink); font-weight:500;}
-  @media (max-width:520px){ .cta-row{flex-direction:column; align-items:stretch; max-width:320px; margin:0 auto;} }
-
-  /* stage: photo band with floating product cards */
-  .stage{position:relative; max-width:1320px; margin:clamp(3rem,2rem + 4vw,5.5rem) auto 0; padding:0 24px;}
-  .stage-photo{position:relative; height:clamp(320px, 22rem + 18vw, 680px); overflow:hidden; border-radius:var(--r); background:var(--paper-2);}
-  .stage-photo img{position:absolute; inset:-12% 0; width:100%; height:124%; object-fit:cover; object-position:50% 68%; will-change:transform;}
-  .stage-photo::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(36,30,35,0) 55%, rgba(36,30,35,.45));}
-  /* animated gradient gridlines over the hero photo only (30px cells) */
-  .stage-photo::before{content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
-    background:linear-gradient(115deg, #F6A9C6 0%, #fff 25%, #B48FD9 50%, #F6A9C6 75%, #fff 100%); background-size:300% 300%;
-    -webkit-mask-image:linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px);
-    -webkit-mask-size:30px 30px; mask-image:linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px);
-    mask-size:30px 30px; opacity:.28; animation:t2g-grid 18s ease-in-out infinite alternate;}
-  @keyframes t2g-grid{0%{background-position:0% 50%}100%{background-position:100% 50%}}
-  .stage-cap{position:absolute; left:20px; bottom:18px; z-index:2; color:#fff; font-family:var(--f-mono); font-size:.75rem; letter-spacing:.08em; text-transform:uppercase;}
-  .route{position:absolute; inset:0; z-index:1; width:100%; height:100%; pointer-events:none;}
-  .route path{fill:none; stroke:#fff; stroke-width:2; stroke-dasharray:2 9; stroke-linecap:round; opacity:.9;}
-  .route .pin{fill:var(--pink); stroke:#fff; stroke-width:3;}
-  .route .draw{stroke-dasharray:1400; stroke-dashoffset:1400; transition:stroke-dashoffset 2.6s var(--ease-out) .4s; stroke:#fff; stroke-width:2; opacity:.9;}
-  .stage.is-visible .route .draw{stroke-dashoffset:0;}
-  .route-mask path{stroke-dasharray:none;}
-
-  .float{position:absolute; z-index:3; background:#fff; border-radius:var(--r); padding:14px 16px; width:min(270px, 62vw); text-align:left;
-    box-shadow:0 0 0 .5px var(--hair), 0 24px 50px -24px rgba(36,30,35,.45); font-size:.875rem; line-height:1.35;
-    opacity:0; transform:translateY(24px) scale(.96); transition:opacity .9s var(--ease-out), transform .9s var(--ease-out);}
-  .stage.is-visible .float{opacity:1; transform:none;}
-  .stage.is-visible .f2{transition-delay:.35s;} .stage.is-visible .f3{transition-delay:.7s;}
-  .float .k{display:flex; align-items:center; gap:8px; font-family:var(--f-mono); font-size:.6875rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px;}
-  .float .k i{width:8px; height:8px; border-radius:50%; background:var(--pink); font-style:normal;}
-  .float b{font-weight:600;}
-  .float .row{display:flex; justify-content:space-between; gap:10px; align-items:baseline;}
-  .float .delta{font-family:var(--f-mono); font-variant-numeric:tabular-nums; color:#2f7d58; font-size:.8125rem;}
-  .float .av{display:inline-flex; width:22px; height:22px; border-radius:50%; align-items:center; justify-content:center; color:#fff; font-size:.625rem; font-weight:600; background:var(--accent); margin-right:-6px; border:2px solid #fff;}
-  .float .av:nth-child(2){background:var(--lavender);} .float .av:nth-child(3){background:var(--pink);}
-  .float .bar{height:4px; background:var(--paper-2); border-radius:2px; margin-top:10px; overflow:hidden;}
-  .float .bar span{display:block; height:100%; width:68%; background:var(--grad); transform-origin:left; transform:scaleX(0); transition:transform 1.6s var(--ease-out) 1.2s;}
-  .stage.is-visible .float .bar span{transform:scaleX(1);}
-  .f1{left:-6px; top:12%;} .f2{right:-6px; top:30%;} .f3{left:12%; bottom:-34px;}
-  .float .bob{animation:t2g-bob2 6s ease-in-out infinite;}
-  @keyframes t2g-bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-  @media (max-width:760px){ .f1{left:4px; top:-30px;} .f2{right:4px; top:auto; bottom:28%;} .f3{left:auto; right:12px; bottom:-40px;} .float{padding:11px 13px; font-size:.8125rem;} }
+  /* ---------- hero (original design, kept as-is) ---------- */
+  .hero-orig{position:relative; overflow:hidden; font-family:'Inter',sans-serif; font-size:17px; line-height:1.6; color:#241E23;
+    background:linear-gradient(rgba(255,255,255,0.62), rgba(255,255,255,0.62)), radial-gradient(circle at 12% 8%, rgba(225,74,128,0.05), transparent 40%),
+      radial-gradient(circle at 88% 18%, rgba(180,143,217,0.05), transparent 40%), url(/img/bg-pattern.webp), #fff;
+    background-repeat:no-repeat, no-repeat, no-repeat, repeat, no-repeat; background-size:auto, auto, auto, 1200px, auto;
+    background-position:center, center, center, center top, center;
+    margin-top:-80px; padding-top:80px;}
+  .hero-orig::after{content:""; position:absolute; left:0; right:0; bottom:0; height:90px; z-index:0; pointer-events:none; background:linear-gradient(rgba(250,243,241,0), var(--paper));}
+  .hero-orig .parallax-root{display:block !important; position:absolute; inset:0; z-index:0;}
+  .hero-orig .hero{position:relative; z-index:1; max-width:1120px; margin:0 auto; padding:56px 24px 48px; text-align:center;}
+  .hero-orig .hero-photo{margin:36px auto 0; max-width:520px; position:relative;}
+  .hero-orig .hero-photo img{display:block; width:100%; height:auto; aspect-ratio:4/3; object-fit:cover; object-position:50% 72%;
+    border-radius:18px; box-shadow:0 2px 6px rgba(36,30,35,0.05), 0 18px 40px -18px rgba(120,40,80,0.22);}
+  .hero-orig .hero-photo figcaption{position:absolute; left:14px; bottom:12px; font-family:'JetBrains Mono',monospace; font-size:11px;
+    letter-spacing:0.06em; text-transform:uppercase; color:#fff; background:rgba(20,12,18,0.55); padding:5px 10px; border-radius:999px; backdrop-filter:blur(4px);}
+  @media (min-width:900px){
+    .hero-orig .hero{display:grid; grid-template-columns:1.15fr 0.85fr; gap:56px; align-items:center; text-align:left; padding-top:64px;}
+    .hero-orig .hero h1, .hero-orig .hero .sub{margin-left:0;}
+    .hero-orig .hero .cta-row{justify-content:flex-start;}
+    .hero-orig .hero-photo{margin:0; max-width:none; transform:rotate(1.6deg);
+      background:#fff; padding:12px 12px 40px; border-radius:6px; box-shadow:0 2px 6px rgba(36,30,35,0.06), 0 26px 50px -20px rgba(120,40,80,0.35);}
+    .hero-orig .hero-photo img{aspect-ratio:3/4; object-position:50% 50%; border-radius:2px; box-shadow:none;}
+    .hero-orig .hero-photo figcaption{position:static; display:block; text-align:center; margin-top:12px; background:none; color:#6B5860;
+      backdrop-filter:none; font-family:'Caveat',cursive; font-size:22px; letter-spacing:0; text-transform:none; padding:0;}
+  }
+  @media (prefers-reduced-motion: reduce){ .hero-orig .hero-photo{transform:none;} }
+  .hero-orig .kicker{display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.18em; text-transform:uppercase; color:#9E4A6E;
+    border:1px solid rgba(36,30,35,0.10); background:rgba(255,255,255,0.7); border-radius:999px; padding:7px 14px; margin-bottom:24px;}
+  .hero-orig h1{font-family:'Space Grotesk',sans-serif; font-weight:700 !important; font-size:clamp(34px, 5.6vw, 58px); line-height:1.05; letter-spacing:-0.025em;
+    margin:0 auto 20px; max-width:15ch; color:#241E23;}
+  .hero-orig .sub{font-size:clamp(16px,2.1vw,20px); color:#6B5860; max-width:58ch; margin:0 auto 30px; line-height:1.6;}
+  .hero-orig .cta-row{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:18px;}
+  .hbtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:'Inter',sans-serif; font-size:16px; font-weight:600;
+    padding:15px 28px; border-radius:999px; text-decoration:none; cursor:pointer; border:1px solid transparent; transition:transform .15s ease, box-shadow .15s ease, background .15s ease;}
+  .hbtn-primary{background:linear-gradient(135deg, #C22A66, #8E3A73); color:#fff; box-shadow:0 8px 20px -8px rgba(194,42,102,0.55);}
+  .hbtn-primary:hover{transform:translateY(-1px); box-shadow:0 12px 26px -8px rgba(194,42,102,0.6);}
+  .hbtn-ghost{background:rgba(255,255,255,0.6); color:#C22A66; border-color:#F6A9C6;}
+  .hbtn-ghost:hover{background:#fff; border-color:#C22A66; transform:translateY(-1px);}
+  .hero-orig .trust{font-family:'JetBrains Mono',monospace; font-size:12px; color:#6B5860; letter-spacing:0.02em; margin:0;}
+  .hero-orig .trust b{color:#9E4A6E;}
+  @media (max-width:520px){
+    .hero-orig .hero{padding-top:36px;}
+    .hero-orig .kicker{font-size:10px; letter-spacing:0.1em; padding:6px 11px; margin-bottom:18px;}
+    .hero-orig .cta-row{flex-direction:column; align-items:stretch; gap:10px;}
+    .hero-orig .cta-row .hbtn{width:100%;}
+  }
 
   /* ---------- marquee ---------- */
   .ribbon{padding:clamp(4.5rem,3rem + 3vw,6.5rem) 0 0;}
@@ -232,52 +229,36 @@
   ])->unique('name')->values();
 @endphp
 
-{{-- ================= HERO ================= --}}
-<header class="hero">
-  <span class="chip reveal"><span class="dot pulse"></span> AI-drafted · group-editable · free in beta</span>
-  <h1 data-split>Plan the trip <span class="gtext">together</span>, not in the group chat.</h1>
-  <p class="lead reveal d2">Say where, when and who's coming. Get a full day-by-day plan back — meals, stops, costs, rainy-day backups — that the whole group shapes in one place.</p>
-  <div class="cta-row reveal d3">
-    <a class="btn btn-primary btn-lg" href="{{ route('trips.create') }}">Plan my first trip <span class="arr" aria-hidden="true"></span></a>
-    @if($sampleTrip ?? null)
-      <a class="btn btn-ghost btn-lg" href="#live">See a live sample</a>
-    @endif
-  </div>
-  <p class="trust reveal d4">No card required · <b>Up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips free</b></p>
-
-  <div class="stage reveal" id="stage">
-    <div class="stage-photo">
+{{-- ================= HERO (original design) ================= --}}
+<div class="hero-orig">
+  @include('partials.parallax')
+  <header class="hero">
+    <div class="hero-copy">
+    <div class="kicker">AI-drafted · group-editable · shareable</div>
+    <h1 class="reveal">Turn planning into the best part of the trip — <span class="gtext">together</span>.</h1>
+    <p class="sub reveal d1">
+      Tell Travel2gether where you're headed, when, and who's coming. Get a full day-by-day
+      itinerary back — meals, activities, cost tags, weather backups — that your whole group
+      taps through and shapes together.
+    </p>
+    <div class="cta-row reveal d2">
+      <a class="hbtn hbtn-primary" href="{{ route('trips.create') }}">Plan my first trip — free</a>
+      @if($sampleTrip ?? null)
+        <a class="hbtn hbtn-ghost" href="{{ route('trips.show', $sampleTrip) }}">See a sample itinerary</a>
+      @endif
+    </div>
+    <p class="trust reveal d3">No card required &nbsp;·&nbsp; <b>Free while in beta — up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips</b></p>
+    </div>
+    <figure class="hero-photo reveal d1">
       <picture>
         <source srcset="{{ asset('img/hero/grand-canyon.webp') }}" type="image/webp">
-        <img src="{{ asset('img/hero/grand-canyon.jpg') }}" width="1050" height="1400" fetchpriority="high" decoding="async" data-parallax="0.12"
+        <img src="{{ asset('img/hero/grand-canyon.jpg') }}" width="1050" height="1400" fetchpriority="high" decoding="async"
              alt="Two travellers wrapped up together on the rim of the Grand Canyon, looking out over the layered red cliffs under a wide blue sky">
       </picture>
-      <svg class="route" viewBox="0 0 1200 600" preserveAspectRatio="none" aria-hidden="true">
-        <path class="draw" d="M120 470 C 300 360, 380 520, 560 380 S 860 180, 1080 250"/>
-        <circle class="pin" cx="120" cy="470" r="8"/><circle class="pin" cx="560" cy="380" r="8"/><circle class="pin" cx="1080" cy="250" r="8"/>
-      </svg>
-      <span class="stage-cap">Grand Canyon, Arizona · Day 3</span>
-    </div>
-
-    <div class="float f1" aria-hidden="true"><div class="bob">
-      <div class="k"><i></i> Lunch · 12:30</div>
-      <div class="row"><b>Locked: Phantom Ranch Canteen</b></div>
-      <div style="margin-top:8px; display:flex; align-items:center; gap:10px; color:var(--text-dim); font-size:.8125rem;">
-        <span><span class="av">M</span><span class="av">J</span><span class="av">L</span></span>&nbsp; 3 of 4 picked this
-      </div>
-    </div></div>
-    <div class="float f2" aria-hidden="true"><div class="bob" style="animation-delay:-2s">
-      <div class="k"><i style="background:#5B8C7B"></i> Budget · live</div>
-      <div class="row"><b>Trip total</b><span class="delta">−$48 vs plan</span></div>
-      <div class="bar"><span></span></div>
-    </div></div>
-    <div class="float f3" aria-hidden="true"><div class="bob" style="animation-delay:-4s">
-      <div class="k"><i style="background:var(--lavender)"></i> Weather swap</div>
-      <div class="row"><b>Storms 3pm → Visitor Center</b></div>
-      <div style="margin-top:6px; color:var(--text-dim); font-size:.8125rem;">Indoor backup already in the plan</div>
-    </div></div>
-  </div>
-</header>
+      <figcaption>Grand Canyon, Arizona</figcaption>
+    </figure>
+  </header>
+</div>
 
 {{-- ================= MARQUEE ================= --}}
 <section class="ribbon" aria-label="Places">

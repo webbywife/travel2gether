@@ -17,7 +17,7 @@ class TripPageTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('Plan the trip', false)
+            ->assertSee('Turn planning into', false)
             ->assertSee(route('trips.create'), false)   // the planner is open before sign-up
             ->assertSee(route('trips.show', 'seoul-2026'), false)
             ->assertDontSee('One complete AI-generated itinerary', false); // the free plan is 3 trips, not 1
