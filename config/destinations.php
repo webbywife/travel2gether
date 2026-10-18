@@ -7,6 +7,8 @@
  * Philippine passport holder — the traveller profile the whole app assumes
  * (every seeded sample and the wizard default to an MNL origin).
  *
+ * Visa notes last fact-checked 2026-10-18 (Thailand back to 30 days from 15 Sep 2026;
+ * Taiwan trial to 31 Jul 2027; UAE visa-on-arrival from Jun 2026; Japan eVisa from May 2026).
  * Visa rules change and have exceptions (transit visas, accredited-agency
  * schemes, holding a qualifying third-country visa, etc.) — `visa_note` is a
  * starting point, not a ruling. Always confirm with the destination's
@@ -57,7 +59,7 @@ return [
 
     ['country' => 'Japan', 'region' => 'East Asia', 'flag' => '🇯🇵',
         'cities' => ['Tokyo', 'Kyoto', 'Osaka', 'Sapporo', 'Fukuoka'],
-        'visa_status' => 'required', 'visa_note' => 'Tourist visa needed, usually filed through an accredited travel agency; a limited eVisa scheme has been expanding.'],
+        'visa_status' => 'required', 'visa_note' => 'Tourist visa required, applied for through the Japan Visa Application Centre. Since May 2026 an eVisa also covers package tours run by designated agencies.'],
 
     ['country' => 'South Korea', 'region' => 'East Asia', 'flag' => '🇰🇷',
         'cities' => ['Seoul', 'Busan', 'Jeju Island', 'Gyeongju', 'Incheon'],
@@ -65,11 +67,11 @@ return [
 
     ['country' => 'China', 'region' => 'East Asia', 'flag' => '🇨🇳',
         'cities' => ['Beijing', 'Shanghai', "Xi'an", 'Chengdu', 'Guilin'],
-        'visa_status' => 'required', 'visa_note' => 'Visa required; an e-visa option is available for some entry points.'],
+        'visa_status' => 'required', 'visa_note' => 'Tourist visa required. Visa-free transit (up to 240 hours) may apply when connecting through China to a third country.'],
 
     ['country' => 'United Arab Emirates', 'region' => 'Middle East', 'flag' => '🇦🇪',
         'cities' => ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ras Al Khaimah'],
-        'visa_status' => 'required', 'visa_note' => 'Visa required, though visa-on-arrival is often granted when holding a valid US, UK, Schengen, Australian or Canadian visa.'],
+        'visa_status' => 'required', 'visa_note' => 'Visa required, unless you hold a valid US, UK or EU visa or residence permit (or a US Green Card) — then a visa on arrival is available (since June 2026).'],
 
     ['country' => 'France', 'region' => 'Europe', 'flag' => '🇫🇷',
         'cities' => ['Paris', 'Nice', 'Lyon', 'Bordeaux', 'Marseille'],
@@ -105,7 +107,7 @@ return [
 
     ['country' => 'Turkey', 'region' => 'Europe/Asia', 'flag' => '🇹🇷',
         'cities' => ['Istanbul', 'Cappadocia', 'Antalya', 'Izmir', 'Pamukkale'],
-        'visa_status' => 'evisa', 'visa_note' => 'e-Visa available to apply for online before you fly.'],
+        'visa_status' => 'required', 'visa_note' => 'Visa required. An online e-Visa is available only if you hold a valid US, UK, Schengen or Irish visa or residence permit; otherwise apply at the embassy.'],
 
     ['country' => 'United Kingdom', 'region' => 'Europe', 'flag' => '🇬🇧',
         'cities' => ['London', 'Edinburgh', 'Manchester', 'Bath', 'Liverpool'],
@@ -117,11 +119,11 @@ return [
 
     ['country' => 'Canada', 'region' => 'Americas', 'flag' => '🇨🇦',
         'cities' => ['Toronto', 'Vancouver', 'Montreal', 'Banff', 'Quebec City'],
-        'visa_status' => 'required', 'visa_note' => 'Visitor visa required, unless you hold a valid US visa (then an eTA may suffice).'],
+        'visa_status' => 'required', 'visa_note' => 'Visitor visa required. Flying in with a valid US non-immigrant visa (or a Canadian visa from the last 10 years)? An eTA may be enough instead.'],
 
     ['country' => 'Mexico', 'region' => 'Americas', 'flag' => '🇲🇽',
         'cities' => ['Mexico City', 'Cancún', 'Playa del Carmen', 'Oaxaca', 'Tulum'],
-        'visa_status' => 'required', 'visa_note' => 'Visa required, unless you hold a valid US, Schengen, UK or Japanese visa.'],
+        'visa_status' => 'required', 'visa_note' => 'Visa required, unless you hold a valid US, Canadian, UK, Japanese or Schengen visa or residence permit.'],
 
     ['country' => 'Australia', 'region' => 'Oceania', 'flag' => '🇦🇺',
         'cities' => ['Sydney', 'Melbourne', 'Brisbane', 'Gold Coast', 'Perth'],

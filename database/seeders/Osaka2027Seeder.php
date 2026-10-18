@@ -76,7 +76,7 @@ class Osaka2027Seeder extends Seeder
                 'area_label' => 'Base: Namba — Dōtonbori is the doorstep',
                 'map_embed_url' => $this->osm(34.6687, 135.5013, 0.02),
                 'hiccups' => [
-                    'Japan needs a visa for a Philippine passport — apply through an accredited agency several weeks before you fly.',
+                    'Japan needs a visa for a Philippine passport — apply through the Japan Visa Application Centre several weeks before you fly (package tours can use the eVisa).',
                     'Cherry-blossom week is peak season: book hotels and the rapi:t back to the airport early, and expect queues at every famous food stall.',
                     'Takoyaki comes off the griddle molten — wait a minute before the first bite.',
                     'Dōtonbori is busiest 19:00–21:00 on weekends; Thursday evening is calmer.',
@@ -311,7 +311,7 @@ class Osaka2027Seeder extends Seeder
             ['category' => 'Shopping', 'label' => 'Pasalubong', 'note' => 'Don Quijote, Shinsaibashi', 'amount' => 10000],
             ['category' => 'Insurance', 'label' => 'Travel insurance', 'amount' => 2500],
             ['category' => 'Communication', 'label' => 'eSIM', 'note' => '~4 days', 'amount' => 1500],
-            ['category' => 'Visa', 'label' => 'Japan visa via accredited agency', 'note' => 'PH passport', 'amount' => 6000],
+            ['category' => 'Visa', 'label' => 'Japan visa + application centre fee', 'note' => 'PH passport · check the current fee', 'amount' => 6000],
         ];
     }
 }

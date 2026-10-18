@@ -75,7 +75,7 @@ class Kyoto2026Seeder extends Seeder
                 'area_label' => 'Base: by Kyoto Station · evening in Higashiyama',
                 'map_embed_url' => $this->osm(34.9949, 135.7850, 0.025),
                 'hiccups' => [
-                    'Japan needs a visa for a Philippine passport — apply through an accredited agency several weeks before you fly.',
+                    'Japan needs a visa for a Philippine passport — apply through the Japan Visa Application Centre several weeks before you fly (package tours can use the eVisa).',
                     'The ICOCA & HARUKA combo ticket ended in 2023: buy the HARUKA ticket at the JR office and an IC card (ICOCA) separately for buses and subways.',
                     'Kiyomizu-dera\'s night viewing runs 21–30 November until 21:30 (last entry 21:00) — the lanes below it are packed, so go straight up.',
                     'The souvenir shops on Ninenzaka and Sannenzaka mostly close around 18:00 — shop on the way up, not after.',
@@ -318,7 +318,7 @@ class Kyoto2026Seeder extends Seeder
             ['category' => 'Shopping', 'label' => 'Pasalubong', 'note' => 'yatsuhashi, matcha sweets, pickles', 'amount' => 6000],
             ['category' => 'Insurance', 'label' => 'Travel insurance', 'amount' => 2500],
             ['category' => 'Communication', 'label' => 'eSIM', 'note' => '~4 days', 'amount' => 1500],
-            ['category' => 'Visa', 'label' => 'Japan visa via accredited agency', 'note' => 'PH passport', 'amount' => 6000],
+            ['category' => 'Visa', 'label' => 'Japan visa + application centre fee', 'note' => 'PH passport · check the current fee', 'amount' => 6000],
         ];
     }
 }
