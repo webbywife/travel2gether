@@ -47,11 +47,14 @@
   .hero-orig .hp-frame img{transition:transform .9s cubic-bezier(.16,1,.3,1);}
   .hero-orig .hero-photo:hover .hp-frame img{transform:scale(1.05);}
   .hp-route{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
-  .hp-line{fill:none; stroke:#fff; stroke-width:2.5; stroke-linecap:round; stroke-dasharray:400; stroke-dashoffset:400;
-    filter:drop-shadow(0 1px 2px rgba(0,0,0,.25)); transition:stroke-dashoffset 2s cubic-bezier(.16,1,.3,1) .4s;}
+  /* dashed pink like the connector to the plane doodle; a solid mask stroke draws it on */
+  .hp-line{fill:none; stroke:#C22A66; stroke-width:1.3; stroke-dasharray:1.4 3.2; stroke-linecap:round;
+    filter:drop-shadow(0 0 1.5px rgba(255,255,255,.9));}
+  .hp-draw{fill:none; stroke:#fff; stroke-width:6; stroke-dasharray:400; stroke-dashoffset:400;
+    transition:stroke-dashoffset 2s cubic-bezier(.16,1,.3,1) .4s;}
   .hp-pin{fill:#C22A66; stroke:#fff; stroke-width:3; opacity:0; transition:opacity .4s ease .3s;}
   .hp-pin-end{transition-delay:2s;}
-  .hero-photo.is-visible .hp-line{stroke-dashoffset:0;}
+  .hero-photo.is-visible .hp-draw{stroke-dashoffset:0;}
   .hero-photo.is-visible .hp-pin{opacity:1;}
   .hp-plane path{fill:#fff; stroke:#C22A66; stroke-width:1.4; stroke-linejoin:round;}
   html[data-motion="reduce"] .hp-plane{display:none;}
@@ -288,7 +291,10 @@
         </picture>
         {{-- a little paper plane flies the trip route over the photo --}}
         <svg class="hp-route" id="hpRoute" viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <path id="hpPath" class="hp-line" d="M30 262 C 78 236, 128 226, 170 238 S 242 236, 272 194"/>
+          <mask id="hpReveal" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="400">
+            <path class="hp-draw" d="M30 262 C 78 236, 128 226, 170 238 S 242 236, 272 194"/>
+          </mask>
+          <path id="hpPath" class="hp-line" mask="url(#hpReveal)" d="M30 262 C 78 236, 128 226, 170 238 S 242 236, 272 194"/>
           <circle class="hp-pin" cx="30" cy="262" r="6"/>
           <circle class="hp-pin hp-pin-end" cx="272" cy="194" r="6"/>
           <g class="hp-plane" id="hpPlane" opacity="0">
