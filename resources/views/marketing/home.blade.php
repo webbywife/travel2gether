@@ -83,10 +83,19 @@
   .ribbon-head p{margin:0; color:var(--text-dim); font-size:var(--fs-sm); max-width:60ch;}
   .pause{background:none; border:0; font-family:var(--f-mono); font-size:.6875rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); cursor:pointer; padding:6px 0;}
   .pause:hover{color:var(--pink);}
-  .shot{position:relative; flex:0 0 auto; width:clamp(180px, 12rem + 6vw, 300px); aspect-ratio:4/5; overflow:hidden; border-radius:var(--r); background:var(--paper-2); display:block;}
-  .shot img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .8s var(--ease-out);}
+  /* travel photos as polaroids: white frame, handwritten caption, slight tilt; hover straightens + lifts */
+  .ribbon .marquee{--gap:24px; padding:22px 0 30px;}
+  .shot{flex:0 0 auto; width:clamp(170px, 11rem + 5vw, 260px); display:block; text-decoration:none; background:#fff;
+    padding:10px 10px 0; border-radius:3px; --rot:-2deg; transform:rotate(var(--rot));
+    box-shadow:0 1px 3px rgba(36,30,35,.08), 0 14px 30px -14px rgba(120,40,80,.35);
+    transition:transform .5s cubic-bezier(.16,1,.3,1), box-shadow .5s ease;}
+  .shot:nth-child(3n+2){--rot:1.6deg;} .shot:nth-child(3n){--rot:-.7deg;} .shot:nth-child(4n){--rot:2.2deg;}
+  .shot .ph{display:block; aspect-ratio:1/1; overflow:hidden; background:var(--paper-2);}
+  .shot img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .8s cubic-bezier(.16,1,.3,1);}
+  .shot > span:not(.ph){display:block; font-family:'Caveat',cursive; font-size:1.375rem; line-height:1; color:#5A4A52; text-align:center;
+    padding:12px 6px 14px; min-height:1.375rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .shot:hover, .shot:focus-visible{transform:rotate(0deg) translateY(-8px) scale(1.03); box-shadow:0 2px 6px rgba(36,30,35,.1), 0 26px 44px -18px rgba(120,40,80,.45); z-index:1;}
   .shot:hover img{transform:scale(1.06);}
-  .shot span{position:absolute; left:10px; bottom:10px; background:#fff; color:var(--ink); font-family:var(--f-mono); font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; padding:5px 8px; border-radius:2px;}
   .place{flex:0 0 auto; font-size:clamp(2rem, 1.2rem + 3vw, 4rem); letter-spacing:-.04em; color:var(--ink); text-decoration:none; padding:0 8px; display:flex; align-items:center; gap:24px;}
   .place::after{content:"✦"; font-size:.4em; color:var(--pink);}
 
@@ -298,7 +307,7 @@
       @if(count($travelShots))
         @foreach($travelShots as $shot)
           <a href="{{ route('gallery.show', $shot['slug']) }}" class="shot">
-            <img src="{{ \App\Support\Gallery::thumb($shot['slug'], $shot) }}" alt="{{ $shot['place'] }}" loading="lazy" decoding="async">
+            <span class="ph"><img src="{{ \App\Support\Gallery::thumb($shot['slug'], $shot) }}" alt="{{ $shot['place'] }}" loading="lazy" decoding="async"></span>
             <span>{{ $shot['place'] }}</span>
           </a>
         @endforeach
