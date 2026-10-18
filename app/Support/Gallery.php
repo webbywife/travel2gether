@@ -155,10 +155,14 @@ class Gallery
         $seed = (int) now()->format('Ymd');
         $out = [];
         foreach (self::places() as $i => $place) {
-            $stills = self::stills($place);
-            $land = array_values(array_filter($stills, fn ($p) => $p['w'] >= $p['h'])) ?: $stills;
+            // Only photos with a named location, so every polaroid gets a caption; skip areas that have none.
+            $located = array_values(array_filter($place['photos'], fn ($p) => $p['type'] === 'photo' && trim($p['place']) !== ''));
+            if (! $located) {
+                continue;
+            }
+            $land = array_values(array_filter($located, fn ($p) => $p['w'] >= $p['h'])) ?: $located;
             $p = $land[($seed + $i * 7) % count($land)];
-            $out[] = $p + ['slug' => $place['slug'], 'place' => $place['name']];
+            $out[] = ['slug' => $place['slug'], 'area' => $place['name']] + $p;
         }
         usort($out, fn ($a, $b) => crc32($a['file'] . $seed) <=> crc32($b['file'] . $seed));
 

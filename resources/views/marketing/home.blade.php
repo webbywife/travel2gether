@@ -313,7 +313,7 @@
     <div class="marquee-track">
       @if(count($travelShots))
         @foreach($travelShots as $shot)
-          <a href="{{ route('gallery.show', $shot['slug']) }}" class="shot">
+          <a href="{{ route('gallery.show', $shot['slug']) }}" class="shot" title="{{ $shot['place'] }} — {{ $shot['area'] }}">
             <span class="ph"><img src="{{ \App\Support\Gallery::thumb($shot['slug'], $shot) }}" alt="{{ $shot['place'] }}" loading="lazy" decoding="async"></span>
             <span>{{ $shot['place'] }}</span>
           </a>

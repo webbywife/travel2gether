@@ -143,4 +143,16 @@ class GalleryTest extends TestCase
             ->assertSee('Plan my Kyoto trip — free')
             ->assertSee(route('trips.create', ['destination' => 'Kyoto, Japan']), false);
     }
+
+    public function test_homepage_polaroids_only_use_photos_with_a_location(): void
+    {
+        $noLocation = ['slug' => 'nara', 'name' => 'Nara', 'country' => 'Japan', 'years' => ['2024'],
+            'photos' => [['file' => 'nara-01.jpg', 'w' => 1600, 'h' => 1200, 'place' => '', 'city' => 'Nara', 'taken' => '2024-04']]];
+        $this->index([$this->kyoto(), $noLocation]);
+
+        $shots = \App\Support\Gallery::highlights(10);
+
+        $this->assertSame(['Fushimi Inari'], array_column($shots, 'place'));
+        $this->assertSame('Kyoto', $shots[0]['area']);
+    }
 }
