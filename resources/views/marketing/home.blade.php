@@ -40,6 +40,22 @@
       backdrop-filter:none; font-family:'Caveat',cursive; font-size:22px; letter-spacing:0; text-transform:none; padding:0;}
   }
   @media (prefers-reduced-motion: reduce){ .hero-orig .hero-photo{transform:none;} }
+  /* photo motion: hover straightens + lifts the polaroid; a paper plane flies the route */
+  .hero-orig .hero-photo{transition:transform .5s cubic-bezier(.16,1,.3,1), box-shadow .5s ease;}
+  .hero-orig .hp-frame{position:relative; overflow:hidden; border-radius:inherit;}
+  @media (min-width:900px){ .hero-orig .hp-frame{border-radius:2px;} .hero-orig .hero-photo:hover{transform:rotate(0deg) translateY(-6px); box-shadow:0 2px 6px rgba(36,30,35,0.06), 0 34px 60px -22px rgba(120,40,80,0.42);} }
+  .hero-orig .hp-frame img{transition:transform .9s cubic-bezier(.16,1,.3,1);}
+  .hero-orig .hero-photo:hover .hp-frame img{transform:scale(1.05);}
+  .hp-route{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+  .hp-line{fill:none; stroke:#fff; stroke-width:2.5; stroke-linecap:round; stroke-dasharray:400; stroke-dashoffset:400;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.25)); transition:stroke-dashoffset 2s cubic-bezier(.16,1,.3,1) .4s;}
+  .hp-pin{fill:#C22A66; stroke:#fff; stroke-width:3; opacity:0; transition:opacity .4s ease .3s;}
+  .hp-pin-end{transition-delay:2s;}
+  .hero-photo.is-visible .hp-line{stroke-dashoffset:0;}
+  .hero-photo.is-visible .hp-pin{opacity:1;}
+  .hp-plane path{fill:#fff; stroke:#C22A66; stroke-width:1.4; stroke-linejoin:round;}
+  html[data-motion="reduce"] .hp-plane{display:none;}
+  @media (prefers-reduced-motion: reduce){ html:not([data-motion="full"]) .hp-plane{display:none;} }
   .hero-orig .kicker{display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.18em; text-transform:uppercase; color:#9E4A6E;
     border:1px solid rgba(36,30,35,0.10); background:rgba(255,255,255,0.7); border-radius:999px; padding:7px 14px; margin-bottom:24px;}
   .hero-orig h1{font-family:'Space Grotesk',sans-serif; font-weight:700 !important; font-size:clamp(34px, 5.6vw, 58px); line-height:1.05; letter-spacing:-0.025em;
@@ -250,11 +266,22 @@
     <p class="trust reveal d3">No card required &nbsp;·&nbsp; <b>Free while in beta — up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips</b></p>
     </div>
     <figure class="hero-photo reveal d1">
-      <picture>
-        <source srcset="{{ asset('img/hero/grand-canyon.webp') }}" type="image/webp">
-        <img src="{{ asset('img/hero/grand-canyon.jpg') }}" width="1050" height="1400" fetchpriority="high" decoding="async"
-             alt="Two travellers wrapped up together on the rim of the Grand Canyon, looking out over the layered red cliffs under a wide blue sky">
-      </picture>
+      <div class="hp-frame">
+        <picture>
+          <source srcset="{{ asset('img/hero/grand-canyon.webp') }}" type="image/webp">
+          <img src="{{ asset('img/hero/grand-canyon.jpg') }}" width="1050" height="1400" fetchpriority="high" decoding="async"
+               alt="Two travellers wrapped up together on the rim of the Grand Canyon, looking out over the layered red cliffs under a wide blue sky">
+        </picture>
+        {{-- a little paper plane flies the trip route over the photo --}}
+        <svg class="hp-route" id="hpRoute" viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <path id="hpPath" class="hp-line" d="M30 262 C 78 236, 128 226, 170 238 S 242 236, 272 194"/>
+          <circle class="hp-pin" cx="30" cy="262" r="6"/>
+          <circle class="hp-pin hp-pin-end" cx="272" cy="194" r="6"/>
+          <g class="hp-plane" id="hpPlane" opacity="0">
+            <path d="M9 0 L-7 -6 L-4 0 L-7 6 Z"/>
+          </g>
+        </svg>
+      </div>
       <figcaption>Grand Canyon, Arizona</figcaption>
     </figure>
   </header>
@@ -505,6 +532,27 @@
 
 <script>
 (function () {
+  // Paper plane flies the hero route: 5.6s flight, short rest, repeat. Skipped when motion is off.
+  var path = document.getElementById('hpPath'), plane = document.getElementById('hpPlane');
+  function calm() { var m = document.documentElement.getAttribute('data-motion'); return m === 'reduce' || (m !== 'full' && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  if (path && plane && path.getTotalLength) {
+    var len = path.getTotalLength(), FLY = 5600, CYCLE = 7000, t0 = null, visible = true;
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }).observe(path.ownerSVGElement);
+    function frame(t) {
+      if (t0 === null) t0 = t + 2200;              // start once the route has drawn in
+      if (calm() || !visible || t < t0) { plane.setAttribute('opacity', 0); requestAnimationFrame(frame); return; }
+      var k = ((t - t0) % CYCLE) / FLY;
+      if (k > 1) { plane.setAttribute('opacity', 0); requestAnimationFrame(frame); return; }
+      var e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;   // ease in-out
+      var a = path.getPointAtLength(e * len), b = path.getPointAtLength(Math.min(len, e * len + 1));
+      var ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+      plane.setAttribute('transform', 'translate(' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')');
+      plane.setAttribute('opacity', Math.min(1, k / .06, (1 - k) / .08).toFixed(2));
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
   // Live sample switcher
   var frame = document.getElementById('sbFrame'), open = document.getElementById('sbOpen');
   document.querySelectorAll('.sb-tab').forEach(function (btn) {
