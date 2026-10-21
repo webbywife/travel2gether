@@ -59,7 +59,8 @@
   details.opt.more{margin:0 0 18px;}
   details.opt.more > summary{border:1px dashed var(--line); border-radius:14px; padding:14px 18px; background:rgba(255,255,255,0.7);}
   @media (max-width:620px){ .build{padding:0 16px;} .step{padding:18px 16px;} .shop-row .amt input{width:76px;} }
-  .start{background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:0 0 14px;}
+  .start{background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:14px 0 0;}
+  .start-link{font-size:13px; color:var(--pink); font-weight:600;}
   .start-head{font-weight:600; font-size:14px; margin-bottom:8px;}
   .start-note{font-size:12.5px; color:var(--text-dim); margin:4px 0;}
   .start-group{margin:8px 0;}
@@ -120,6 +121,16 @@
           </select>
         </div>
       </div>
+      <div class="start" id="startPanel" hidden>
+        <div class="start-head" id="startHead"></div>
+        <div class="start-group" id="startAirportsWrap" hidden><span class="start-label">✈️ Airports — tap the one you fly into</span><div class="start-chips" id="startAirports"></div></div>
+        <div class="start-note" id="startAirport" hidden></div>
+        <div class="start-group" id="startAreasWrap" hidden><span class="start-label">🏘️ Areas where visitors stay — tap to add to your areas</span><div class="start-chips" id="startAreas"></div></div>
+        <div class="start-group" id="startSightsWrap" hidden><span class="start-label">📍 Places to see nearby — tap to add to your areas</span><div class="start-chips" id="startSights"></div></div>
+        <div class="start-group" id="startHotelsWrap" hidden><span class="start-label">🏨 Hotels &amp; hostels near the centre — tap to use</span><div class="start-chips" id="startHotels"></div></div>
+        <div class="start-group" id="startFlightsWrap" hidden><span class="start-label">🛫 Flights</span><a class="start-link" id="startFlights" target="_blank" rel="noopener"></a></div>
+        <div class="start-note" id="startStatus"></div>
+      </div>
     </div>
 
     <div class="step">
@@ -167,14 +178,6 @@
     <div class="step">
       <h2><span class="n">03</span>Where you're staying</h2>
       <p class="hint">Search for the hotel — the day skeleton anchors bag-drop and checkout to it, and the map uses its location.</p>
-      <div class="start" id="startPanel" hidden>
-        <div class="start-head" id="startHead"></div>
-        <div class="start-group" id="startAirportsWrap" hidden><span class="start-label">✈️ Airports — tap the one you fly into</span><div class="start-chips" id="startAirports"></div></div>
-        <div class="start-note" id="startAirport" hidden></div>
-        <div class="start-group" id="startAreasWrap" hidden><span class="start-label">🏘️ Areas where visitors stay</span><div class="start-chips" id="startAreas"></div></div>
-        <div class="start-group" id="startHotelsWrap" hidden><span class="start-label">🏨 Hotels &amp; hostels near the centre — tap to use</span><div class="start-chips" id="startHotels"></div></div>
-        <div class="start-note" id="startStatus"></div>
-      </div>
       <div class="ps" data-place data-kind="hotel">
         <label class="f" for="f-hotel-name">Hotel</label>
         <input id="f-hotel-name" class="in" name="hotel_name" value="{{ old('hotel_name') }}" placeholder="Search a hotel or area…" autocomplete="off" data-place-input>
@@ -423,13 +426,35 @@
     return Array.prototype.some.call(list.querySelectorAll('.area-row .area-main > [data-place] [data-place-input]'),
       function (i) { return i.value.trim().toLowerCase() === name.toLowerCase(); });
   }
+  // Chips fill fields inside the collapsed sections — open them so the change is visible.
+  function openDetails(node) { for (var d = node && node.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true; }
+  function addArea(p) {
+    if (areaAlreadyListed(p.name)) return;
+    var w = emptyAreaWrap(); openDetails(w); setPlace(w, p, p.formatted_address);
+  }
+  // A Google Flights search for the trip's dates (live prices and airlines — we don't claim any routes ourselves).
+  var flightAirport = '';
+  function updateFlights() {
+    var wrap = document.getElementById('startFlightsWrap'), a = document.getElementById('startFlights');
+    if (!wrap || !flightAirport) { if (wrap) wrap.hidden = true; return; }
+    var fromEl = document.querySelector('[name="segments[0][from]"]');
+    var from = (fromEl && fromEl.value.trim().toUpperCase()) || 'MNL';
+    var go = document.getElementById('f-arrival-date').value, back = document.getElementById('f-departure-date').value;
+    var q = 'Flights from ' + from + ' to ' + flightAirport + (go ? ' on ' + go : '') + (go && back ? ' through ' + back : '');
+    a.href = 'https://www.google.com/travel/flights?q=' + encodeURIComponent(q);
+    a.textContent = from + ' → ' + flightAirport + (go ? ' · ' + go + (back ? ' to ' + back : '') : '') + ' — see flights on Google Flights ↗';
+    wrap.hidden = false;
+  }
+  ['f-arrival-date', 'f-departure-date', 'f-segments-0-from'].forEach(function (id) {
+    var i = document.getElementById(id); if (i) i.addEventListener('change', updateFlights);
+  });
   function loadStart(lat, lon, name) {
     if (!placesEnabled || !startPanel) return;
     startPanel.hidden = false;
     document.getElementById('startHead').textContent = 'Suggested for ' + name;
     var status = document.getElementById('startStatus');
     status.textContent = 'Finding airports, areas and places to stay…';
-    ['startAirport', 'startAirportsWrap', 'startAreasWrap', 'startHotelsWrap'].forEach(function (id) { document.getElementById(id).hidden = true; });
+    ['startAirport', 'startAirportsWrap', 'startAreasWrap', 'startSightsWrap', 'startHotelsWrap', 'startFlightsWrap'].forEach(function (id) { document.getElementById(id).hidden = true; });
 
     fetch('/places/explore?lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon), { headers: { 'Accept': 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : null; })
@@ -447,10 +472,13 @@
             if (to) to.value = ap.provider_id; if (from) from.value = ap.provider_id;
             document.getElementById('startAirport').textContent = '✈️ ' + ap.provider_id + ' set as your arrival and return airport.';
             document.getElementById('startAirport').hidden = false;
+            openDetails(to); flightAirport = ap.provider_id; updateFlights();
           });
           apBox.appendChild(b);
         });
         document.getElementById('startAirportsWrap').hidden = !aps.length;
+        var major = aps.filter(function (a) { return a.major; })[0] || aps[0];
+        flightAirport = major ? major.provider_id : ''; updateFlights();
 
         // Areas where the hotels cluster; the busiest one starts area 1 if it's empty.
         var areas = d.areas || [], areaBox = document.getElementById('startAreas');
@@ -458,7 +486,7 @@
         areas.forEach(function (a, n) {
           var b = el('button'); b.type = 'button';
           b.appendChild(document.createTextNode(a.name)); b.appendChild(el('small', a.hotels + ' hotels · ' + a.km + ' km'));
-          b.addEventListener('click', function () { if (!areaAlreadyListed(a.name)) setPlace(emptyAreaWrap(), a); });
+          b.addEventListener('click', function () { addArea(a); });
           areaBox.appendChild(b);
         });
         document.getElementById('startAreasWrap').hidden = !areas.length;
@@ -466,19 +494,29 @@
         var autoArea = areas[0] && first && !first.querySelector('[data-place-input]').value.trim();
         if (autoArea) setPlace(first, areas[0]);
 
+        var sights = d.landmarks || [], sightBox = document.getElementById('startSights');
+        sightBox.innerHTML = '';
+        sights.slice(0, 8).forEach(function (p) {
+          var b = el('button'); b.type = 'button';
+          b.appendChild(document.createTextNode(p.name)); b.appendChild(el('small', (p.category ? p.category + ' · ' : '') + p.km + ' km'));
+          b.addEventListener('click', function () { addArea(p); });
+          sightBox.appendChild(b);
+        });
+        document.getElementById('startSightsWrap').hidden = !sights.length;
+
         var hotels = d.hotels || [], hotelBox = document.getElementById('startHotels');
         var hotelWrap = document.querySelector('[data-place][data-kind="hotel"]');
         hotelBox.innerHTML = '';
         hotels.slice(0, 8).forEach(function (h) {
           var b = el('button'); b.type = 'button';
           b.appendChild(document.createTextNode(h.name)); b.appendChild(el('small', (h.category ? h.category + ' · ' : '') + h.km + ' km'));
-          b.addEventListener('click', function () { setPlace(hotelWrap, h, h.formatted_address); });
+          b.addEventListener('click', function () { openDetails(hotelWrap); setPlace(hotelWrap, h, h.formatted_address); });
           hotelBox.appendChild(b);
         });
         document.getElementById('startHotelsWrap').hidden = !hotels.length;
 
         status.textContent = (autoArea ? 'Area 1 is set to ' + areas[0].name + ' — change it anytime. ' : '') +
-          (d.partial ? 'Some suggestions didn\'t load — try picking the destination again in a minute.' : 'From OpenStreetMap and OurAirports.');
+          (d.partial ? 'Some suggestions didn\'t load — try picking the destination again in a minute.' : 'Suggestions from OpenStreetMap and OurAirports — check opening times and prices before you go.');
       })
       .catch(function () { status.textContent = 'Suggestions are unavailable right now — search for your hotel and areas below.'; });
   }
@@ -535,6 +573,17 @@
   // Coming back to the form (validation error) with a picked destination: show its suggestions again.
   var dLat = document.querySelector('[name="dest_lat"]'), dLon = document.querySelector('[name="dest_lon"]');
   if (dLat && dLat.value && dLon && dLon.value) loadStart(dLat.value, dLon.value, destInput.value);
+  else if (placesEnabled && destInput && destInput.value.trim().length >= 3) {
+    fetch('/places/search?kind=destination&q=' + encodeURIComponent(destInput.value.trim()), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : { results: [] }; })
+      .then(function (d) {
+        var p = (d.results || [])[0];
+        if (!p || !p.lat || dLat.value) return; // the planner may have picked one meanwhile
+        dLat.value = p.lat; dLon.value = p.lon;
+        loadStart(p.lat, p.lon, destInput.value);
+      })
+      .catch(function () {});
+  }
 })();
 </script>
 @endsection
