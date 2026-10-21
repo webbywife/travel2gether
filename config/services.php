@@ -46,10 +46,10 @@ return [
         'maps_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
-    // Claude (Anthropic) — powers AI day drafts, Trippie and the day-details helper.
-    'anthropic' => [
-        'api_key' => env('ANTHROPIC_API_KEY'),
-        'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
+    // OpenRouter — powers AI day drafts, Trippie and the day-details helper.
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+        'model' => env('OPENROUTER_MODEL', 'deepseek/deepseek-chat'),
         // Site-wide ceiling on AI requests per day (all users together).
         'daily_cap' => (int) env('AI_DAILY_CAP', 2500),
     ],

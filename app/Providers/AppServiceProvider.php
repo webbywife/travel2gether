@@ -44,21 +44,21 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         // Paid AI: per-visitor and per-account daily caps, plus a site-wide daily ceiling,
-        // so nobody (guest scripts included) can run up the Anthropic bill.
+        // so nobody (guest scripts included) can run up the AI bill.
         RateLimiter::for('ai-trippie', fn (Request $request) => [
             Limit::perMinute(8)->by('trippie-m:' . $request->ip()),
             Limit::perDay(60)->by('trippie-d:' . ($request->user()?->id ?? $request->ip())),
-            Limit::perDay((int) config('services.anthropic.daily_cap', 2500))->by('ai-global'),
+            Limit::perDay((int) config('services.openrouter.daily_cap', 2500))->by('ai-global'),
         ]);
         RateLimiter::for('ai-suggest', fn (Request $request) => [
             Limit::perMinute(6)->by('suggest-m:' . $request->user()?->id),
             Limit::perDay(80)->by('suggest-d:' . $request->user()?->id),
-            Limit::perDay((int) config('services.anthropic.daily_cap', 2500))->by('ai-global'),
+            Limit::perDay((int) config('services.openrouter.daily_cap', 2500))->by('ai-global'),
         ]);
         RateLimiter::for('ai-draft', fn (Request $request) => [
             Limit::perMinute(6)->by('draft-m:' . $request->user()?->id),
             Limit::perDay(40)->by('draft-d:' . $request->user()?->id),
-            Limit::perDay((int) config('services.anthropic.daily_cap', 2500))->by('ai-global'),
+            Limit::perDay((int) config('services.openrouter.daily_cap', 2500))->by('ai-global'),
         ]);
 
         RateLimiter::for('password-reset', fn (Request $request) => [

@@ -1,7 +1,7 @@
 @extends('layouts.site')
 
 @section('title', 'Privacy & cookies · Travel2gether')
-@section('meta_description', 'What Travel2gether collects, the cookies and browser storage it uses, and which third parties (Google Sign-In, Anthropic Claude AI, OpenStreetMap, Pexels, Open-Meteo) your data passes through.')
+@section('meta_description', 'What Travel2gether collects, the cookies and browser storage it uses, and which third parties (Google Sign-In, OpenRouter AI, OpenStreetMap, Pexels, Open-Meteo) your data passes through.')
 
 @push('styles')
 <style>
@@ -56,7 +56,7 @@
     <p>To provide specific features, some data leaves Travel2gether and goes to:</p>
     <ul>
       <li><strong>Google Sign-In</strong> — if you use it, to authenticate you.</li>
-      <li><strong>Anthropic (Claude AI)</strong> — your trip's destination, dates, day titles and areas, interests, and hotel names (to draft a day or suggest day details), and whatever you type to Trippie or into "Help me with this day" (plus your current trip's summary, if you're on a trip page). Anthropic does not use this to train its models under its commercial API terms. <strong>Don't paste anything sensitive into a trip field or the chat</strong> — treat both like a message to any third-party AI tool.</li>
+      <li><strong>OpenRouter (AI)</strong> — your trip's destination, dates, day titles and areas, interests, and hotel names (to draft a day or suggest day details), and whatever you type to Trippie or into "Help me with this day" (plus your current trip's summary, if you're on a trip page). OpenRouter passes it to an AI model provider to produce the reply, and those companies' own privacy policies govern how they handle it. <strong>Don't paste anything sensitive into a trip field or the chat</strong> — treat both like a message to any third-party AI tool.</li>
       <li><strong>OpenStreetMap services (Photon, Overpass)</strong> — the place name you type and an approximate location, to look up real places for the trip builder and to give the AI a list of real nearby sights. No account data is sent.</li>
       <li><strong>Pexels</strong> — the names of places in an AI-drafted day, to find an illustrative photo when none of our own photos fits. The photo then loads from Pexels' servers, which can see your IP address, like any image on the web.</li>
       <li><strong>Open-Meteo</strong> — a location's coordinates and a date, to fetch weather. No personal or account data is sent.</li>

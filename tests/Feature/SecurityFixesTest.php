@@ -81,17 +81,9 @@ class SecurityFixesTest extends TestCase
             ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     }
 
-    public function test_haiku_requests_omit_unsupported_options(): void
+    public function test_the_ai_model_name_is_trimmed(): void
     {
-        config(['services.anthropic.model' => 'claude-haiku-4-5 ']); // note the stray space, as on prod
-        $c = app(\App\Services\ClaudeClient::class);
-        $r = new \ReflectionClass($c);
-        $this->assertSame('claude-haiku-4-5', $c->model());
-        $this->assertFalse($r->getMethod('supportsEffort')->invoke($c));
-        $this->assertFalse($r->getMethod('supportsFallbacks')->invoke($c));
-
-        config(['services.anthropic.model' => 'claude-opus-5-5']);
-        $this->assertTrue($r->getMethod('supportsEffort')->invoke($c));
-        $this->assertTrue($r->getMethod('supportsFallbacks')->invoke($c));
+        config(['services.openrouter.model' => 'deepseek/deepseek-chat ']); // note the stray space, as on prod
+        $this->assertSame('deepseek/deepseek-chat', app(\App\Services\ClaudeClient::class)->model());
     }
 }

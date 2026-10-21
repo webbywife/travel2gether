@@ -24,9 +24,9 @@ class QaFixesTest extends TestCase
         return $t;
     }
 
-    public function test_ai_buttons_show_with_only_a_claude_key(): void
+    public function test_ai_buttons_show_with_only_an_ai_key(): void
     {
-        config(['services.gemini.api_key' => null, 'services.anthropic.api_key' => 'sk-ant-test']);
+        config(['services.gemini.api_key' => null, 'services.openrouter.api_key' => 'sk-or-test']);
         $owner = User::factory()->create();
         $trip = $this->trip($owner);
 

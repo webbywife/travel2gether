@@ -27,8 +27,8 @@ Personal project (owner: Lea Abarentos). This repo is **public**: this file hold
 - **Who can reach it:** a public web app, by design. No shared or generic accounts.
 
 ## Run-as and secrets
-- PHP-FPM runs as the deploy user. All secrets (`APP_KEY`, DB, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, Google OAuth, mail) live in the server `.env`, which is not web-reachable. Only the owner reads it (over SSH).
-- External calls are HTTPS only: Anthropic, Gemini (key sent in a header, never in the URL), Google OAuth, Open-Meteo, Photon/Overpass, Pexels.
+- PHP-FPM runs as the deploy user. All secrets (`APP_KEY`, DB, `OPENROUTER_API_KEY`, `GEMINI_API_KEY`, Google OAuth, mail) live in the server `.env`, which is not web-reachable. Only the owner reads it (over SSH).
+- External calls are HTTPS only: OpenRouter, Gemini (key sent in a header, never in the URL), Google OAuth, Open-Meteo, Photon/Overpass, Pexels.
 
 ## Protections in place
 CSRF on every write · rate limits on login, register, reset, OAuth, AI and places · minimum password length 12 · email verification (toggled by env) · Blade auto-escaping, and `textContent` in client JS · security headers (nosniff, SAMEORIGIN, Referrer-Policy, Permissions-Policy, HSTS, structural CSP) · JSON-LD output with `JSON_HEX_TAG` · daily AI cap · security event log.
@@ -45,7 +45,7 @@ CSRF on every write · rate limits on login, register, reset, OAuth, AI and plac
 
 ## Kill switch and revoking access
 - **Whole app:** `php artisan down --secret=<token>` (maintenance page; the owner can still get in through the secret URL). Bring it back with `php artisan up`.
-- **AI only:** remove `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` from `.env`, then run `php artisan config:cache`.
+- **AI only:** remove `OPENROUTER_API_KEY` / `GEMINI_API_KEY` from `.env`, then run `php artisan config:cache`.
 - **Revoke admin:** change the admin email in `.env`, then `config:cache`.
 - **Revoke a trip member:** the owner removes them in the Share panel. A removal row blocks rejoining through old invite links.
 

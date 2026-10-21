@@ -2,69 +2,53 @@
 
 namespace App\Services;
 
-use Anthropic\Client;
-use Anthropic\Core\Exceptions\APIConnectionException;
-use Anthropic\Core\Exceptions\APIStatusException;
-use Anthropic\Core\Exceptions\RateLimitException;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Http;
 
 /**
- * Thin wrapper around the official Anthropic PHP SDK — the AI behind day
+ * Thin wrapper around OpenRouter's chat-completions API — the AI behind day
  * drafts, Trippie and the day-details helper. (Gemini stays as a fallback,
- * but Google blocks it from this server's IP.)
+ * but Google blocks it from this server's IP.) The class keeps its old name so
+ * callers and tests are unchanged.
  *
  * Errors surface as RuntimeException('quota' | 'refusal' | 'unavailable')
  * so callers keep their existing friendly messages.
  */
 class ClaudeClient
 {
+    private const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
+
     public function enabled(): bool
     {
-        return filled(config('services.anthropic.api_key'));
+        return filled(config('services.openrouter.api_key'));
     }
 
     public function model(): string
     {
-        return trim((string) config('services.anthropic.model', 'claude-opus-5-5'));
-    }
-
-    /** `effort` exists on Opus 4.5+, Sonnet 4.6+, the 5.x family and Fable — not on Haiku 4.5 / Sonnet 4.5. */
-    private function supportsEffort(): bool
-    {
-        $m = $this->model();
-
-        return ! str_contains($m, 'haiku') && ! str_starts_with($m, 'claude-sonnet-4-5');
-    }
-
-    /** Server-side refusal fallbacks ("default") are offered on the newest models only. */
-    private function supportsFallbacks(): bool
-    {
-        return (bool) preg_match('/^claude-(opus-5|sonnet-5-5|fable-5)/', $this->model());
-    }
-
-    private function client(float $timeout): Client
-    {
-        return new Client(
-            apiKey: config('services.anthropic.api_key'),
-            requestOptions: ['timeout' => $timeout, 'maxRetries' => 2],
-        );
+        return trim((string) config('services.openrouter.model', 'deepseek/deepseek-chat'));
     }
 
     /**
-     * One request whose reply must match $schema (structured outputs), decoded.
+     * One request whose reply must match $schema, decoded.
      *
-     * @param  array<string, mixed>  $schema  JSON Schema (objects need additionalProperties:false + required)
+     * @param  array<string, mixed>  $schema  JSON Schema
      * @return array<string, mixed>
      */
     public function json(string $system, string $user, array $schema, string $effort = 'medium', int $maxTokens = 16000, float $timeout = 170): array
     {
+        // Not every OpenRouter model enforces json_schema, so state the shape in the prompt too.
+        $system .= "\n\nReply with a single JSON object only (no markdown fences) matching this JSON Schema:\n".json_encode($schema);
+
         $text = $this->send(
             system: $system,
             messages: [['role' => 'user', 'content' => $user]],
-            outputConfig: ['format' => ['type' => 'json_schema', 'schema' => $schema]] + ($this->supportsEffort() ? ['effort' => $effort] : []),
             maxTokens: $maxTokens,
             timeout: $timeout,
+            json: true,
         );
 
+        // Some models wrap JSON in a ```json fence despite the instruction.
+        $text = trim((string) preg_replace('/^```(?:json)?\s*|\s*```$/', '', trim($text)));
         $data = json_decode($text, true);
         if (! is_array($data)) {
             throw new \RuntimeException('unavailable');
@@ -83,7 +67,6 @@ class ClaudeClient
         return trim($this->send(
             system: $system,
             messages: $messages,
-            outputConfig: $this->supportsEffort() ? ['effort' => $effort] : null,
             maxTokens: $maxTokens,
             timeout: $timeout,
         ));
@@ -91,41 +74,48 @@ class ClaudeClient
 
     /**
      * @param  array<int, array<string, mixed>>  $messages
-     * @param  array<string, mixed>|null  $outputConfig
      */
-    private function send(string $system, array $messages, ?array $outputConfig, int $maxTokens, float $timeout): string
+    private function send(string $system, array $messages, int $maxTokens, float $timeout, bool $json = false): string
     {
+        $payload = [
+            'model' => $this->model(),
+            'max_tokens' => $maxTokens,
+            'messages' => array_merge([['role' => 'system', 'content' => $system]], $messages),
+        ];
+        if ($json) {
+            $payload['response_format'] = ['type' => 'json_object'];
+        }
+
         try {
-            $message = $this->client($timeout)->beta->messages->create(
-                model: $this->model(),
-                maxTokens: $maxTokens,
-                system: [['type' => 'text', 'text' => $system, 'cacheControl' => ['type' => 'ephemeral']]],
-                messages: $messages,
-                outputConfig: $outputConfig,
-                // If the model declines on policy grounds, let the API retry on its default fallback.
-                fallbacks: $this->supportsFallbacks() ? 'default' : null,
-                betas: $this->supportsFallbacks() ? ['server-side-fallback-2026-07-01'] : null,
-            );
-        } catch (RateLimitException $e) {
-            throw new \RuntimeException('quota', 0, $e);
-        } catch (APIStatusException $e) {
-            report($e);
-            throw new \RuntimeException('unavailable', 0, $e);
-        } catch (APIConnectionException $e) {
+            $response = Http::withToken((string) config('services.openrouter.api_key'))
+                ->withHeaders(['X-Title' => 'Travel2gether'])
+                ->timeout((int) ceil($timeout))
+                ->retry(2, 500, fn ($e) => $e instanceof ConnectionException, throw: false)
+                ->acceptJson()
+                ->post(self::ENDPOINT, $payload);
+        } catch (ConnectionException $e) {
             report($e);
             throw new \RuntimeException('unavailable', 0, $e);
         }
 
-        if ($message->stopReason === 'refusal') {
+        if ($response->status() === 429) {
+            throw new \RuntimeException('quota');
+        }
+        if ($response->failed()) {
+            report(new \RuntimeException('OpenRouter HTTP '.$response->status()));
+            throw new \RuntimeException('unavailable');
+        }
+
+        $choice = $response->json('choices.0');
+        if (($choice['finish_reason'] ?? null) === 'content_filter') {
             throw new \RuntimeException('refusal');
         }
 
-        foreach ($message->content as $block) {
-            if ($block->type === 'text') {
-                return $block->text;
-            }
+        $text = $choice['message']['content'] ?? null;
+        if (! is_string($text) || trim($text) === '') {
+            throw new \RuntimeException('unavailable');
         }
 
-        throw new \RuntimeException('unavailable');
+        return $text;
     }
 }

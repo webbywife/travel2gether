@@ -14,7 +14,7 @@ class PrivacyPageTest extends TestCase
         $this->get('/privacy')
             ->assertOk()
             ->assertSee('Privacy', false)
-            ->assertSee('Anthropic (Claude AI)', false)
+            ->assertSee('OpenRouter (AI)', false)
             ->assertSee('OpenStreetMap', false)
             ->assertSee('Pexels', false)
             ->assertSee('Open-Meteo', false)
