@@ -22,6 +22,16 @@ class TripDayController extends Controller
         $this->authorize('update', $trip);
         abort_unless($day->trip_id === $trip->id, 404);
 
+        // Trips made before destinations were placed have no coordinates, so the area/hotel search drifts worldwide.
+        if ($trip->lat === null || $trip->lon === null) {
+            $pin = app(\App\Services\PlacesService::class)->geocodeDestination($trip->destination);
+            if ($pin) {
+                $trip->update($pin);
+                $trip->days()->whereNull('lat')->update($pin);
+                $day->refresh();
+            }
+        }
+
         return view('trips.days.edit', [
             'trip' => $trip,
             'day' => $day,

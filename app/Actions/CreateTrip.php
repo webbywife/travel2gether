@@ -35,6 +35,13 @@ class CreateTrip
         $blankLeg = array_fill_keys(['from', 'to', 'date', 'depart', 'arrive', 'terminal', 'airline', 'flight_no'], null);
         $data['segments'] = [($data['segments'][0] ?? []) + $blankLeg, ($data['segments'][1] ?? []) + $blankLeg];
 
+        // The step-by-step planner types a destination without picking a suggestion, so place it here.
+        if (blank($data['dest_lat'] ?? null) || blank($data['dest_lon'] ?? null)) {
+            $pin = app(\App\Services\PlacesService::class)->geocodeDestination($data['destination']);
+            $data['dest_lat'] = $pin['lat'] ?? null;
+            $data['dest_lon'] = $pin['lon'] ?? null;
+        }
+
         return DB::transaction(function () use ($data, $owner) {
             $arrival = Carbon::parse($data['arrival_date']);
             $departure = Carbon::parse($data['departure_date']);

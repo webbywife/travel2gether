@@ -533,6 +533,42 @@ class PlacesService
      *
      * @return array{lat: float, lon: float}|null
      */
+    /**
+     * Coordinates of a typed destination ("Bangkok, Thailand"), for trips made
+     * without picking a suggestion. Photon only; null when it can't be placed.
+     */
+    public function geocodeDestination(string $destination): ?array
+    {
+        $destination = trim($destination);
+        if ($destination === '' || ! config('services.places.osm', true)) {
+            return null;
+        }
+
+        $key = 'places:osm:geocode:' . md5(mb_strtolower($destination));
+        $hit = Cache::get($key);
+        if ($hit !== null) {
+            return $hit ?: null;
+        }
+
+        $qs = http_build_query(['q' => $destination, 'limit' => 1, 'lang' => 'en']);
+        foreach (self::KIND_FILTERS['destination']['layer'] as $layer) {
+            $qs .= '&layer=' . rawurlencode($layer);
+        }
+        $res = rescue(fn () => Http::withHeaders(['User-Agent' => self::USER_AGENT])->connectTimeout(4)->timeout(6)
+            ->get(self::PHOTON_URL . '?' . $qs), null, false);
+        if (! $res?->successful()) {
+            return null; // not cached: try again later
+        }
+
+        $f = $res->json('features.0');
+        $lat = (float) data_get($f, 'geometry.coordinates.1');
+        $lon = (float) data_get($f, 'geometry.coordinates.0');
+        $found = ($lat && $lon) ? ['lat' => round($lat, 5), 'lon' => round($lon, 5)] : null;
+        Cache::put($key, $found ?: false, $found ? now()->addDays(30) : now()->addDay());
+
+        return $found;
+    }
+
     public function locate(string $name, float $lat, float $lon): ?array
     {
         $key = 'places:osm:locate:' . md5(mb_strtolower($name) . '|' . round($lat, 1) . '|' . round($lon, 1));
