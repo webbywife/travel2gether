@@ -55,7 +55,16 @@ class DraftDayWithAi implements ShouldQueue
         }
 
         DB::transaction(function () use ($day, $draft, $index) {
-            $day->stops()->delete(); // cascades to options
+            $day->stops()->where('is_anchor', false)->delete(); // cascades to options; fixed landing/flight stops stay
+            $anchors = $day->stops()->where('is_anchor', true)->orderBy('sort')->get();
+            // Arrival day: every anchor comes first. Departure day: checkout first, airport + flight last.
+            $isFirst = $day->day_number === $day->trip->days()->min('day_number');
+            $head = $isFirst ? $anchors : $anchors->take(1);
+            $tail = $isFirst ? collect() : $anchors->slice(1)->values();
+            foreach ($head->values() as $k => $a) {
+                $a->update(['sort' => $k]);
+            }
+            $offset = $head->count();
 
             $lat = $day->lat ?? $day->trip->lat;
             $lon = $day->lon ?? $day->trip->lon;
@@ -81,7 +90,7 @@ class DraftDayWithAi implements ShouldQueue
                 unset($stop['options']);
 
                 $record = $day->stops()->create($stop + [
-                    'sort' => $i,
+                    'sort' => $offset + $i,
                     'has_options' => count($options) > 0,
                 ]);
 
@@ -90,6 +99,10 @@ class DraftDayWithAi implements ShouldQueue
                 }
 
                 $index($record->options);
+            }
+
+            foreach ($tail as $k => $a) {
+                $a->update(['sort' => $offset + count($draft['stops']) + $k]);
             }
 
             // Only a successful *re*-draft by a non-admin spends the trip's free regeneration.

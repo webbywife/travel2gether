@@ -9,7 +9,7 @@
   <div class="card">
     @if ($pendingDest = \App\Support\PendingTrip::destination(request()))
       <h1>Save your {{ $pendingDest ?: 'new' }} trip</h1>
-      <p class="lede">Your trip is ready. Create a free account to open it and invite your group. No card required.</p>
+      <p class="lede">Your trip is ready on your dates. Create a free account to open it and invite your group. No card required.</p>
     @else
       <h1>Start planning</h1>
       <p class="lede">Your first full AI itinerary is free — no card required.</p>

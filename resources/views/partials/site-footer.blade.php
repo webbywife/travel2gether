@@ -4,11 +4,11 @@
     <div class="foot-top">
       <div>
         <p class="foot-pitch">Plan the trip together — then actually go.</p>
-        <a class="btn btn-primary" href="{{ route('trips.create') }}" style="color:#fff;">Start planning <span class="arr" aria-hidden="true"></span></a>
+        <a class="btn btn-primary" href="{{ route('trips.start') }}" style="color:#fff;">Start planning <span class="arr" aria-hidden="true"></span></a>
       </div>
       <div>
         <h4>Plan</h4>
-        <a href="{{ route('trips.create') }}">New trip</a>
+        <a href="{{ route('trips.start') }}">New trip</a>
         <a href="{{ route('samples') }}">Sample trips</a>
         <a href="{{ route('home') }}#how">How it works</a>
       </div>

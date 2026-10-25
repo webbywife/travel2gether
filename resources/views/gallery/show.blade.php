@@ -71,7 +71,12 @@
   <div class="ph-sub">
     @php $nVid = collect($place['photos'])->where('type', 'video')->count(); $nPh = count($place['photos']) - $nVid; @endphp
     <span>{{ $place['country'] }}@if($span) · {{ $span }}@endif · {{ $nPh }} {{ \Illuminate\Support\Str::plural('photo', $nPh) }}@if($nVid) · {{ $nVid }} {{ \Illuminate\Support\Str::plural('video', $nVid) }}@endif</span>
-    <a class="btn {{ $guide ? 'btn-ghost' : 'btn-primary' }}" href="{{ route('trips.create', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">Plan a trip here →</a>
+    @if ($sample)
+      <a class="btn btn-primary" href="{{ route('trips.show', $sample) }}">Use this itinerary →</a>
+      <a class="btn btn-ghost" href="{{ route('trips.start', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">Build my own</a>
+    @else
+    <a class="btn {{ $guide ? 'btn-ghost' : 'btn-primary' }}" href="{{ route('trips.start', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">Plan a trip here →</a>
+    @endif
   </div>
   @if ($guide || $visa)
     <div class="ph-guide">
@@ -86,7 +91,7 @@
         <div class="g-facts"><span><b>Philippine passport</b>{{ \App\Support\Destinations::visaLabel($visa['visa_status']) }}</span></div>
       @endif
       <div class="g-cta">
-        <a class="btn btn-primary" href="{{ route('trips.create', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">Plan my {{ $place['name'] }} trip — free</a>
+        <a class="btn btn-primary" href="{{ $sample ? route('trips.show', $sample) : route('trips.start', ['destination' => $place['name'] . ($place['country'] ? ', ' . $place['country'] : '')]) }}">{{ $sample ? 'Use this ' . $place['name'] . ' itinerary — free' : 'Plan my ' . $place['name'] . ' trip — free' }}</a>
         <span>Free while in beta · a day-by-day plan your group shapes together</span>
       </div>
     </div>

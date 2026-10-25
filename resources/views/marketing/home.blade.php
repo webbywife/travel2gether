@@ -275,7 +275,7 @@
       taps through and shapes together.
     </p>
     <div class="cta-row reveal d2">
-      <a class="hbtn hbtn-primary" href="{{ route('trips.create') }}">Plan my first trip — free</a>
+      <a class="hbtn hbtn-primary" href="{{ route('trips.start') }}">Plan my first trip — free</a>
       @if($sampleTrip ?? null)
         <a class="hbtn hbtn-ghost" href="{{ route('trips.show', $sampleTrip) }}">See a sample itinerary</a>
       @endif
@@ -548,7 +548,7 @@
   <span class="chip reveal">Free while we're in beta</span>
   <h2 data-split>Your next trip starts with one sentence.</h2>
   <p class="reveal d2">Plan up to {{ \App\Models\User::FREE_TRIP_LIMIT }} trips at a time — full day-by-day plans, group sharing, the budget and the weather backups.</p>
-  <a class="btn btn-white btn-lg reveal d3" href="{{ route('trips.create') }}">Start planning — free <span class="arr" aria-hidden="true"></span></a>
+  <a class="btn btn-white btn-lg reveal d3" href="{{ route('trips.start') }}">Start planning — free <span class="arr" aria-hidden="true"></span></a>
   <span class="fine reveal d4">No account needed to start · save it when it's ready</span>
 </section>
 

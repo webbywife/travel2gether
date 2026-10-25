@@ -61,9 +61,9 @@
       <img class="brand-word" src="{{ asset('img/wordmark.png') }}" width="152" height="28" alt="Travel2gether">
     </a>
     @auth
-      <a class="btn btn-primary nav-cta" href="{{ route('trips.create') }}">New trip</a>
+      <a class="btn btn-primary nav-cta" href="{{ route('trips.start') }}">New trip</a>
     @else
-      <a class="btn btn-primary nav-cta" href="{{ route('trips.create') }}">Start planning</a>
+      <a class="btn btn-primary nav-cta" href="{{ route('trips.start') }}">Start planning</a>
     @endauth
     <button type="button" class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteLinks" aria-label="Open menu">
       <span></span><span></span><span></span>
@@ -77,13 +77,13 @@
         <a href="{{ route('dashboard') }}">My trips</a>
         <a href="{{ route('profile.edit') }}">Profile</a>
         @can('admin')<a href="{{ route('analytics') }}">Analytics</a>@endcan
-        <a class="btn btn-primary" href="{{ route('trips.create') }}">New trip</a>
+        <a class="btn btn-primary" href="{{ route('trips.start') }}">New trip</a>
         <form method="POST" action="{{ route('logout') }}" style="display:inline;">@csrf
           <button type="submit" class="links-logout" style="background:none;border:none;color:var(--text-dim);font:inherit;font-size:14.5px;cursor:pointer;padding:0;">Log out</button>
         </form>
       @else
         <a href="{{ route('login') }}">Log in</a>
-        <a class="btn btn-primary" href="{{ route('trips.create') }}">Start planning</a>
+        <a class="btn btn-primary" href="{{ route('trips.start') }}">Start planning</a>
       @endauth
     </div>
   </nav>

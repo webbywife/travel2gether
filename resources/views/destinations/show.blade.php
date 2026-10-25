@@ -7,7 +7,7 @@
 
   $name = $t['destination'];
   $visaLabel = $visa ? Destinations::visaLabel($visa['visa_status']) : null;
-  $planUrl = route('trips.create', ['destination' => $name . ', ' . $t['country']]);
+  $planUrl = route('trips.start', ['destination' => $name . ', ' . $t['country']]);
   $photos = collect($gallery['photos'] ?? [])->where('type', 'photo')->take(6);
   $cover = Gallery::cover($slug) ?? (file_exists(public_path("img/destinations/{$slug}.jpg")) ? asset("img/destinations/{$slug}.jpg") : null);
 

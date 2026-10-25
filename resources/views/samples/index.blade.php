@@ -91,7 +91,7 @@
             <p>{{ Str::limit($t->subhead, 170) }}</p>
             <div class="sx-actions">
               <a class="btn btn-primary" href="{{ route('trips.show', $t) }}">Open the plan</a>
-              <a class="plan" href="{{ route('trips.create', ['destination' => $t->destination]) }}">Plan my own {{ $city }} trip →</a>
+              <a class="plan" href="{{ route('trips.start', ['destination' => $t->destination]) }}">Plan my own {{ $city }} trip →</a>
             </div>
           </div>
         </article>

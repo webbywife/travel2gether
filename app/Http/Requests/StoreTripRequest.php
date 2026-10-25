@@ -56,6 +56,12 @@ class StoreTripRequest extends FormRequest
             'interests' => ['nullable', 'array', 'max:12'],
             'interests.*' => ['string', 'max:40'],
 
+            'pace' => ['nullable', \Illuminate\Validation\Rule::in(['Relaxed', 'Balanced', 'Packed'])],
+            'who' => ['nullable', \Illuminate\Validation\Rule::in(['Solo', 'Couple', 'Friends', 'Family'])],
+            'spend' => ['nullable', \Illuminate\Validation\Rule::in(['Budget-friendly', 'Mid-range', 'Treat-yourself'])],
+            'needs' => ['nullable', 'array', 'max:10'],
+            'needs.*' => ['string', \Illuminate\Validation\Rule::in(\App\Support\TravelNeeds::keys())],
+
             'budget_per_person' => ['nullable', 'integer', 'min:0', 'max:100000'],
             'shopping' => ['nullable', 'array'],
             'shopping.*' => ['nullable', 'integer', 'min:0', 'max:100000'],

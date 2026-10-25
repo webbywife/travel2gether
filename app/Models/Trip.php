@@ -103,6 +103,20 @@ class Trip extends Model
     }
 
     /** The seeded public samples (Seoul, Tokyo) — no owner, visible to everyone. */
+    /** Gallery place slug → the sample itinerary a visitor can copy from that place's page. */
+    private const SAMPLE_FOR_PLACE = [
+        'tokyo' => 'tokyo-2026', 'tokyo-jp' => 'tokyo-2026', 'seoul' => 'seoul-2026', 'kyoto' => 'kyoto-2026',
+        'osaka' => 'osaka-2027', 'new-york-city' => 'new-york-2026', 'paris' => 'paris-2027', 'rome' => 'rome-2027',
+        'singapore' => 'singapore-2027', 'grand-canyon-national-park' => 'grand-canyon-2027',
+    ];
+
+    public static function sampleForPlace(string $placeSlug): ?self
+    {
+        $slug = self::SAMPLE_FOR_PLACE[$placeSlug] ?? null;
+
+        return $slug ? self::where('slug', $slug)->where('is_public', true)->whereNull('created_by')->first() : null;
+    }
+
     public function isSample(): bool
     {
         return $this->is_public && $this->created_by === null;

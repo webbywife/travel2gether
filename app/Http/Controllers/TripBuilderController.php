@@ -30,6 +30,20 @@ class TripBuilderController extends Controller
         ]);
     }
 
+    /** Step-by-step planner: one question per screen; posts to the same store() as the full form. */
+    public function guided(Request $request): View|RedirectResponse
+    {
+        if ($limit = $this->limitReached($request)) {
+            return $limit;
+        }
+
+        return view('trips.guided', [
+            'prefillDestination' => (string) $request->query('destination', ''),
+            'airports' => config('airports', []),
+            'suggestions' => collect(Destinations::templates())->map(fn ($t) => $t['destination'] . ', ' . $t['country'])->sort()->values()->all(),
+        ]);
+    }
+
     public function store(StoreTripRequest $request, CreateTrip $create): RedirectResponse
     {
         if (! $request->user()) {

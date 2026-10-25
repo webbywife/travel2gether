@@ -141,7 +141,7 @@ class GalleryTest extends TestCase
             ->assertSee('Ideal trip')
             ->assertSee('Philippine passport')
             ->assertSee('Plan my Kyoto trip — free')
-            ->assertSee(route('trips.create', ['destination' => 'Kyoto, Japan']), false);
+            ->assertSee(route('trips.start', ['destination' => 'Kyoto, Japan']), false);
     }
 
     public function test_homepage_polaroids_only_use_photos_with_a_location(): void

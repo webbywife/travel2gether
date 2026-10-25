@@ -120,6 +120,25 @@ class TripDayController extends Controller
         }
     }
 
+    /** "Draft all days": queue every untouched (skeleton) day at once so they run side by side instead of one click at a time. */
+    public function generateAll(Request $request, Trip $trip, GenerateDayItinerary $ai): RedirectResponse
+    {
+        $this->authorize('update', $trip);
+        abort_unless($ai->enabled(), 503, 'AI drafting is not configured.');
+
+        $n = 0;
+        foreach ($trip->days()->where('source', 'skeleton')->get() as $day) {
+            if (in_array($day->ai_status, ['queued', 'running'], true)) {
+                continue;
+            }
+            $day->update(['ai_status' => 'queued', 'ai_error' => null]);
+            DraftDayWithAi::dispatch($day->id, false);
+            $n++;
+        }
+
+        return back()->with('status', $n ? "Drafting {$n} " . \Illuminate\Support\Str::plural('day', $n) . ' with AI. Each fills in by itself as it finishes.' : 'Every day is already drafted or in progress.');
+    }
+
     /** Polled by the itinerary page while a day is being drafted. */
     public function aiStatus(Request $request, Trip $trip, TripDay $day): JsonResponse
     {

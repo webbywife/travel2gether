@@ -49,7 +49,7 @@
       <h1>Hi, {{ \Illuminate\Support\Str::of(auth()->user()->name)->before(' ') }}</h1>
       <p class="lede">Your trips and the ones you've been invited to.</p>
     </div>
-    <a class="btn btn-primary" href="{{ route('trips.create') }}">Plan a new trip</a>
+    <a class="btn btn-primary" href="{{ route('trips.start') }}">Plan a new trip</a>
   </div>
 
   @if (session('status'))
@@ -61,7 +61,7 @@
       <h3>No trips yet</h3>
       <p>Plan your own from flights, dates, hotel and the areas you want — or start from a sample and edit it.</p>
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-        <a class="btn btn-primary" href="{{ route('trips.create') }}">Plan a new trip</a>
+        <a class="btn btn-primary" href="{{ route('trips.start') }}">Plan a new trip</a>
         @foreach ($samples as $s)
           <form method="POST" action="{{ route('trips.duplicate', $s) }}">
             @csrf

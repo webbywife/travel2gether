@@ -115,7 +115,11 @@ Route::get('/t/{trip:slug}/calendar.ics', [TripCalendarController::class, 'show'
 Route::post('/t/{trip:slug}/seen-hiccups', [TripController::class, 'seenHiccups'])->middleware('throttle:20,1')->name('trips.seen-hiccups');
 Route::get('/t/{trip:slug}/picks', [TripPickController::class, 'index'])->middleware('throttle:60,1')->name('trips.picks.index');
 
+// "Use this itinerary" — open to guests (held until sign-up, like the planner).
+Route::post('/t/{trip:slug}/use', [TripController::class, 'useSample'])->middleware('throttle:20,1')->name('trips.use');
+
 // The planner is open to guests: they fill it in first, and the trip is created once they sign up (see PendingTrip).
+Route::get('/trips/start', [TripBuilderController::class, 'guided'])->name('trips.start');
 Route::get('/trips/create', [TripBuilderController::class, 'create'])->name('trips.create');
 Route::post('/trips', [TripBuilderController::class, 'store'])->middleware('throttle:20,1')->name('trips.store');
 
@@ -130,6 +134,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/t/{trip:slug}/days/{day}/generate', [TripDayController::class, 'generate'])
         ->middleware('throttle:ai-draft')->name('trips.days.generate');
+    Route::post('/t/{trip:slug}/draft-all', [TripDayController::class, 'generateAll'])
+        ->middleware('throttle:ai-draft')->name('trips.days.generate-all');
     Route::get('/t/{trip:slug}/days/{day}/ai-status', [TripDayController::class, 'aiStatus'])
         ->middleware('throttle:120,1')->name('trips.days.ai-status');
     Route::post('/t/{trip:slug}/days/{day}/suggest', [TripDayController::class, 'suggest'])

@@ -93,7 +93,7 @@
         </div>
         <p class="overview">{{ $t['overview'] }}</p>
         <div class="cta-row-tpl">
-          <a class="cta" href="{{ route('trips.create', ['destination' => $t['destination'] . ', ' . $t['country']]) }}">Plan this trip →</a>
+          <a class="cta" href="{{ route('trips.start', ['destination' => $t['destination'] . ', ' . $t['country']]) }}">Plan this trip →</a>
           <a class="cta photos" href="{{ route('destinations.show', $photoSlug) }}">Guide</a>
           @if($myCount)<a class="cta photos" href="{{ route('gallery.show', $photoSlug) }}">📷 {{ $myCount }} of my photos</a>@endif
         </div>

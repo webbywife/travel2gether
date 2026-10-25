@@ -115,6 +115,8 @@
   /* collaboration bar */
   .collab{max-width:860px; margin:0 auto 14px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
     padding:10px 16px; background:var(--panel); border:1px solid var(--line); border-radius:12px; font-size:13px;}
+  .collab input[type=date]{padding:7px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; font:inherit; font-size:13.5px; color:var(--text);}
+  .collab input[type=date]:focus{outline:2px solid var(--pink-light); border-color:var(--pink);}
   .collab .roster{display:flex; align-items:center;}
   .collab .av{display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%;
     background:linear-gradient(102deg,#C22A66,#6E54A6); color:#fff; font-size:10.5px; font-weight:700; border:2px solid #fff; margin-left:-7px;}
@@ -366,7 +368,7 @@
 @include('partials.site-header')
 @guest
 <div class="sample-ribbon">
-  <a href="{{ route('trips.create') }}">{{ $trip->isSample() ? 'Sample itinerary' : 'Shared itinerary' }} — <b>plan your own, free →</b></a>
+  <a href="{{ route('trips.start') }}">{{ $trip->isSample() ? 'Sample itinerary' : 'Shared itinerary' }} — <b>plan your own, free →</b></a>
   @if ($trip->isSample())<a class="home" href="{{ route('samples') }}">See all sample trips</a>@endif
 </div>
 @endguest
@@ -489,12 +491,28 @@
     <div class="collab">
       <span>Viewing the sample.</span>
       <span style="flex:1"></span>
-      <form method="POST" action="{{ route('trips.duplicate', $trip) }}">@csrf
-        <button type="submit" class="btn-sm solid">Make my own copy</button>
+      <form method="POST" action="{{ route('trips.use', $trip) }}" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">@csrf
+        <label for="useDate" style="font-size:13px;">Arriving</label>
+        <input id="useDate" type="date" name="arrival_date" required min="{{ now()->toDateString() }}" value="{{ old('arrival_date') }}">
+        <button type="submit" class="btn-sm solid">Use this itinerary</button>
       </form>
     </div>
   @endif
 @endauth
+@guest
+  @if ($trip->isSample())
+    <div class="collab">
+      <span>Like this plan? Pick your arrival date and it becomes yours.</span>
+      <span style="flex:1"></span>
+      <form method="POST" action="{{ route('trips.use', $trip) }}" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">@csrf
+        <label for="useDate" style="font-size:13px;">Arriving</label>
+        <input id="useDate" type="date" name="arrival_date" required min="{{ now()->toDateString() }}" value="{{ old('arrival_date') }}">
+        <button type="submit" class="btn-sm solid">Use this itinerary</button>
+      </form>
+      @error('arrival_date')<span style="color:var(--pink); font-size:13px; width:100%;">{{ $message }}</span>@enderror
+    </div>
+  @endif
+@endguest
 
 <div class="wrap">
 
@@ -555,8 +573,18 @@
   @endif
 
   @if($trip->forecast_note)
-  <div class="meaning"><b>On the forecast:</b> {{ $trip->forecast_note }} <span id="forecastNoteLive"></span></div>
+  <div class="meaning"><b>On the forecast:</b> <span id="forecastNoteStatic">{{ $trip->forecast_note }}</span> <span id="forecastNoteLive"></span></div>
   @endif
+  @can('update', $trip)
+    @if (($aiEnabled ?? false) && $trip->days->where('source', 'skeleton')->whereNotIn('ai_status', ['queued', 'running'])->count() > 1)
+      <form method="POST" action="{{ route('trips.days.generate-all', $trip) }}" class="ai-day" style="margin:0 0 16px;"
+            onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Starting…';">
+        @csrf
+        <button type="submit" class="ai-btn">✨ Draft all days with AI</button>
+        <span class="ai-hint">Runs every day at once, usually about a minute in total.</span>
+      </form>
+    @endif
+  @endcan
 
   <div class="tabbar" id="tabbar">
     @foreach($trip->days as $day)
@@ -1131,6 +1159,8 @@
         });
       }).catch(() => {});
     })).then(() => {
+      const staticNote = document.getElementById('forecastNoteStatic');
+      if (staticNote && noteEl) staticNote.hidden = true; // the live line replaces the generic note, not repeats it
       if (noteEl) noteEl.textContent = anyLive
         ? 'Days inside the ~16-day window show a live forecast for that day\'s actual area.'
         : 'These dates are outside the live ~16-day window — showing the planned notes instead.';

@@ -19,7 +19,7 @@ class DestinationsTest extends TestCase
             ->assertOk()
             ->assertSee('Get inspired', false)
             ->assertSee('Kyoto', false)
-            ->assertSee(route('trips.create', ['destination' => 'Kyoto, Japan']), false);
+            ->assertSee(route('trips.start', ['destination' => 'Kyoto, Japan']), false);
     }
 
     public function test_a_city_link_prefills_the_wizard_destination(): void

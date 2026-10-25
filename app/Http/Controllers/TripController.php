@@ -114,6 +114,29 @@ class TripController extends Controller
             ->with('status', 'Trip copied — invite your group from the Share panel.');
     }
 
+    /** "Use this itinerary": copy a sample onto the visitor's own dates. Guests are held until they sign up. */
+    public function useSample(Request $request, Trip $trip, DuplicateTrip $duplicate): RedirectResponse
+    {
+        abort_unless($trip->isSample(), 404);
+        $data = $request->validate(['arrival_date' => ['required', 'date', 'after_or_equal:today', 'before:+3 years']]);
+
+        if (! $request->user()) {
+            \App\Support\PendingTrip::holdCopy($request, $trip, $data['arrival_date']);
+            \App\Support\VisitTracker::record($request, 'copy');
+
+            return redirect()->route('register');
+        }
+
+        if ($request->user()->hasReachedTripLimit()) {
+            return redirect()->route('upgrade')->with('error',
+                'Free members can have up to ' . \App\Models\User::FREE_TRIP_LIMIT . ' trips at a time — upgrade to add more.');
+        }
+
+        $copy = $duplicate($trip, $request->user(), "{$request->user()->name}'s " . \Illuminate\Support\Str::before($trip->destination, ',') . ' trip', \Illuminate\Support\Carbon::parse($data['arrival_date']));
+
+        return redirect()->route('trips.show', $copy)->with('status', 'Your trip is ready on your dates. Change anything, then invite your group from the Share panel.');
+    }
+
     /** Owners can delete their own trip (frees a slot under the free-tier cap). Samples can't be deleted. */
     public function destroy(Request $request, Trip $trip): RedirectResponse
     {

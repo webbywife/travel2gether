@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Trip;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -11,12 +12,15 @@ class DuplicateTrip
 {
     /**
      * Deep-copy a trip (days → stops → options, budget lines) into a new
-     * private trip owned by $owner.
+     * private trip owned by $owner. With $startsOn the whole trip is moved to
+     * start that day, and the original author's flights and dated forecast are
+     * dropped (they belong to the old dates).
      */
-    public function __invoke(Trip $source, User $owner, ?string $title = null): Trip
+    public function __invoke(Trip $source, User $owner, ?string $title = null, ?Carbon $startsOn = null): Trip
     {
-        return DB::transaction(function () use ($source, $owner, $title) {
+        return DB::transaction(function () use ($source, $owner, $title, $startsOn) {
             $source->loadMissing('days.stops.options', 'budgetLines');
+            $shift = $startsOn ? (int) $source->start_date->diffInDays($startsOn->copy()->startOfDay(), false) : 0;
 
             $copy = Trip::create([
                 'slug' => $this->uniqueSlug($title ?? $source->title),
@@ -25,15 +29,15 @@ class DuplicateTrip
                 'subhead' => $source->subhead,
                 'destination' => $source->destination,
                 'origin_label' => $source->origin_label,
-                'start_date' => $source->start_date,
-                'end_date' => $source->end_date,
+                'start_date' => $source->start_date->copy()->addDays($shift),
+                'end_date' => $source->end_date->copy()->addDays($shift),
                 'party_size' => $source->party_size,
                 'currency' => $source->currency,
                 'map_provider' => $source->map_provider,
                 'lat' => $source->lat,
                 'lon' => $source->lon,
-                'forecast_note' => $source->forecast_note,
-                'segments' => $source->segments,
+                'forecast_note' => $startsOn ? null : $source->forecast_note,
+                'segments' => $startsOn ? null : $source->segments,
                 'stats' => $source->stats,
                 'is_public' => false,
                 'created_by' => $owner->id,
@@ -48,10 +52,17 @@ class DuplicateTrip
                     'outfit_chips', 'outfit_photos', 'area_label', 'map_embed_url', 'hiccups', 'sort',
                 ]));
 
+                if ($startsOn) {
+                    $newDay->update([
+                        'date' => $day->date->copy()->addDays($shift),
+                        'forecast_date' => null, 'temp_high' => null, 'temp_low' => null, 'weather_note' => null,
+                    ]);
+                }
+
                 foreach ($day->stops as $stop) {
                     $newStop = $newDay->stops()->create($stop->only([
                         'sort', 'time', 'title', 'description', 'cost_label', 'weather_tag',
-                        'map_provider', 'map_url', 'thumb_url', 'hiccup', 'has_options', 'option_label',
+                        'map_provider', 'map_url', 'thumb_url', 'hiccup', 'has_options', 'option_label', 'is_anchor',
                     ]));
 
                     foreach ($stop->options as $option) {

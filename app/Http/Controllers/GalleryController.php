@@ -31,6 +31,6 @@ class GalleryController extends Controller
         $guide = \App\Support\Destinations::templateFor($place['name']);
         $visa = \App\Support\Destinations::visaForCountry($place['country']);
 
-        return view('gallery.show', ['place' => $place, 'guide' => $guide, 'visa' => $visa]);
+        return view('gallery.show', ['place' => $place, 'guide' => $guide, 'visa' => $visa, 'sample' => \App\Models\Trip::sampleForPlace($slug)]);
     }
 }

@@ -250,6 +250,7 @@ class GenerateDayItinerary
         Interests: {$interests}
         {$this->shoppingLine($shopping)}
         Base hotel: {$trip->hotel_name}
+        {$this->travellerLines($trip, $day)}
         {$climateLine}
         {$poiList}
 
@@ -259,8 +260,7 @@ class GenerateDayItinerary
           when given — do not contradict them or state different numbers.
         - weather_tag: one of "indoor", "covered", "outdoor" — pick "covered" or "indoor" if
           the rain chance above is high (over ~40%) and the plan should lean that way.
-        - 5-7 stops, time-ordered, ~09:00 to evening: a morning sight, lunch, an afternoon
-          thing, dinner, and one shopping stop if it fits the interests.
+        - {$this->scheduleRule($trip, $day)}
         - EVERY meal / sight / activity / shopping stop needs 3-4 real named options at
           different tiers ("budget", "mid", "splurge", and an "indoor-ac" or "rain-friendly"
           where useful). costs are integers in {$cur}, 0 for free.
@@ -293,6 +293,90 @@ class GenerateDayItinerary
           ]
         }
         PROMPT;
+    }
+
+    /** "HH:MM" (or "04:45 +1") → minutes after midnight, null when there is no usable time. */
+    private static function minutes(?string $t): ?int
+    {
+        return $t && preg_match('/(\d{1,2}):(\d{2})/', $t, $m) ? ((int) $m[1]) * 60 + (int) $m[2] : null;
+    }
+
+    private static function clock(int $min): string
+    {
+        $min = max(0, min(23 * 60 + 59, $min));
+
+        return sprintf('%02d:%02d', intdiv($min, 60), $min % 60);
+    }
+
+    /** Fixed landing / flight stops of this day (kept on re-draft) — the planner only fills the gap between them. */
+    private function anchorStops(TripDay $day)
+    {
+        return $day->stops()->where('is_anchor', true)->orderBy('sort')->get();
+    }
+
+    private function scheduleRule($trip, TripDay $day): string
+    {
+        $anchors = $this->anchorStops($day);
+        $firstDay = $day->day_number === $trip->days()->min('day_number');
+
+        if ($anchors->isNotEmpty() && $firstDay) {
+            $land = self::minutes($anchors->first()->time);
+            if ($land === null) {
+                return 'ARRIVAL DAY: landing and bag drop are already fixed (do not output them). Plan only a light 1-3 stop outing '
+                    . 'AFTER settling in, no earlier than 15:00, near the hotel, ending with an early dinner.';
+            }
+            $from = $land + 180; // immigration, bags, transfer, bag drop
+            if ($from >= 20 * 60) {
+                return "ARRIVAL DAY: the group lands at {$anchors->first()->time}; landing and bag drop are already fixed (do not output them). "
+                    . 'They will be too late for sightseeing: output ONE stop only, a simple dinner or snack near the hotel, '
+                    . 'no earlier than ' . self::clock($land + 150) . '.';
+            }
+
+            return "ARRIVAL DAY: the group lands at {$anchors->first()->time}; landing and bag drop are already fixed (do not output them). "
+                . 'Plan 1-3 stops after that, none starting before ' . self::clock(max($from, 15 * 60)) . ', close to the hotel, easy pace, ending with dinner.';
+        }
+
+        if ($anchors->isNotEmpty() && ! $firstDay) {
+            $depart = self::minutes($anchors->last()->time);
+            if ($depart === null) {
+                return 'DEPARTURE DAY: checkout and the airport transfer are already fixed (do not output them). Plan 1-2 easy stops '
+                    . 'between 10:30 and midday only, close to the hotel.';
+            }
+            $until = $depart - 300; // ~3h airport check-in + ~1-2h transfer
+            if ($until < 9 * 60 + 30) {
+                return "DEPARTURE DAY: the flight leaves at {$anchors->last()->time}; checkout and the airport transfer are already fixed. "
+                    . 'There is no time for sightseeing: output ONE stop only, a quick breakfast near the hotel.';
+            }
+
+            return "DEPARTURE DAY: the flight leaves at {$anchors->last()->time}; checkout and the airport transfer are already fixed (do not output them). "
+                . 'Plan 1-3 easy stops between 08:30 and ' . self::clock($until) . ' at the latest, near the hotel, nothing that could run over.';
+        }
+
+        $pace = $trip->interests['pace'] ?? null;
+        $count = ['Relaxed' => '3-4', 'Balanced' => '5-6', 'Packed' => '7-8'][$pace] ?? '5-7';
+
+        return "{$count} stops, time-ordered, ~09:00 to evening: a morning sight, lunch, an afternoon thing, dinner, and one shopping stop if it fits the interests.";
+    }
+
+    /** Who is travelling, spending style and ticked needs, as plain instructions (never condition names). */
+    private function travellerLines($trip, TripDay $day): string
+    {
+        $prefs = $trip->interests ?? [];
+        $lines = [];
+        if (! empty($prefs['who'])) {
+            $lines[] = "Travelling as: {$prefs['who']} ({$trip->party_size} people).";
+        }
+        if (! empty($prefs['spend'])) {
+            $lines[] = "Spending style: {$prefs['spend']}. List the option that fits this style first, and make most choices match it.";
+        }
+        $needs = \App\Support\TravelNeeds::instructions((array) ($prefs['needs'] ?? []));
+        if ($needs) {
+            $lines[] = 'Plan around these needs of someone in the group (apply them to every stop, not just one): ' . implode('; ', $needs) . '. '
+                . 'Add at least one hiccup specific to these needs for THIS area and date (for example the long queue, the stairs, the heat). '
+                . 'This is trip planning, not medical advice; do not mention any condition by name.';
+        }
+
+        return implode("\n        ", $lines);
     }
 
     private function shoppingLine(string $shopping): string

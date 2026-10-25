@@ -63,6 +63,10 @@ class CreateTrip
                     'interests' => $data['interests'] ?? [],
                     'shopping' => array_keys($data['shopping'] ?? []),
                     'budget_per_person' => $data['budget_per_person'] ?? null,
+                    'pace' => $data['pace'] ?? null,
+                    'who' => $data['who'] ?? null,
+                    'spend' => $data['spend'] ?? null,
+                    'needs' => array_values($data['needs'] ?? []),
                 ],
                 'forecast_note' => 'Each day shows the live forecast for that day\'s actual area, not just the hotel. Numbers fill in once the dates fall inside the ~16-day window.',
                 'segments' => $this->segments($data['segments'] ?? [], $arrival, $departure),
@@ -184,10 +188,10 @@ class CreateTrip
                 'hotel_lat' => $hotel['lat'], 'hotel_lon' => $hotel['lon'],
             ]);
 
-            $day->stops()->create(['sort' => 0, 'time' => $out['arrive'] ?? null, 'has_options' => false,
+            $day->stops()->create(['sort' => 0, 'time' => $out['arrive'] ?? null, 'has_options' => false, 'is_anchor' => true,
                 'title' => 'Land at ' . ($out['to'] ?: 'the airport'),
                 'description' => trim(($out['airline'] ?? '') . ' ' . ($out['flight_no'] ?? '')) . '. Immigration, bags, then a transit card and the ride into town.']);
-            $day->stops()->create(['sort' => 1, 'time' => null, 'has_options' => false,
+            $day->stops()->create(['sort' => 1, 'time' => null, 'has_options' => false, 'is_anchor' => true,
                 'title' => "Bag drop at {$hotelName}",
                 'description' => 'Front desk holds luggage until check-in. This is your base for the trip.',
                 'map_url' => filled($hotel['address']) ? 'https://www.google.com/maps/search/?api=1&query=' . urlencode($hotel['address']) : null]);
@@ -210,15 +214,15 @@ class CreateTrip
                 'hotel_lat' => $hotel['lat'], 'hotel_lon' => $hotel['lon'],
             ]);
 
-            $day->stops()->create(['sort' => 0, 'time' => '10:00', 'has_options' => false,
+            $day->stops()->create(['sort' => 0, 'time' => '10:00', 'has_options' => false, 'is_anchor' => true,
                 'title' => "Checkout — bags with you or held at {$hotelName}",
                 'description' => 'Front desk holds luggage until the evening if the flight is late.']);
             $day->stops()->create(['sort' => 1, 'time' => null, 'has_options' => false,
                 'title' => 'One last easy thing, if time', 'description' => 'A neighbourhood walk, a last meal, a final shop.']);
-            $day->stops()->create(['sort' => 2, 'time' => null, 'has_options' => false,
+            $day->stops()->create(['sort' => 2, 'time' => null, 'has_options' => false, 'is_anchor' => true,
                 'title' => 'Head to ' . ($ret['from'] ?: 'the airport'),
                 'description' => 'Leave a buffer — airport transfers back are slower than you expect.']);
-            $day->stops()->create(['sort' => 3, 'time' => $ret['depart'] ?? null, 'has_options' => false,
+            $day->stops()->create(['sort' => 3, 'time' => $ret['depart'] ?? null, 'has_options' => false, 'is_anchor' => true,
                 'title' => 'Depart — ' . trim(($ret['airline'] ?? '') . ' ' . ($ret['flight_no'] ?? '')) ?: 'flight home',
                 'description' => 'Trip complete.']);
 

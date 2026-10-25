@@ -11,11 +11,12 @@ class Stop extends Model
     protected $fillable = [
         'trip_day_id', 'sort', 'time', 'title', 'description', 'cost_label',
         'weather_tag', 'map_provider', 'map_url', 'thumb_url', 'photo_source', 'photo_credit', 'photo_credit_url', 'hiccup',
-        'has_options', 'option_label',
+        'has_options', 'option_label', 'is_anchor',
     ];
 
     protected $casts = [
         'has_options' => 'boolean',
+        'is_anchor' => 'boolean',
     ];
 
     public function day(): BelongsTo
