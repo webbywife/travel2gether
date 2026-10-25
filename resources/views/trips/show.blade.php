@@ -646,6 +646,15 @@
           <div class="ai-day ai-drafting" data-ai-status-url="{{ route('trips.days.ai-status', [$trip, $day->id]) }}">
             <button type="button" class="ai-btn" disabled>✨ Drafting with AI…</button>
             <span class="ai-hint">About a minute — this page updates by itself.</span>
+            @can('update', $trip)
+              @if($day->updated_at && $day->updated_at->lt(now()->subMinutes(3)))
+                <form method="POST" action="{{ route('trips.days.ai-cancel', [$trip, $day->id]) }}" style="display:inline-block; margin-left:8px;">
+                  @csrf
+                  <span class="ai-hint">Taking longer than usual.</span>
+                  <button type="submit" class="print-link" style="cursor:pointer; background:none;">Cancel and try again</button>
+                </form>
+              @endif
+            @endcan
           </div>
         @else
           @if($day->ai_status === 'failed' && $day->ai_error)

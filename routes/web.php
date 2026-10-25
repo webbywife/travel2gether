@@ -145,6 +145,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:ai-draft')->name('trips.days.generate');
     Route::post('/t/{trip:slug}/draft-all', [TripDayController::class, 'generateAll'])
         ->middleware('throttle:ai-draft')->name('trips.days.generate-all');
+    Route::post('/t/{trip:slug}/days/{day}/ai-cancel', [TripDayController::class, 'aiCancel'])
+        ->middleware('throttle:30,1')->name('trips.days.ai-cancel');
     Route::get('/t/{trip:slug}/days/{day}/ai-status', [TripDayController::class, 'aiStatus'])
         ->middleware('throttle:120,1')->name('trips.days.ai-status');
     Route::post('/t/{trip:slug}/days/{day}/suggest', [TripDayController::class, 'suggest'])

@@ -81,6 +81,7 @@ class PlanAroundTest extends TestCase
         }));
 
         foreach ([$trip->days->first(), $trip->days->last()] as $day) {
+            $day->update(['ai_status' => 'queued']);
             (new DraftDayWithAi($day->id, false))->handle(app(GenerateDayItinerary::class), app(IndexGeneratedPlaces::class), app(StopPhotoFinder::class));
         }
 

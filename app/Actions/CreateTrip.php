@@ -197,7 +197,7 @@ class CreateTrip
 
             $day->stops()->create(['sort' => 0, 'time' => $out['arrive'] ?? null, 'has_options' => false, 'is_anchor' => true,
                 'title' => 'Land at ' . ($out['to'] ?: 'the airport'),
-                'description' => trim(($out['airline'] ?? '') . ' ' . ($out['flight_no'] ?? '')) . '. Immigration, bags, then a transit card and the ride into town.']);
+                'description' => ltrim(trim(($out['airline'] ?? '') . ' ' . ($out['flight_no'] ?? '')) . '. ', '. ') . 'Immigration, bags, then a transit card and the ride into town.']);
             $day->stops()->create(['sort' => 1, 'time' => null, 'has_options' => false, 'is_anchor' => true,
                 'title' => "Bag drop at {$hotelName}",
                 'description' => 'Front desk holds luggage until check-in. This is your base for the trip.',

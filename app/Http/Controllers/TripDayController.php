@@ -170,6 +170,21 @@ class TripDayController extends Controller
         ]);
     }
 
+    /** Escape hatch for a day stuck on "Drafting with AI…" (no worker, crashed job): free it so it can be drafted again. */
+    public function aiCancel(Request $request, Trip $trip, TripDay $day): RedirectResponse
+    {
+        $this->authorize('update', $trip);
+        abort_unless($day->trip_id === $trip->id, 404);
+
+        if (in_array($day->ai_status, ['queued', 'running'], true)) {
+            // A job still waiting in the queue sees this and does nothing.
+            $day->update(['ai_status' => 'failed', 'ai_error' => 'Cancelled — you can try again.']);
+        }
+
+        return back()->with('status', "{$day->title} is free again. You can draft it with AI or fill it in yourself.")
+            ->withFragment((string) $day->day_number);
+    }
+
     public function aiStatus(Request $request, Trip $trip, TripDay $day): JsonResponse
     {
         abort_unless($trip->canView($request->user()) && $day->trip_id === $trip->id, 404);

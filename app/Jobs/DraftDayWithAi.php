@@ -34,7 +34,8 @@ class DraftDayWithAi implements ShouldQueue
     public function handle(GenerateDayItinerary $ai, IndexGeneratedPlaces $index, StopPhotoFinder $photos): void
     {
         $day = TripDay::with('trip')->find($this->dayId);
-        if (! $day) {
+        // Gone, or cancelled while it waited in the queue.
+        if (! $day || ! in_array($day->ai_status, ['queued', 'running'], true)) {
             return;
         }
 
