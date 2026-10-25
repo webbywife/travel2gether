@@ -437,6 +437,122 @@ class PlacesService
             ])->values()->all();
     }
 
+    /**
+     * Safety and supplies near a point, from OpenStreetMap (free): the nearest hospitals/clinics, police stations,
+     * pharmacies and groceries. A full answer is cached a week per ~100 m cell. When every Overpass mirror is down
+     * we fall back to Photon for hospitals and police only (pharmacy and grocery come back null = "not available"),
+     * and that partial answer is only cached for a few minutes.
+     *
+     * @return array{groups: array<string, array<int, array{name:string, km:float, map_url:string}>|null>, partial: bool}
+     */
+    public function essentials(float $lat, float $lon): array
+    {
+        $lat = round($lat, 3);
+        $lon = round($lon, 3);
+        $key = "places:osm:essentials:{$lat}:{$lon}";
+
+        if ($full = Cache::get($key)) {
+            return ['groups' => $full, 'partial' => false];
+        }
+        if ($full = $this->essentialsFromOverpass($lat, $lon)) {
+            Cache::put($key, $full, now()->addDays(7));
+
+            return ['groups' => $full, 'partial' => false];
+        }
+
+        $partialKey = $key . ':partial';
+        $groups = Cache::remember($partialKey, now()->addMinutes(5), fn () => [
+            'hospital' => $this->essentialsFromPhoton($lat, $lon, 'hospital', 'amenity:hospital'),
+            'police' => $this->essentialsFromPhoton($lat, $lon, 'police', 'amenity:police'),
+            'pharmacy' => null,
+            'grocery' => null,
+        ]);
+
+        return ['groups' => $groups, 'partial' => true];
+    }
+
+    /** @return array<string, array<int, array{name:string, km:float, map_url:string}>>|null null when every mirror failed */
+    private function essentialsFromOverpass(float $lat, float $lon): ?array
+    {
+        $around = "(around:6000,{$lat},{$lon})";
+        $q = '[out:json][timeout:20];'
+            . "nwr{$around}[\"amenity\"~\"^(hospital|clinic)$\"][\"name\"];out center tags 40;"
+            . "nwr{$around}[\"amenity\"=\"police\"][\"name\"];out center tags 20;"
+            . "nwr{$around}[\"amenity\"=\"pharmacy\"][\"name\"];out center tags 30;"
+            . "nwr{$around}[\"shop\"~\"^(supermarket|convenience|grocery)$\"][\"name\"];out center tags 40;";
+
+        // A person is waiting on this: keep the whole lookup well under PHP's 30 s limit (7 s per mirror, 20 s total).
+        $res = null;
+        $deadline = microtime(true) + 20;
+        foreach (self::OVERPASS_URLS as $url) {
+            if (microtime(true) > $deadline - 3) {
+                break;
+            }
+            $res = rescue(fn () => Http::withHeaders(['User-Agent' => self::USER_AGENT])
+                ->asForm()->connectTimeout(4)->timeout(7)->post($url, ['data' => $q]), null, false);
+            if ($res?->successful() && is_array($res->json('elements'))) {
+                break;
+            }
+            $res = null;
+        }
+        if (! $res) {
+            return null;
+        }
+
+        $groups = ['hospital' => [], 'police' => [], 'pharmacy' => [], 'grocery' => []];
+        foreach ($res->json('elements', []) as $e) {
+            $t = $e['tags'] ?? [];
+            $plat = $e['lat'] ?? ($e['center']['lat'] ?? null);
+            $plon = $e['lon'] ?? ($e['center']['lon'] ?? null);
+            $name = trim((string) ($t['name:en'] ?? $t['name'] ?? ''));
+            if ($plat === null || $plon === null || $name === '') {
+                continue;
+            }
+            $kind = match (true) {
+                in_array($t['amenity'] ?? '', ['hospital', 'clinic'], true) => 'hospital',
+                ($t['amenity'] ?? '') === 'police' => 'police',
+                ($t['amenity'] ?? '') === 'pharmacy' => 'pharmacy',
+                default => 'grocery',
+            };
+            $groups[$kind][] = $this->essentialRow($name, $lat, $lon, (float) $plat, (float) $plon) + ['clinic' => ($t['amenity'] ?? '') === 'clinic'];
+        }
+
+        // Hospitals before clinics, then nearest first; two of each is plenty on a phone.
+        return collect($groups)->map(fn ($rows) => collect($rows)->sortBy([['clinic', 'asc'], ['km', 'asc']])->unique('name')
+            ->take(2)->map(fn ($r) => \Illuminate\Support\Arr::except($r, ['clinic']))->values()->all())->all();
+    }
+
+    /** Photon (komoot) finds well-named hospitals and police stations fast, but not pharmacies or shops. @return array<int, array<string, mixed>> */
+    private function essentialsFromPhoton(float $lat, float $lon, string $q, string $osmTag): array
+    {
+        $res = rescue(fn () => Http::withHeaders(['User-Agent' => self::USER_AGENT])->connectTimeout(4)->timeout(6)
+            ->get(self::PHOTON_URL, ['q' => $q, 'lat' => $lat, 'lon' => $lon, 'osm_tag' => $osmTag, 'limit' => 8, 'lang' => 'en']), null, false);
+        if (! $res?->successful()) {
+            return [];
+        }
+
+        return collect($res->json('features', []))
+            ->map(function ($f) use ($lat, $lon) {
+                $name = trim((string) data_get($f, 'properties.name', ''));
+                $plon = data_get($f, 'geometry.coordinates.0');
+                $plat = data_get($f, 'geometry.coordinates.1');
+
+                return ($name === '' || $plat === null || $plon === null) ? null : $this->essentialRow($name, $lat, $lon, (float) $plat, (float) $plon);
+            })
+            ->filter(fn ($r) => $r && $r['km'] <= 15)   // Photon only biases by location, so drop far-away namesakes
+            ->sortBy('km')->unique('name')->take(2)->values()->all();
+    }
+
+    /** @return array{name:string, km:float, map_url:string} */
+    private function essentialRow(string $name, float $lat, float $lon, float $plat, float $plon): array
+    {
+        return [
+            'name' => $name,
+            'km' => round(self::km($lat, $lon, $plat, $plon), 1),
+            'map_url' => 'https://www.google.com/maps/search/?api=1&query=' . urlencode("{$plat},{$plon}"),
+        ];
+    }
+
     /** Great-circle distance in km. */
     public static function km(float $lat1, float $lon1, float $lat2, float $lon2): float
     {

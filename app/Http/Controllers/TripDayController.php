@@ -140,6 +140,26 @@ class TripDayController extends Controller
     }
 
     /** Polled by the itinerary page while a day is being drafted. */
+    /** Nearest hospital, police, pharmacy and groceries for this day (base hotel if it has one, else the area). Loaded on demand. */
+    public function essentials(Request $request, Trip $trip, TripDay $day, \App\Services\PlacesService $places): JsonResponse
+    {
+        abort_unless($trip->canView($request->user()) && $day->trip_id === $trip->id, 404);
+
+        $lat = $day->hotel_lat ?? $day->lat ?? $trip->lat;
+        $lon = $day->hotel_lon ?? $day->lon ?? $trip->lon;
+        if (! $lat || ! $lon || ! $places->enabled()) {
+            return response()->json(['groups' => null, 'near' => null]);
+        }
+
+        $found = $places->essentials((float) $lat, (float) $lon);
+
+        return response()->json([
+            'groups' => $found['groups'],
+            'partial' => $found['partial'],
+            'near' => $day->hotel_name ?: ($day->area_label ?: $trip->destination),
+        ]);
+    }
+
     public function aiStatus(Request $request, Trip $trip, TripDay $day): JsonResponse
     {
         abort_unless($trip->canView($request->user()) && $day->trip_id === $trip->id, 404);

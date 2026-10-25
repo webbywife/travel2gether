@@ -76,8 +76,10 @@ class VisitTrackingTest extends TestCase
 
     public function test_place_short_links_open_the_gallery_tagged_as_tiktok(): void
     {
-        $this->get('/kyoto')->assertRedirect('/gallery/kyoto?ref=tiktok');
-        $this->get('/nyc')->assertRedirect('/gallery/new-york-city?ref=tiktok');
+        $this->get('/kyoto')->assertRedirect('/t/kyoto-2026?ref=tiktok');
+        $this->get('/nyc')->assertRedirect('/t/new-york-2026?ref=tiktok');
+        $this->get('/ig/seoul')->assertRedirect('/t/seoul-2026?ref=ig');
+        $this->get('/ig/baguio')->assertRedirect('/gallery/cordillera-ph?ref=ig');
         $this->get('/baguio')->assertRedirect('/gallery/cordillera-ph?ref=tiktok');
     }
 

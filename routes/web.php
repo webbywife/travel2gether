@@ -96,16 +96,22 @@ Route::get('/places/{placeId}', [PlacesController::class, 'show'])->where('place
 
 // Short, typeable link for TikTok videos (captions and comments there aren't clickable).
 // Only used on TikTok, so visits through it count as TikTok in the launch funnel.
-Route::redirect('/tokyo', '/t/tokyo-2026?ref=tiktok', 302);
-Route::redirect('/newyork', '/t/new-york-2026?ref=tiktok', 302);
-foreach ([
-    'seoul' => 'seoul', 'nami' => 'gapyeong-nami-island', 'kyoto' => 'kyoto', 'osaka' => 'osaka', 'fukuoka' => 'fukuoka',
-    'kamakura' => 'kamakura-enoshima', 'fuji' => 'mt-fuji-five-lakes', 'hakone' => 'hakone', 'taipei' => 'taipei-keelung',
-    'hongkong' => 'hong-kong', 'singapore' => 'singapore', 'paris' => 'paris', 'rome' => 'rome', 'florence' => 'florence',
-    'barcelona' => 'barcelona', 'nyc' => 'new-york-city', 'grandcanyon' => 'grand-canyon-national-park',
-    'antelope' => 'antelope-canyon-page-arizona', 'baguio' => 'cordillera-ph', 'palawan' => 'mimaropa-ph', 'bohol' => 'central-visayas-ph',
-] as $short => $gallerySlug) {
-    Route::redirect('/' . $short, '/gallery/' . $gallerySlug . '?ref=tiktok', 302);
+// Short, typeable links for videos and bios (captions there aren't clickable). A place with a ready itinerary opens that
+// itinerary (copyable on the visitor's dates); the rest open the gallery page. /<place> is TikTok, /ig/<place> is
+// Instagram, so the launch funnel can tell the two apart.
+$shortLinks = [
+    'tokyo' => '/t/tokyo-2026', 'newyork' => '/t/new-york-2026', 'seoul' => '/t/seoul-2026', 'kyoto' => '/t/kyoto-2026',
+    'osaka' => '/t/osaka-2027', 'nyc' => '/t/new-york-2026', 'paris' => '/t/paris-2027', 'rome' => '/t/rome-2027',
+    'singapore' => '/t/singapore-2027', 'grandcanyon' => '/t/grand-canyon-2027',
+    'nami' => '/gallery/gapyeong-nami-island', 'fukuoka' => '/gallery/fukuoka', 'kamakura' => '/gallery/kamakura-enoshima',
+    'fuji' => '/gallery/mt-fuji-five-lakes', 'hakone' => '/gallery/hakone', 'taipei' => '/gallery/taipei-keelung',
+    'hongkong' => '/gallery/hong-kong', 'florence' => '/gallery/florence', 'barcelona' => '/gallery/barcelona',
+    'antelope' => '/gallery/antelope-canyon-page-arizona', 'baguio' => '/gallery/cordillera-ph', 'palawan' => '/gallery/mimaropa-ph',
+    'bohol' => '/gallery/central-visayas-ph',
+];
+foreach ($shortLinks as $short => $target) {
+    Route::redirect('/' . $short, $target . '?ref=tiktok', 302);
+    Route::redirect('/ig/' . $short, $target . '?ref=ig', 302);
 }
 
 // Public / shared trip URL. Seoul 2026 is the seeded sample.
@@ -113,6 +119,7 @@ Route::get('/t/{trip:slug}', [TripController::class, 'show'])->name('trips.show'
 Route::get('/t/{trip:slug}/print', [TripController::class, 'print'])->name('trips.print');
 Route::get('/t/{trip:slug}/calendar.ics', [TripCalendarController::class, 'show'])->middleware('throttle:30,1')->name('trips.calendar');
 Route::post('/t/{trip:slug}/seen-hiccups', [TripController::class, 'seenHiccups'])->middleware('throttle:20,1')->name('trips.seen-hiccups');
+Route::get('/t/{trip:slug}/days/{day}/essentials', [TripDayController::class, 'essentials'])->middleware('throttle:30,1')->name('trips.days.essentials');
 Route::get('/t/{trip:slug}/picks', [TripPickController::class, 'index'])->middleware('throttle:60,1')->name('trips.picks.index');
 
 // "Use this itinerary" — open to guests (held until sign-up, like the planner).

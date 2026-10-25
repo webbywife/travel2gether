@@ -115,6 +115,15 @@
   /* collaboration bar */
   .collab{max-width:860px; margin:0 auto 14px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
     padding:10px 16px; background:var(--panel); border:1px solid var(--line); border-radius:12px; font-size:13px;}
+  .essentials{margin-top:12px; border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px 14px; font-size:13.5px;}
+  .essentials summary{cursor:pointer; font-weight:600; list-style:none;}
+  .essentials summary::-webkit-details-marker{display:none;}
+  .ess-body{margin-top:10px; color:var(--text-dim);}
+  .ess-body h4{margin:12px 0 4px; font-size:12.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--text);}
+  .ess-body ul{margin:0; padding:0; list-style:none;}
+  .ess-body li{display:flex; justify-content:space-between; gap:12px; padding:3px 0;}
+  .ess-body a{color:var(--pink); text-decoration:none; font-weight:600; white-space:nowrap;}
+  .ess-note{font-size:12px; margin-top:12px;}
   .collab input[type=date]{padding:7px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; font:inherit; font-size:13.5px; color:var(--text);}
   .collab input[type=date]:focus{outline:2px solid var(--pink-light); border-color:var(--pink);}
   .collab .roster{display:flex; align-items:center;}
@@ -677,6 +686,10 @@
           <div class="cap"><span>{{ $day->area_label }}</span><span>Today's area</span></div>
         </div>
         @endif
+        <details class="essentials" data-url="{{ route('trips.days.essentials', [$trip, $day->id]) }}">
+          <summary>🛟 Hospital, police, pharmacy &amp; groceries nearby</summary>
+          <div class="ess-body" aria-live="polite"></div>
+        </details>
       </div>
 
       <div class="stops">
@@ -1166,6 +1179,38 @@
         : 'These dates are outside the live ~16-day window — showing the planned notes instead.';
     });
   })();
+
+  /* ===== Essentials nearby (hospital, police, pharmacy, groceries) — fetched when a day's box is opened ===== */
+  document.querySelectorAll('details.essentials').forEach((box) => {
+    let loaded = false;
+    box.addEventListener('toggle', () => {
+      if (!box.open || loaded) return;
+      loaded = true;
+      const body = box.querySelector('.ess-body');
+      body.textContent = 'Looking up the nearest places…';
+      fetch(box.dataset.url, { headers: { Accept: 'application/json' } }).then((r) => r.json()).then((d) => {
+        body.textContent = '';
+        if (!d.groups) { body.textContent = 'Not available for this day.'; return; }
+        const titles = { hospital: 'Hospital / clinic', police: 'Police station', pharmacy: 'Pharmacy', grocery: 'Groceries' };
+        const lead = document.createElement('div'); lead.textContent = 'Nearest to ' + d.near; body.appendChild(lead);
+        Object.keys(titles).forEach((k) => {
+          const h = document.createElement('h4'); h.textContent = titles[k]; body.appendChild(h);
+          const ul = document.createElement('ul');
+          const rows = d.groups[k] || [];
+          if (d.groups[k] === null) { const li = document.createElement('li'); li.textContent = 'Not available right now. Try again later.'; ul.appendChild(li); }
+          else if (!rows.length) { const li = document.createElement('li'); li.textContent = d.partial ? 'None found nearby (backup source, may be incomplete).' : 'None found within 6 km.'; ul.appendChild(li); }
+          rows.forEach((p) => {
+            const li = document.createElement('li'); const n = document.createElement('span'); n.textContent = p.name + ' · ' + p.km + ' km';
+            const a = document.createElement('a'); a.href = p.map_url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = 'Map ↗';
+            li.appendChild(n); li.appendChild(a); ul.appendChild(li);
+          });
+          body.appendChild(ul);
+        });
+        const note = document.createElement('p'); note.className = 'ess-note';
+        note.textContent = (d.partial ? 'The main map service is busy, so only hospitals and police are shown for now. ' : '') + 'From OpenStreetMap. Hours and details can be out of date, so confirm locally.'; body.appendChild(note);
+      }).catch(() => { body.textContent = 'Not available right now. Try again in a minute.'; loaded = false; });
+    });
+  });
 
   /* ===== Phase 3 — weather swaps + cost delta =====
      Checks the hourly forecast at each stop's time; if the current pick is
