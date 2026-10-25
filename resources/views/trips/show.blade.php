@@ -230,6 +230,15 @@
     border:1px solid var(--pink); background:linear-gradient(135deg,#C22A66,#7156A8); color:#fff; cursor:pointer;}
   .ai-btn:hover{opacity:0.92;}
   .ai-btn:disabled{opacity:0.55; cursor:default;}
+  .tl{display:flex; align-items:center; gap:14px; padding:12px 16px; margin-top:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:14px; max-width:520px;}
+  .tl-mascot{width:64px; height:64px; object-fit:contain; flex:none; animation:tl-bob 1.8s ease-in-out infinite;}
+  .tl-body{flex:1; min-width:0;}
+  .tl-msg{font-weight:600; font-size:14px; margin-bottom:8px; min-height:1.3em;}
+  .tl-track{position:relative; height:18px; margin-bottom:6px; border-bottom:2px dotted var(--pink-light, var(--line));}
+  .tl-plane{position:absolute; left:0; bottom:-9px; font-size:16px; color:var(--pink); animation:tl-fly 3.2s linear infinite;}
+  @keyframes tl-bob{0%,100%{transform:translateY(0) rotate(-2deg);} 50%{transform:translateY(-6px) rotate(2deg);}}
+  @keyframes tl-fly{0%{left:0; opacity:0;} 10%{opacity:1;} 90%{opacity:1;} 100%{left:calc(100% - 16px); opacity:0;}}
+  @media (prefers-reduced-motion:reduce){ .tl-mascot,.tl-plane{animation:none;} .tl-plane{left:calc(50% - 8px);} }
   .ai-hint{font-size:11.5px; color:var(--text-dim); font-family:'IBM Plex Mono',monospace;}
   .day-date{font-family:'IBM Plex Mono', monospace; font-size:13.5px; color:var(--text-dim); letter-spacing:0.06em; text-transform:uppercase;}
   .day-title{font-family:'Inter Tight', sans-serif; font-weight:700; font-size:30px; margin:4px 0 0;}
@@ -645,8 +654,14 @@
 
         @if(in_array($day->ai_status, ['queued', 'running'], true))
           <div class="ai-day ai-drafting" data-ai-status-url="{{ route('trips.days.ai-status', [$trip, $day->id]) }}">
-            <button type="button" class="ai-btn" disabled>✨ Drafting with AI…</button>
-            <span class="ai-hint">About a minute — this page updates by itself.</span>
+            <div class="tl" role="status">
+              <img class="tl-mascot" src="{{ asset('img/trippie/thinking.png') }}" alt="" width="64" height="64">
+              <div class="tl-body">
+                <div class="tl-msg" data-tl-msg>Trippie is planning this day…</div>
+                <div class="tl-track" aria-hidden="true"><span class="tl-plane">✈</span></div>
+                <span class="ai-hint">About a minute — this page updates by itself.</span>
+              </div>
+            </div>
             @can('update', $trip)
               @if($day->updated_at && $day->updated_at->lt(now()->subMinutes(3)))
                 <form method="POST" action="{{ route('trips.days.ai-cancel', [$trip, $day->id]) }}" style="display:inline-block; margin-left:8px;">
@@ -1504,6 +1519,14 @@
 
   /* ===== Background AI drafts: poll until done, then reload ===== */
   (function () {
+    const msgs = ['Checking the forecast for your dates…', 'Finding places near your hotel…', 'Fitting stops around your flights…',
+      'Adding tips and possible hiccups…', 'Almost there — polishing the day…'];
+    document.querySelectorAll('[data-tl-msg]').forEach(function (el) {
+      var i = 0;
+      el.textContent = msgs[0];
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      setInterval(function () { i = Math.min(i + 1, msgs.length - 1); el.textContent = msgs[i]; }, 9000);
+    });
     const boxes = Array.from(document.querySelectorAll('.ai-drafting[data-ai-status-url]'));
     if (!boxes.length) return;
     let tries = 0;

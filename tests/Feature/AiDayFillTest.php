@@ -239,7 +239,7 @@ class AiDayFillTest extends TestCase
         $this->assertSame('queued', $day->fresh()->ai_status);
 
         $this->actingAs($owner)->get(route('trips.show', $trip))
-            ->assertOk()->assertSee('Drafting with AI…');
+            ->assertOk()->assertSee('Trippie is planning this day…');
         $this->actingAs($owner)->getJson(route('trips.days.ai-status', [$trip, $day->id]))
             ->assertJson(['status' => 'queued']);
     }
