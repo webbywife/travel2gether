@@ -296,6 +296,7 @@
   .opt-card .wx-badge{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.04em; color:var(--text-dim); margin-left:6px;}
   #pickDelta{color:var(--text-dim);}
   .opt-hint{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--text-dim); margin:-18px 0 26px;}
+  .opt-num{font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:3px;}
   .opt-top{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
   .opt-name{font-weight:600; font-size:15px;}
   .opt-tag{font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:#fff; background:var(--pink); border-radius:999px; padding:2px 8px; white-space:nowrap;}
@@ -756,6 +757,7 @@
               @foreach($stop->options as $opt)
               <div class="opt-card {{ $opt->id === $pickedId ? 'pick' : '' }}" data-option-id="{{ $opt->id }}" data-original="{{ $opt->is_default_pick ? 'true' : 'false' }}"
                    data-cost="{{ $opt->costMidpoint() ?? '' }}" data-weather="{{ $opt->weatherFit($stop) }}" data-name="{{ $opt->name }}">
+                <div class="opt-num">Option {{ $loop->iteration }}</div>
                 <div class="opt-top">
                   <span class="opt-name">{{ $opt->name }}</span>
                   @if($opt->is_sponsored)<span class="opt-tag sponsored">Sponsored</span>
