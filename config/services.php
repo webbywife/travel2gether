@@ -66,6 +66,11 @@ return [
     ],
 
     // Free OpenStreetMap place search (Photon + Overpass), used when no Google key is set.
+    // Optional. When set, Geoapify (OpenStreetMap-based, free daily allowance) answers "what's near" when Overpass is down.
+    'geoapify' => [
+        'key' => env('GEOAPIFY_KEY'),
+    ],
+
     'places' => [
         'osm' => env('PLACES_OSM', true),
     ],

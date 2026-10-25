@@ -454,10 +454,15 @@ class PlacesService
         if ($full = Cache::get($key)) {
             return ['groups' => $full, 'partial' => false];
         }
-        if ($full = $this->essentialsFromOverpass($lat, $lon)) {
+        $full = $this->essentialsFromOverpass($lat, $lon) ?? $this->essentialsFromGeoapify($lat, $lon);
+        if ($full) {
             Cache::put($key, $full, now()->addDays(7));
+            Cache::put($key . ':last', $full, now()->addDays(90)); // outlives the week, so an outage can still be answered
 
             return ['groups' => $full, 'partial' => false];
+        }
+        if ($stale = Cache::get($key . ':last')) {
+            return ['groups' => $stale, 'partial' => false];
         }
 
         $partialKey = $key . ':partial';
@@ -522,6 +527,66 @@ class PlacesService
             ->take(2)->map(fn ($r) => \Illuminate\Support\Arr::except($r, ['clinic']))->values()->all())->all();
     }
 
+    /**
+     * Where is this named place, near this point? One Photon lookup, cached 30 days (a miss for 1 day). Results more
+     * than 40 km from the point are namesakes elsewhere, so they count as not found.
+     *
+     * @return array{lat: float, lon: float}|null
+     */
+    public function locate(string $name, float $lat, float $lon): ?array
+    {
+        $key = 'places:osm:locate:' . md5(mb_strtolower($name) . '|' . round($lat, 1) . '|' . round($lon, 1));
+        $hit = Cache::get($key);
+        if ($hit !== null) {
+            return $hit ?: null;
+        }
+
+        $res = rescue(fn () => Http::withHeaders(['User-Agent' => self::USER_AGENT])->connectTimeout(4)->timeout(6)
+            ->get(self::PHOTON_URL, ['q' => $name, 'lat' => $lat, 'lon' => $lon, 'limit' => 5, 'lang' => 'en']), null, false);
+        if (! $res?->successful()) {
+            return null; // not cached: try again later
+        }
+
+        $best = collect($res->json('features', []))
+            ->map(fn ($f) => [
+                'lat' => (float) data_get($f, 'geometry.coordinates.1'), 'lon' => (float) data_get($f, 'geometry.coordinates.0'),
+            ])
+            ->filter(fn ($p) => $p['lat'] && $p['lon'] && self::km($lat, $lon, $p['lat'], $p['lon']) <= 40)
+            ->sortBy(fn ($p) => self::km($lat, $lon, $p['lat'], $p['lon']))->first();
+
+        Cache::put($key, $best ? ['lat' => round($best['lat'], 5), 'lon' => round($best['lon'], 5)] : false, $best ? now()->addDays(30) : now()->addDay());
+
+        return $best ? ['lat' => round($best['lat'], 5), 'lon' => round($best['lon'], 5)] : null;
+    }
+
+    /** Full answer from Geoapify (4 small calls) when a GEOAPIFY_KEY is configured; null otherwise or on any failure. */
+    private function essentialsFromGeoapify(float $lat, float $lon): ?array
+    {
+        $apiKey = config('services.geoapify.key');
+        if (! filled($apiKey)) {
+            return null;
+        }
+
+        $groups = [];
+        foreach (['hospital' => 'healthcare.hospital', 'police' => 'service.police', 'pharmacy' => 'healthcare.pharmacy', 'grocery' => 'commercial.supermarket'] as $kind => $category) {
+            $res = rescue(fn () => Http::connectTimeout(4)->timeout(7)->get('https://api.geoapify.com/v2/places', [
+                'categories' => $category, 'filter' => "circle:{$lon},{$lat},6000", 'bias' => "proximity:{$lon},{$lat}", 'limit' => 6, 'lang' => 'en', 'apiKey' => $apiKey,
+            ]), null, false);
+            if (! $res?->successful() || ! is_array($res->json('features'))) {
+                return null;
+            }
+            $groups[$kind] = collect($res->json('features'))->map(function ($f) use ($lat, $lon) {
+                $name = trim((string) data_get($f, 'properties.name', ''));
+                $plon = data_get($f, 'geometry.coordinates.0', data_get($f, 'properties.lon'));
+                $plat = data_get($f, 'geometry.coordinates.1', data_get($f, 'properties.lat'));
+
+                return ($name === '' || $plat === null || $plon === null) ? null : $this->essentialRow($name, $lat, $lon, (float) $plat, (float) $plon);
+            })->filter()->sortBy('km')->unique('name')->take(2)->values()->all();
+        }
+
+        return $groups;
+    }
+
     /** Photon (komoot) finds well-named hospitals and police stations fast, but not pharmacies or shops. @return array<int, array<string, mixed>> */
     private function essentialsFromPhoton(float $lat, float $lon, string $q, string $osmTag): array
     {
@@ -543,12 +608,14 @@ class PlacesService
             ->sortBy('km')->unique('name')->take(2)->values()->all();
     }
 
-    /** @return array{name:string, km:float, map_url:string} */
+    /** @return array{name:string, km:float, lat:float, lon:float, map_url:string} */
     private function essentialRow(string $name, float $lat, float $lon, float $plat, float $plon): array
     {
         return [
             'name' => $name,
             'km' => round(self::km($lat, $lon, $plat, $plon), 1),
+            'lat' => round($plat, 5),
+            'lon' => round($plon, 5),
             'map_url' => 'https://www.google.com/maps/search/?api=1&query=' . urlencode("{$plat},{$plon}"),
         ];
     }

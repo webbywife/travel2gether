@@ -119,6 +119,8 @@ Route::get('/t/{trip:slug}', [TripController::class, 'show'])->name('trips.show'
 Route::get('/t/{trip:slug}/print', [TripController::class, 'print'])->name('trips.print');
 Route::get('/t/{trip:slug}/calendar.ics', [TripCalendarController::class, 'show'])->middleware('throttle:30,1')->name('trips.calendar');
 Route::post('/t/{trip:slug}/seen-hiccups', [TripController::class, 'seenHiccups'])->middleware('throttle:20,1')->name('trips.seen-hiccups');
+Route::get('/t/{trip:slug}/stops/{stop}/locate', [TripController::class, 'locateStop'])->middleware('throttle:90,1')->name('trips.stops.locate');
+Route::get('/t/{trip:slug}/map.json', [TripController::class, 'mapData'])->middleware('throttle:60,1')->name('trips.map');
 Route::get('/t/{trip:slug}/days/{day}/essentials', [TripDayController::class, 'essentials'])->middleware('throttle:30,1')->name('trips.days.essentials');
 Route::get('/t/{trip:slug}/picks', [TripPickController::class, 'index'])->middleware('throttle:60,1')->name('trips.picks.index');
 

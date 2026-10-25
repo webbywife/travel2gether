@@ -114,6 +114,60 @@ class TripController extends Controller
             ->with('status', 'Trip copied — invite your group from the Share panel.');
     }
 
+    /** Pins for the trip-wide map: each day's hotel and the stops whose options we know the exact location of. */
+    public function mapData(Request $request, Trip $trip): \Illuminate\Http\JsonResponse
+    {
+        abort_unless($trip->canView($request->user()), 404);
+        $trip->load('days.stops.options.place');
+
+        $days = $trip->days->map(function ($day) use ($trip) {
+            $n = 0;
+            $stops = [];
+            foreach ($day->stops->sortBy('sort') as $stop) {
+                if ($stop->options->isEmpty()) {
+                    continue; // transit / checkout rows have nothing to pin
+                }
+                $opts = $stop->options->sortByDesc('is_default_pick');
+                $at = $opts->first(fn ($o) => $o->place?->lat !== null && $o->place?->lon !== null);
+                $stops[] = [
+                    'n' => ++$n, 'id' => $stop->id, 'time' => $stop->time, 'title' => $stop->title,
+                    'name' => ($at ?? $opts->first())->name,
+                    'lat' => $at ? (float) $at->place->lat : null, 'lon' => $at ? (float) $at->place->lon : null,
+                    'locate_url' => $at ? null : route('trips.stops.locate', [$trip, $stop->id]),
+                ];
+            }
+            $hLat = $day->hotel_lat ?? $trip->hotel_lat ?? null;
+            $hLon = $day->hotel_lon ?? $trip->hotel_lon ?? null;
+
+            return [
+                'day' => $day->day_number, 'title' => $day->title, 'date' => $day->date->format('D j M'),
+                'hotel' => ($hLat && $hLon) ? ['name' => $day->hotel_name ?: $trip->hotel_name, 'lat' => (float) $hLat, 'lon' => (float) $hLon] : null,
+                'essentials_url' => route('trips.days.essentials', [$trip, $day->id]),
+                'stops' => $stops,
+            ];
+        })->values();
+
+        return response()->json(['center' => $trip->lat && $trip->lon ? [(float) $trip->lat, (float) $trip->lon] : null, 'days' => $days]);
+    }
+
+    /** Finds one stop's exact spot by name (Photon, free), near the day's area; cached. Used by the trip map. */
+    public function locateStop(Request $request, Trip $trip, \App\Models\Stop $stop, \App\Services\PlacesService $places): \Illuminate\Http\JsonResponse
+    {
+        abort_unless($trip->canView($request->user()) && $stop->day?->trip_id === $trip->id, 404);
+
+        $day = $stop->day;
+        $name = optional($stop->options()->orderByDesc('is_default_pick')->first())->name;
+        $lat = (float) ($day->hotel_lat ?? $day->lat ?? $trip->lat);
+        $lon = (float) ($day->hotel_lon ?? $day->lon ?? $trip->lon);
+        if (! $name || ! $lat || ! $lon) {
+            return response()->json(['found' => false]);
+        }
+
+        $hit = $places->locate($name, $lat, $lon);
+
+        return response()->json($hit ? ['found' => true] + $hit : ['found' => false]);
+    }
+
     /** "Use this itinerary": copy a sample onto the visitor's own dates. Guests are held until they sign up. */
     public function useSample(Request $request, Trip $trip, DuplicateTrip $duplicate): RedirectResponse
     {

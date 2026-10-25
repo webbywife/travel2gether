@@ -87,4 +87,44 @@ class EssentialsTest extends TestCase
         $this->assertNull($json['groups']['pharmacy']);
         $this->assertNull($json['groups']['grocery']);
     }
+
+    public function test_geoapify_answers_all_four_when_overpass_is_down_and_a_key_is_set(): void
+    {
+        $this->seed(Seoul2026Seeder::class);
+        $trip = Trip::where('slug', 'seoul-2026')->firstOrFail();
+        $day = $trip->days()->first();
+        $day->update(['hotel_lat' => 37.5665, 'hotel_lon' => 126.9780]);
+        Cache::flush();
+        config(['services.places.osm' => true, 'services.geoapify.key' => 'test-key']);
+
+        Http::fake([
+            'api.geoapify.com/*' => fn ($req) => Http::response(['features' => [[
+                'properties' => ['name' => 'Geo ' . (preg_match('/categories=([a-z.]+)/', urldecode($req->url()), $m) ? $m[1] : '?')],
+                'geometry' => ['coordinates' => [126.98, 37.57]],
+            ]]]),
+            '*' => Http::response('down', 504),
+        ]);
+
+        $json = $this->getJson(route('trips.days.essentials', [$trip, $day->id]))->assertOk()->json();
+        $this->assertFalse($json['partial']);
+        $this->assertSame(['Geo healthcare.pharmacy'], array_column($json['groups']['pharmacy'], 'name'));
+        $this->assertSame(['Geo commercial.supermarket'], array_column($json['groups']['grocery'], 'name'));
+    }
+
+    public function test_a_stale_good_answer_is_served_when_everything_is_down(): void
+    {
+        $this->seed(Seoul2026Seeder::class);
+        $trip = Trip::where('slug', 'seoul-2026')->firstOrFail();
+        $day = $trip->days()->first();
+        $day->update(['hotel_lat' => 37.5665, 'hotel_lon' => 126.9780]);
+        Cache::flush();
+        config(['services.places.osm' => true]);
+        $good = ['hospital' => [], 'police' => [], 'pharmacy' => [['name' => 'Old Pharmacy', 'km' => 0.4, 'lat' => 37.5, 'lon' => 127.0, 'map_url' => 'x']], 'grocery' => []];
+        Cache::put('places:osm:essentials:37.567:126.978:last', $good, now()->addDays(30));
+        Http::fake(['*' => Http::response('down', 504)]);
+
+        $json = $this->getJson(route('trips.days.essentials', [$trip, $day->id]))->assertOk()->json();
+        $this->assertFalse($json['partial']);
+        $this->assertSame(['Old Pharmacy'], array_column($json['groups']['pharmacy'], 'name'));
+    }
 }

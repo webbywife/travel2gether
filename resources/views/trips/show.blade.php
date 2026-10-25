@@ -30,7 +30,7 @@
         $catMeta[$cat] = $known[$cat] ?? ['slug' => \Illuminate\Support\Str::slug($cat) ?: 'cat'.$i, 'color' => $palette[$i % count($palette)]];
         $i++;
     }
-    $sequence = $trip->days->pluck('day_number')->map(fn ($n) => (string) $n)->push('budget')->all();
+    $sequence = $trip->days->pluck('day_number')->map(fn ($n) => (string) $n)->push('map')->push('budget')->all();
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -124,6 +124,17 @@
   .ess-body li{display:flex; justify-content:space-between; gap:12px; padding:3px 0;}
   .ess-body a{color:var(--pink); text-decoration:none; font-weight:600; white-space:nowrap;}
   .ess-note{font-size:12px; margin-top:12px;}
+  .book-card{display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center; margin:0 0 16px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fff; font-size:14px;}
+  .trip-map{height:min(70vh,520px); min-height:340px; border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--panel-2);}
+  .map-controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 10px;}
+  .chip-btn{border:1px solid var(--line); background:#fff; border-radius:999px; padding:7px 13px; font:inherit; font-size:13px; cursor:pointer; color:var(--text);}
+  .chip-btn[aria-pressed=true]{border-color:var(--pink); background:var(--panel-2);}
+  .chip-btn:disabled{opacity:.5; cursor:not-allowed;}
+  .map-legend{display:flex; flex-wrap:wrap; gap:6px 16px; list-style:none; padding:0; margin:12px 0 0; font-size:12.5px; color:var(--text-dim);}
+  .map-legend i{display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:-1px;}
+  .map-legend i.sq{border-radius:3px;}
+  .pin{width:26px; height:26px; border-radius:50%; color:#fff; font:600 12px 'IBM Plex Mono',monospace; display:flex; align-items:center; justify-content:center; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.35); cursor:pointer;}
+  .pin.sq{border-radius:6px; width:24px; height:24px; font-size:11px;}
   .collab input[type=date]{padding:7px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; font:inherit; font-size:13.5px; color:var(--text);}
   .collab input[type=date]:focus{outline:2px solid var(--pink-light); border-color:var(--pink);}
   .collab .roster{display:flex; align-items:center;}
@@ -595,6 +606,17 @@
     @endif
   @endcan
 
+  @php $bookLinks = \App\Support\Affiliates::forTrip($trip); @endphp
+  @if ($bookLinks)
+    <div class="book-card">
+      <b>Book your trip</b>
+      @foreach ($bookLinks as $l)
+        <a class="chip-btn" href="{{ $l['url'] }}" target="_blank" rel="sponsored nofollow noopener noreferrer">{{ $l['label'] }} ↗</a>
+      @endforeach
+      <span class="ess-note">Partner links: we may earn a small commission at no extra cost to you.</span>
+    </div>
+  @endif
+
   <div class="tabbar" id="tabbar">
     @foreach($trip->days as $day)
     <button class="tab {{ $loop->first ? 'active' : '' }}" data-day="{{ $day->day_number }}">
@@ -602,6 +624,7 @@
       <span class="t-title">{{ $day->title }}</span>
     </button>
     @endforeach
+    <button class="tab" data-day="map"><span class="t-num mono">All stops</span><span class="t-title">Map</span></button>
     <button class="tab" data-day="budget"><span class="t-num mono">Trip cost</span><span class="t-title">Budget</span></button>
   </div>
 
@@ -777,6 +800,25 @@
     </div>
     @endforeach
 
+    {{-- ===== Map ===== --}}
+    <div class="day-panel" data-day="map">
+      <div class="day-head">
+        <div class="day-date">Whole trip</div>
+        <h1 class="day-title">Trip map</h1>
+      </div>
+      <div class="map-controls" id="mapDays" role="group" aria-label="Show days on the map"></div>
+      <div class="trip-map" id="tripMap" role="region" aria-label="Map of this trip's stops"></div>
+      <div class="map-controls" style="margin-top:10px;">
+        <button type="button" class="chip-btn" id="mapEss" disabled>🛟 Show hospitals, police, pharmacies &amp; groceries near this day</button>
+        <span class="ess-note" id="mapNote" aria-live="polite">Pick a single day to show nearby essentials.</span>
+      </div>
+      <ul class="map-legend" aria-label="Legend">
+        <li><i style="background:#B5385F"></i>Stops, numbered in order</li><li><i class="sq" style="background:#1f2937"></i>Hotel</li>
+        <li><i class="sq" style="background:#c53030"></i>Hospital</li><li><i class="sq" style="background:#2b6cb0"></i>Police</li>
+        <li><i class="sq" style="background:#2f6d54"></i>Pharmacy</li><li><i class="sq" style="background:#7b5e3b"></i>Groceries</li>
+      </ul>
+    </div>
+
     {{-- ===== Budget ===== --}}
     <div class="day-panel" data-day="budget">
       <div class="day-head">
@@ -873,6 +915,7 @@
     csrf: @json(csrf_token()),
     currencySymbol: @json($sym),
     sequence: @json($sequence),
+    mapUrl: @json(route('trips.map', $trip)),
     catMeta: @json(collect($catMeta)->mapWithKeys(fn ($m, $k) => [$m['slug'] => ['label' => $k, 'color' => $m['color']]])),
   };
 </script>
@@ -890,6 +933,7 @@
     tabs.forEach(t => t.classList.toggle('active', t.dataset.day === id));
     panels.forEach(p => p.classList.toggle('active', p.dataset.day === id));
     if (history.replaceState) history.replaceState(null, '', '#' + (id === T.sequence[0] ? '' : id));
+    if (id === 'map' && window.T2G_openMap) window.T2G_openMap();
     if (opts.scroll === false) return;
     document.querySelector('.tabbar .tab.active')?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     const bar = document.querySelector('.tabbar');
@@ -1211,6 +1255,103 @@
       }).catch(() => { body.textContent = 'Not available right now. Try again in a minute.'; loaded = false; });
     });
   });
+
+  /* ===== Trip map (MapLibre + OpenFreeMap, loaded only when the Map tab is opened) ===== */
+  (function () {
+    const COLORS = ['#B5385F', '#2f6d54', '#5a4488', '#2b6cb0', '#c05621', '#0f766e', '#9E4A6E', '#4a5568'];
+    const ESS = { hospital: ['H', '#c53030', 'Hospital / clinic'], police: ['P', '#2b6cb0', 'Police station'], pharmacy: ['Rx', '#2f6d54', 'Pharmacy'], grocery: ['G', '#7b5e3b', 'Groceries'] };
+    let started = false, map, data, markers = [], essMarkers = [], current = 'all';
+    const $ = (id) => document.getElementById(id);
+
+    function pin(label, color, square) {
+      const el = document.createElement('div'); el.className = 'pin' + (square ? ' sq' : ''); el.style.background = color; el.textContent = label; return el;
+    }
+    function add(list, el, lon, lat, text) {
+      const m = new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).setPopup(new maplibregl.Popup({ offset: 16 }).setText(text)).addTo(map); list.push(m);
+    }
+    function clear(list) { list.forEach((m) => m.remove()); list.length = 0; }
+
+    let drawId = 0;
+    function draw() {
+      const id = ++drawId;
+      clear(markers); clear(essMarkers);
+      const bounds = new maplibregl.LngLatBounds(); let any = false; const todo = [];
+      const fit = () => { if (any) map.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 400 }); };
+      const put = (s, color, d) => { add(markers, pin(String(s.n), color), s.lon, s.lat, 'Day ' + d.day + ' · ' + (s.time ? s.time + ' · ' : '') + s.name); bounds.extend([s.lon, s.lat]); any = true; };
+      data.days.forEach((d, i) => {
+        if (current !== 'all' && String(d.day) !== current) return;
+        const color = COLORS[i % COLORS.length];
+        if (d.hotel) { add(markers, pin('🏨', '#1f2937', true), d.hotel.lon, d.hotel.lat, (d.hotel.name || 'Hotel')); bounds.extend([d.hotel.lon, d.hotel.lat]); any = true; }
+        d.stops.forEach((s) => { if (s.lat != null) put(s, color, d); else if (s.locate_url) todo.push([s, color, d]); });
+      });
+      fit();
+      if (!any && data.center) map.jumpTo({ center: [data.center[1], data.center[0]], zoom: 11 });
+      $('mapEss').disabled = current === 'all';
+      $('mapEss').setAttribute('aria-pressed', 'false');
+      const idle = current === 'all' ? 'Pick a single day to show nearby essentials.' : '';
+      if (!todo.length) { $('mapNote').textContent = idle; return; }
+      // Look the rest up by name, two at a time, adding each pin as it is found.
+      let done = 0, missed = 0, next = 0;
+      const status = () => { $('mapNote').textContent = done < todo.length ? 'Locating stops… ' + done + ' of ' + todo.length : (missed ? missed + ' stop' + (missed === 1 ? '' : 's') + ' could not be located. ' : '') + idle; };
+      status();
+      const worker = () => {
+        if (id !== drawId || next >= todo.length) return Promise.resolve();
+        const [s, color, d] = todo[next++];
+        return fetch(s.locate_url, { headers: { Accept: 'application/json' } }).then((r) => r.json()).then((r) => {
+          if (id !== drawId) return;
+          if (r.found) { s.lat = r.lat; s.lon = r.lon; put(s, color, d); } else missed++;
+        }).catch(() => { missed++; }).then(() => { if (id !== drawId) return; done++; status(); if (done === todo.length) fit(); return worker(); });
+      };
+      worker(); worker();
+    }
+
+    function chips() {
+      const box = $('mapDays'); box.textContent = '';
+      [['all', 'All days']].concat(data.days.map((d) => [String(d.day), 'Day ' + d.day])).forEach(([k, label]) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'chip-btn'; b.textContent = label;
+        b.setAttribute('aria-pressed', String(k === current));
+        b.addEventListener('click', () => { current = k; box.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); draw(); });
+        box.appendChild(b);
+      });
+    }
+
+    $('mapEss').addEventListener('click', () => {
+      const btn = $('mapEss'), day = data.days.find((d) => String(d.day) === current);
+      if (!day) return;
+      if (btn.getAttribute('aria-pressed') === 'true') { clear(essMarkers); btn.setAttribute('aria-pressed', 'false'); return; }
+      btn.disabled = true; $('mapNote').textContent = 'Looking up the nearest places…';
+      fetch(day.essentials_url, { headers: { Accept: 'application/json' } }).then((r) => r.json()).then((d) => {
+        btn.disabled = false; clear(essMarkers);
+        if (!d.groups) { $('mapNote').textContent = 'Not available for this day.'; return; }
+        let n = 0;
+        Object.keys(ESS).forEach((k) => {
+          if (d.groups[k] === null) return;
+          (d.groups[k] || []).forEach((p) => { if (p.lat == null) return; add(essMarkers, pin(ESS[k][0], ESS[k][1], true), p.lon, p.lat, ESS[k][2] + ': ' + p.name + ' (' + p.km + ' km)'); n++; });
+        });
+        btn.setAttribute('aria-pressed', 'true');
+        $('mapNote').textContent = (d.partial ? 'The main map service is busy, so only hospitals and police are shown. ' : '') + n + ' places shown. From OpenStreetMap, confirm locally.';
+      }).catch(() => { btn.disabled = false; $('mapNote').textContent = 'Not available right now. Try again in a minute.'; });
+    });
+
+    function start() {
+      fetch(T.mapUrl, { headers: { Accept: 'application/json' } }).then((r) => r.json()).then((d) => {
+        data = d; chips();
+        map = new maplibregl.Map({ container: 'tripMap', style: 'https://tiles.openfreemap.org/styles/liberty', center: d.center ? [d.center[1], d.center[0]] : [0, 20], zoom: d.center ? 10 : 1.5, attributionControl: { compact: true } });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+        map.on('load', draw);
+      }).catch(() => { $('tripMap').textContent = 'The map could not load. Try again in a minute.'; });
+    }
+
+    window.T2G_openMap = function () {
+      if (started) { if (map) setTimeout(() => map.resize(), 50); return; }
+      started = true;
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.css'; document.head.appendChild(css);
+      const js = document.createElement('script'); js.src = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js'; js.onload = start;
+      js.onerror = () => { $('tripMap').textContent = 'The map could not load. Try again in a minute.'; };
+      document.head.appendChild(js);
+    };
+    if (location.hash === '#map') window.T2G_openMap();
+  })();
 
   /* ===== Phase 3 — weather swaps + cost delta =====
      Checks the hourly forecast at each stop's time; if the current pick is
