@@ -149,7 +149,7 @@ class CreateTrip
      * the rest are filled with the destination's popular areas (config/destination_areas.php), then — for a
      * destination with no list, or too short a list — nearby districts and landmarks from the places lookup. Anything
      * that overlaps a pick is skipped ("Higashiyama" already covers "Higashiyama & Kiyomizu-dera"). With nothing
-     * to add it falls back to cycling the picks. Arrival and departure still use $areas, so their hotels don't change.
+     * to add it leaves the rest as free days (never a repeat). Arrival and departure still use $areas, so their hotels don't change.
      *
      * @return Collection<int, array<string, mixed>>
      */
@@ -293,8 +293,9 @@ class CreateTrip
         }
 
         // Middle day → anchor to its own area (one per day while there are enough),
-        // and to that area's own hotel when it has one.
-        $area = $dayAreas->isNotEmpty() ? $dayAreas[($i - 1) % $dayAreas->count()] : null;
+        // and to that area's own hotel when it has one. Days beyond the areas are
+        // free days — never a repeat of an earlier day's area.
+        $area = $dayAreas[$i - 1] ?? null;
         $name = $area['name'] ?? 'Free day — revisit a favourite';
         $hotel = $hotelFor($area);
 

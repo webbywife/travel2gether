@@ -251,7 +251,7 @@ class TripBuilderTest extends TestCase
             'areas' => [['name' => 'Chiado', 'lat' => 38.7106, 'lon' => -9.1425], ['name' => 'Bairro Alto', 'lat' => 38.7133, 'lon' => -9.1456]],
         ]), User::factory()->create());
 
-        // 5 middle days: two picks, then the nearby areas and landmarks (Chiado Square skipped), then it cycles
+        // 5 middle days: two picks, then the nearby areas and landmarks (Chiado Square skipped)
         $titles = $trip->days()->orderBy('day_number')->pluck('title')->slice(1, 5)->values()->all();
         $this->assertSame(['Chiado', 'Bairro Alto', 'Baixa', 'Belém Tower', 'Alfama Viewpoint'], $titles);
     }
@@ -283,5 +283,17 @@ class TripBuilderTest extends TestCase
         $this->assertNotContains('Higashiyama & Kiyomizu-dera', $titles);
         $this->assertNotContains('Arashiyama', array_slice($titles, 2));
         $this->assertCount(4, array_unique($titles));
+    }
+
+    public function test_with_no_more_areas_to_add_the_extra_days_are_free_days_not_repeats(): void
+    {
+        $trip = app(\App\Actions\CreateTrip::class)($this->payload([
+            'destination' => 'Nowhereville', // no curated list and no coordinates to look up
+            'arrival_date' => '2027-04-01', 'departure_date' => '2027-04-06',
+            'areas' => [['name' => 'Old Town', 'lat' => 1.0, 'lon' => 1.0], ['name' => 'Harbour', 'lat' => 1.01, 'lon' => 1.01]],
+        ]), User::factory()->create());
+
+        $titles = $trip->days()->orderBy('day_number')->pluck('title')->slice(1, 4)->values()->all();
+        $this->assertSame(['Old Town', 'Harbour', 'Free day — revisit a favourite', 'Free day — revisit a favourite'], $titles);
     }
 }
