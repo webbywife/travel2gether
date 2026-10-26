@@ -366,6 +366,10 @@
   .brow .amount span.cur{color:var(--text-dim);}
   .brow input[type=number]{width:84px; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:'IBM Plex Mono', monospace; font-size:15px; padding:6px 8px; text-align:right;}
   .brow input[type=number]:focus{outline:1px solid var(--pink);}
+  .brow .mcalc{display:flex !important; align-items:center; gap:4px; flex-wrap:wrap; font-family:'IBM Plex Mono', monospace;}
+  .brow .mcalc input[type=number]{width:64px; font-size:13px; padding:3px 6px;}
+  .brow .mcalc .mc-n{width:44px;}
+  .brow-calc .amount input[readonly]{background:transparent; border-color:transparent;}
   .btotal-line{display:flex; justify-content:space-between; align-items:center; margin-top:18px; padding-top:14px; border-top:1px solid var(--line);}
   .btotal-line .t-label{font-family:'Inter Tight', sans-serif; font-weight:700; font-size:16px;}
   .btotal-line .t-amount{font-family:'IBM Plex Mono', monospace; font-weight:700; font-size:23px; color:var(--pink);}
@@ -908,10 +912,21 @@
             <div class="cat">
               <div class="cat-head"><span class="name">{{ $category }}</span><span class="sub" data-sub="{{ $meta['slug'] }}">{{ $sym }}0</span></div>
               @foreach($lines as $line)
+              @if($line->category === 'Meals' && $line->note === 'per meal x days')
+              {{-- the planner's per diem: a per-meal price × meals a day × trip days, worked out here instead of typed as a total --}}
+              <div class="brow brow-calc">
+                <div class="label">{{ $line->label }}<small class="mcalc">
+                  <span class="cur">{{ $sym }}</span><input type="number" class="mc-meal" value="0" min="0" step="any" aria-label="Cost per meal"> a meal ×
+                  <input type="number" class="mc-n" value="3" min="1" max="6" step="1" aria-label="Meals a day"> a day ×
+                  <span class="mc-days mono">{{ $trip->days->count() }}</span> days</small></div>
+                <div class="amount"><span class="cur">{{ $sym }}</span><input type="number" class="item" data-cat="{{ $meta['slug'] }}" data-key="{{ $line->id }}" value="{{ $line->amount }}" step="1" readonly tabindex="-1" aria-label="Meals total per person"></div>
+              </div>
+              @else
               <div class="brow">
                 <div class="label">{{ $line->label }}@if($line->note)<small>{{ $line->note }}</small>@endif</div>
-                <div class="amount"><span class="cur">{{ $sym }}</span><input type="number" class="item" data-cat="{{ $meta['slug'] }}" value="{{ $line->amount }}" step="1"></div>
+                <div class="amount"><span class="cur">{{ $sym }}</span><input type="number" class="item" data-cat="{{ $meta['slug'] }}" data-key="{{ $line->id }}" value="{{ $line->amount }}" step="1"></div>
               </div>
+              @endif
               @endforeach
             </div>
           @endforeach
@@ -1193,7 +1208,18 @@
     canvas?.parentElement.insertBefore(p, canvas);
   }
 
+  // Per diem calculator: per-meal price × meals a day × trip days → the Meals line (a total, like every other line).
+  function mealCalc() {
+    const days = parseFloat(document.getElementById('days').value) || 1;
+    document.querySelectorAll('.brow-calc').forEach(row => {
+      const meal = parseFloat(row.querySelector('.mc-meal').value) || 0, n = parseFloat(row.querySelector('.mc-n').value) || 0;
+      row.querySelector('.mc-days').textContent = days;
+      if (meal > 0) row.querySelector('.item').value = Math.round(meal * n * days);
+    });
+  }
+
   function recalc() {
+    mealCalc();
     const travelers = parseFloat(document.getElementById('travelers').value) || 1;
     const days = parseFloat(document.getElementById('days').value) || 1;
     const fxEl = document.getElementById('fxrate'), fx = fxEl ? parseFloat(fxEl.value) : NaN;
@@ -1234,7 +1260,21 @@
     });
   }
 
-  document.querySelectorAll('.item, #travelers, #days, #fxrate').forEach(el => el && el.addEventListener('input', recalc));
+  // "Your edits stay on this device": line amounts and the per-meal calculator are saved per trip in this browser.
+  const BKEY = 't2g-budget-' + @json($trip->id);
+  let bsaved = {}; try { bsaved = JSON.parse(localStorage.getItem(BKEY)) || {}; } catch (e) { bsaved = {}; }
+  document.querySelectorAll('.item[data-key]:not([readonly])').forEach(el => { if (bsaved['i' + el.dataset.key] != null) el.value = bsaved['i' + el.dataset.key]; });
+  document.querySelectorAll('.brow-calc').forEach((row, k) => {
+    ['mc-meal', 'mc-n'].forEach(c => { const v = bsaved[c + k]; if (v != null) row.querySelector('.' + c).value = v; });
+  });
+  function bsave() {
+    const out = {};
+    document.querySelectorAll('.item[data-key]:not([readonly])').forEach(el => out['i' + el.dataset.key] = el.value);
+    document.querySelectorAll('.brow-calc').forEach((row, k) => ['mc-meal', 'mc-n'].forEach(c => out[c + k] = row.querySelector('.' + c).value));
+    try { localStorage.setItem(BKEY, JSON.stringify(out)); } catch (e) {}
+  }
+
+  document.querySelectorAll('.item, #travelers, #days, #fxrate, .mc-meal, .mc-n').forEach(el => el && el.addEventListener('input', () => { recalc(); bsave(); }));
   recalc();
 
   /* "Show totals in": pick another currency; today's rate comes from our cached /fx endpoint. Remembered on this device. */

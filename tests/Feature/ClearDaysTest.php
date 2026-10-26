@@ -79,4 +79,15 @@ class ClearDaysTest extends TestCase
             $this->assertSame(4, $d->stops()->count());
         }
     }
+
+    public function test_the_planner_per_diem_is_worked_out_per_meal_not_typed_as_a_total(): void
+    {
+        $owner = User::factory()->create();
+        [$trip] = $this->trip($owner);
+
+        $this->actingAs($owner)->get(route('trips.show', $trip))->assertOk()
+            ->assertSee('class="mc-meal"', false)             // per-meal price…
+            ->assertSee('aria-label="Meals a day"', false)    // …× meals a day × days
+            ->assertSee('aria-label="Meals total per person"', false);
+    }
 }
