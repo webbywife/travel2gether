@@ -138,4 +138,20 @@ class TripCollaborationTest extends TestCase
             ->assertSee($theirs->title)
             ->assertSee('Shared with you');
     }
+
+    public function test_a_copy_with_new_dates_gets_a_forecast_date_for_every_day(): void
+    {
+        $sample = $this->sample();
+        $sample->days()->update(['forecast_date' => $sample->start_date]);   // the sample's own days have one
+        $owner = User::factory()->create();
+
+        $copy = app(\App\Actions\DuplicateTrip::class)($sample, $owner, null, now()->addDays(5));
+
+        $days = $copy->days()->orderBy('day_number')->get();
+        $this->assertNotEmpty($days);
+        foreach ($days as $day) {
+            $this->assertSame($day->date->toDateString(), $day->forecast_date->toDateString());
+            $this->assertNull($day->temp_high);   // stored numbers belong to the old dates
+        }
+    }
 }

@@ -53,9 +53,13 @@ class DuplicateTrip
                 ]));
 
                 if ($startsOn) {
+                    // Stored temperatures belong to the old dates, so they're cleared; forecast_date moves with the
+                    // day so the page fetches a live forecast for the new date.
+                    $shifted = $day->date->copy()->addDays($shift);
                     $newDay->update([
-                        'date' => $day->date->copy()->addDays($shift),
-                        'forecast_date' => null, 'temp_high' => null, 'temp_low' => null, 'weather_note' => null,
+                        'date' => $shifted,
+                        'forecast_date' => $day->forecast_date ? $shifted : null,
+                        'temp_high' => null, 'temp_low' => null, 'weather_note' => null,
                     ]);
                 }
 
