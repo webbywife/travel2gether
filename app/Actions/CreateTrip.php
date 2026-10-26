@@ -8,6 +8,7 @@ use App\Support\FlightReference;
 use App\Support\OsmMap;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -91,8 +92,10 @@ class CreateTrip
             $dates = collect(CarbonPeriod::create($arrival, $departure))->values();
             $lastIndex = $dates->count() - 1;
 
+            $dayAreas = $this->areasForDays($areas, max($dates->count() - 2, 0), $data);
+
             foreach ($dates as $i => $date) {
-                $this->buildDay($trip, $i, $lastIndex, $date, $data, $areas);
+                $this->buildDay($trip, $i, $lastIndex, $date, $data, $areas, $dayAreas);
             }
 
             foreach ($this->budgetLines($data, $areas->count()) as $j => $line) {
@@ -140,7 +143,34 @@ class CreateTrip
         }
     }
 
-    private function buildDay(Trip $trip, int $i, int $lastIndex, Carbon $date, array $data, $areas): void
+    /**
+     * One distinct area per middle day. The traveller's picks come first; when the trip has more days than picks,
+     * the rest are filled with nearby districts and landmarks they didn't pick, so a week doesn't cycle two
+     * places (A, B, A, B, A). With no lookup available it falls back to cycling the picks. Arrival and departure
+     * still use $areas, so their hotels don't change.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function areasForDays(Collection $areas, int $middleDays, array $data): Collection
+    {
+        if ($middleDays <= $areas->count() || blank($data['dest_lat'] ?? null) || blank($data['dest_lon'] ?? null)) {
+            return $areas;
+        }
+
+        $found = rescue(fn () => app(\App\Services\PlacesService::class)->explore((float) $data['dest_lat'], (float) $data['dest_lon']), null, false);
+        $taken = $areas->map(fn ($a) => mb_strtolower((string) $a['name']))->all();
+
+        $extra = collect(array_merge($found['areas'] ?? [], $found['landmarks'] ?? []))
+            ->filter(fn ($p) => filled($p['name'] ?? null) && filled($p['lat'] ?? null) && filled($p['lon'] ?? null))
+            ->reject(fn ($p) => in_array(mb_strtolower($p['name']), $taken, true))
+            ->unique(fn ($p) => mb_strtolower($p['name']))
+            ->take($middleDays - $areas->count())
+            ->map(fn ($p) => ['name' => $p['name'], 'lat' => $p['lat'], 'lon' => $p['lon']]);
+
+        return $areas->concat($extra)->values();
+    }
+
+    private function buildDay(Trip $trip, int $i, int $lastIndex, Carbon $date, array $data, $areas, $dayAreas): void
     {
         $out = $data['segments'][0] ?? [];
         $ret = $data['segments'][1] ?? [];
@@ -236,9 +266,9 @@ class CreateTrip
             return;
         }
 
-        // Middle day → anchor to an area (round-robin), and to that area's own
-        // hotel when it has one.
-        $area = $areas->isNotEmpty() ? $areas[($i - 1) % $areas->count()] : null;
+        // Middle day → anchor to its own area (one per day while there are enough),
+        // and to that area's own hotel when it has one.
+        $area = $dayAreas->isNotEmpty() ? $dayAreas[($i - 1) % $dayAreas->count()] : null;
         $name = $area['name'] ?? 'Free day — revisit a favourite';
         $hotel = $hotelFor($area);
 

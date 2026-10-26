@@ -229,4 +229,31 @@ class TripBuilderTest extends TestCase
             ->post(route('trips.store'), $this->payload(['departure_date' => '2027-03-30']))
             ->assertSessionHasErrors('departure_date');
     }
+
+    public function test_a_long_trip_does_not_repeat_the_same_area_on_every_other_day(): void
+    {
+        $this->mock(\App\Services\PlacesService::class, function ($m) {
+            $m->shouldReceive('explore')->andReturn([
+                'airports' => [], 'hotels' => [],
+                'areas' => [['name' => 'Gion', 'lat' => 35.0036, 'lon' => 135.7756]],
+                'landmarks' => [
+                    ['name' => 'Fushimi Inari Shrine', 'lat' => 34.9671, 'lon' => 135.7727],
+                    ['name' => 'Kinkaku-ji Temple', 'lat' => 35.0394, 'lon' => 135.7292],
+                    ['name' => 'Higashiyama', 'lat' => 34.9948, 'lon' => 135.7850], // already picked: skipped
+                ],
+            ]);
+            $m->shouldReceive('geocodeDestination')->andReturn(['lat' => 35.0116, 'lon' => 135.7681]);
+        });
+        $user = User::factory()->create();
+
+        // 8 nights = 6 middle days, two areas picked
+        $trip = app(\App\Actions\CreateTrip::class)($this->payload([
+            'arrival_date' => '2027-04-01', 'departure_date' => '2027-04-09', 'dest_lat' => 35.0116, 'dest_lon' => 135.7681,
+        ]), $user);
+
+        $titles = $trip->days()->orderBy('day_number')->pluck('title')->slice(1, 6)->values()->all();
+        $this->assertSame(['Higashiyama', 'Arashiyama', 'Gion', 'Fushimi Inari Shrine', 'Kinkaku-ji Temple'], array_slice($titles, 0, 5));
+        // 3 extras were offered for 4 empty days, one is a duplicate of a pick: the last day cycles back, never the same twice in a row
+        $this->assertNotSame($titles[4], $titles[5]);
+    }
 }
