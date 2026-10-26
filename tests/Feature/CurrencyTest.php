@@ -36,7 +36,8 @@ class CurrencyTest extends TestCase
 
         $this->actingAs($owner)->get(route('trips.show', $trip))
             ->assertOk()
-            ->assertSee('1 JPY in PHP')
+            ->assertSee('1 JPY in')
+            ->assertSee('<option value="PHP" selected', false)
             ->assertSee('value="0.3986"', false)
             ->assertSee('Live rate')
             ->assertDontSee('value="58"', false);
@@ -53,12 +54,19 @@ class CurrencyTest extends TestCase
             ->assertDontSee('value="58"', false);
     }
 
-    public function test_a_peso_trip_has_no_conversion_row(): void
+    public function test_a_peso_trip_compares_against_usd_and_any_currency_can_be_picked(): void
     {
+        $this->fxRates = ['PHP' => ['USD' => 0.0172, 'KRW' => 24.1]];
         $owner = User::factory()->create();
         $trip = $this->trip($owner, 'PHP');
 
-        $this->actingAs($owner)->get(route('trips.show', $trip))->assertOk()->assertDontSee('id="fxrate"', false);
+        $this->actingAs($owner)->get(route('trips.show', $trip))->assertOk()
+            ->assertSee('<option value="USD" selected', false)
+            ->assertDontSee('<option value="PHP"', false)          // never "1 PHP in PHP"
+            ->assertSee("Change the trip's currency", false);
+
+        $this->getJson('/fx/PHP/KRW')->assertOk()->assertJsonPath('rate', 24.1);
+        $this->getJson('/fx/PHP/XYZ')->assertOk()->assertJsonPath('rate', null); // unsupported code: no guess
     }
 
     public function test_changing_the_currency_converts_the_amounts(): void

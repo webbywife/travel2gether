@@ -85,6 +85,8 @@ Route::middleware(['auth', 'can:admin'])->group(function () {
 });
 
 Route::view('/upgrade', 'upgrade')->name('upgrade');
+Route::get('/fx/{from}/{to}', [\App\Http\Controllers\TripController::class, 'fxRate'])
+    ->where(['from' => '[A-Z]{3}', 'to' => '[A-Z]{3}'])->middleware('throttle:30,1')->name('fx.rate');
 
 // POI search / indexing for building itineraries (Google Places API New).
 // Search + explore are open to guests so the planner works before sign-up (free OSM/Photon lookups, rate-limited per IP).

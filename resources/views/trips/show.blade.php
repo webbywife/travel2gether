@@ -3,8 +3,9 @@
     $currency = $trip->currency ?? 'USD';
     $sym = ['USD' => '$', 'PHP' => '₱', 'KRW' => '₩', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥', 'HKD' => 'HK$', 'SGD' => 'S$',
         'AUD' => 'A$', 'CAD' => 'C$', 'TWD' => 'NT$', 'THB' => '฿', 'VND' => '₫', 'TRY' => '₺'][$currency] ?? ($currency . ' ');
-    // Live rate to pesos for the budget's "total in PHP" (null when no rate source answered — then we show "—").
-    $isPhp = $currency === 'PHP';
+    // Live rate for the budget's "total in …" (PHP by default, USD for a peso trip; the viewer can pick another).
+    // null when no rate source answered — then we show "—", never a guess.
+    $fxTo = $fxTo ?? 'PHP';
     $fxRate = ($phpRate ?? null)['rate'] ?? null;
 
     $budgetByCat = $trip->budgetLines->groupBy('category');
@@ -339,6 +340,9 @@
   .ctrl label{font-size:13.5px; color:var(--text-dim); white-space:nowrap;}
   .ctrl input[type=number]{width:68px; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:'IBM Plex Mono', monospace; font-size:14.5px; padding:7px 9px; text-align:right;}
   .ctrl input[type=number]:focus{outline:1px solid var(--pink);}
+  .ctrl-fx{flex-wrap:wrap;}
+  .ctrl-fx #fxrate{width:104px;}
+  .ctrl select{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:'IBM Plex Mono', monospace; font-size:14px; padding:7px 6px;}
 
   .fx-note{display:block; font-size:11px; color:var(--text-dim); margin-top:4px; font-family:'IBM Plex Mono',monospace;}
   .budget-stats{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px;}
@@ -875,15 +879,23 @@
       <div class="ctrl-row">
         <div class="ctrl"><label for="travelers">Travelers</label><input type="number" id="travelers" value="{{ $trip->party_size ?? 1 }}" min="1" step="1"></div>
         <div class="ctrl"><label for="days">Trip length (days)</label><input type="number" id="days" value="{{ $trip->days->count() }}" min="1" step="1"></div>
-        @unless($isPhp)
-        <div class="ctrl"><label for="fxrate">1 {{ $currency }} in PHP</label><input type="number" id="fxrate" value="{{ $fxRate ? round($fxRate, $fxRate < 1 ? 4 : 2) : '' }}" min="0" step="any" placeholder="today's rate">
-          <small class="fx-note">@if($fxRate)Live rate · {{ $phpRate['date'] }} · @if($phpRate['source'] === 'ExchangeRate-API')<a href="https://www.exchangerate-api.com" rel="noopener" target="_blank">Rates by Exchange Rate API</a>@else{{ $phpRate['source'] }}@endif @else{{ "Couldn't load today's rate — type it in" }}@endif</small></div>
-        @endunless
+        <div class="ctrl ctrl-fx"><label for="fxrate">1 {{ $currency }} in</label>
+          <select id="fxTo" aria-label="Show totals in">
+            @foreach (\App\Services\ExchangeRates::CURRENCIES as $c)
+              @continue($c === $currency)
+              <option value="{{ $c }}" @selected($c === $fxTo)>{{ $c }}</option>
+            @endforeach
+          </select>
+          <input type="number" id="fxrate" value="{{ $fxRate ? round($fxRate, $fxRate < 1 ? 4 : 2) : '' }}" min="0" step="any" placeholder="today's rate">
+          <small class="fx-note" id="fxNote">@if($fxRate)Live rate · {{ $phpRate['date'] }} · @if($phpRate['source'] === 'ExchangeRate-API')<a href="https://www.exchangerate-api.com" rel="noopener" target="_blank">Rates by Exchange Rate API</a>@else{{ $phpRate['source'] }}@endif @else{{ "Couldn't load today's rate — type it in" }}@endif</small></div>
       </div>
+      @can('update', $trip)
+        <p class="fx-note" style="margin:-10px 0 18px;">Amounts are in {{ $currency }}. <a href="{{ route('trips.edit', $trip) }}">Change the trip's currency →</a> (converts every amount at today's rate)</p>
+      @endcan
 
       <div class="budget-stats">
         <div class="bstat"><div class="num mono" id="statTotal">{{ $sym }}0</div><div class="lbl">total (per person)</div></div>
-        @unless($isPhp)<div class="bstat"><div class="num mono" id="statTotalPhp">—</div><div class="lbl">total in PHP (per person)</div></div>@endunless
+        <div class="bstat"><div class="num mono" id="statTotalPhp">—</div><div class="lbl">total in <span id="fxToLbl">{{ $fxTo }}</span> (per person)</div></div>
         <div class="bstat"><div class="num mono" id="statGroup">{{ $sym }}0</div><div class="lbl">total, all travelers</div></div>
         <div class="bstat"><div class="num mono" id="statPerDay">{{ $sym }}0</div><div class="lbl">avg. per day</div></div>
       </div>
@@ -1149,7 +1161,12 @@
 
   /* ===== Budget worksheet ===== */
   const fmt = n => T.currencySymbol + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
-  const fmtPhp = n => '₱' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  // the "total in …" figure, in whichever currency the viewer picked
+  const fmtPhp = n => {
+    const code = document.getElementById('fxTo')?.value || 'PHP';
+    try { return Number(n).toLocaleString('en-US', { style: 'currency', currency: code, maximumFractionDigits: 0 }); }
+    catch (e) { return code + ' ' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+  };
   const catKeys = Object.keys(T.catMeta);
 
   let chart = null;
@@ -1219,6 +1236,35 @@
 
   document.querySelectorAll('.item, #travelers, #days, #fxrate').forEach(el => el && el.addEventListener('input', recalc));
   recalc();
+
+  /* "Show totals in": pick another currency; today's rate comes from our cached /fx endpoint. Remembered on this device. */
+  (function () {
+    const sel = document.getElementById('fxTo'), rate = document.getElementById('fxrate'), note = document.getElementById('fxNote');
+    if (!sel || !rate) return;
+    const FROM = @json($currency), KEY = 't2g-fx-to';
+    function load(to) {
+      document.getElementById('fxToLbl').textContent = to;
+      rate.value = ''; note.textContent = 'Loading today\'s rate…'; recalc();
+      fetch('/fx/' + FROM + '/' + to, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.ok ? r.json() : { rate: null })
+        .then(d => {
+          if (sel.value !== to) return; // picked another meanwhile
+          note.textContent = '';
+          if (!(d.rate > 0)) { note.textContent = 'Couldn\'t load today\'s rate — type it in'; recalc(); return; }
+          rate.value = d.rate < 1 ? d.rate.toFixed(4) : d.rate.toFixed(2);
+          note.append('Live rate · ' + d.date + ' · ');
+          if (d.source === 'ExchangeRate-API') {
+            const a = document.createElement('a'); a.href = 'https://www.exchangerate-api.com'; a.rel = 'noopener'; a.target = '_blank';
+            a.textContent = 'Rates by Exchange Rate API'; note.append(a);
+          } else note.append(d.source);
+          recalc();
+        })
+        .catch(() => { note.textContent = 'Couldn\'t load today\'s rate — type it in'; });
+    }
+    sel.addEventListener('change', () => { try { localStorage.setItem(KEY, sel.value); } catch (e) {} load(sel.value); });
+    let saved = null; try { saved = localStorage.getItem(KEY); } catch (e) {}
+    if (saved && saved !== sel.value && sel.querySelector('option[value="' + saved + '"]')) { sel.value = saved; load(saved); }
+  })();
 
   /* ===== Live weather (Open-Meteo, no key) — per day's own area ===== */
   (function () {

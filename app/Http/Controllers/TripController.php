@@ -30,8 +30,15 @@ class TripController extends Controller
             'picks' => $trip->picks->keyBy('stop_id'),
             'canPick' => $trip->canPick($request->user()),
             'aiEnabled' => app(\App\Services\GenerateDayItinerary::class)->enabled(),
-            'phpRate' => app(\App\Services\ExchangeRates::class)->rate($trip->currency ?: 'USD', 'PHP'),
+            'fxTo' => $fxTo = ($trip->currency ?: 'USD') === 'PHP' ? 'USD' : 'PHP',
+            'phpRate' => app(\App\Services\ExchangeRates::class)->rate($trip->currency ?: 'USD', $fxTo),
         ]);
+    }
+
+    /** Today's rate for the budget worksheet's "show totals in" picker (cached server-side; null when no source answers). */
+    public function fxRate(string $from, string $to, \App\Services\ExchangeRates $rates): \Illuminate\Http\JsonResponse
+    {
+        return response()->json($rates->rate($from, $to) ?? ['rate' => null]);
     }
 
     /** A printable, scrapbook-styled export of the finished itinerary. */
