@@ -230,30 +230,58 @@ class TripBuilderTest extends TestCase
             ->assertSessionHasErrors('departure_date');
     }
 
-    public function test_a_long_trip_does_not_repeat_the_same_area_on_every_other_day(): void
+    public function test_a_destination_without_a_curated_list_fills_days_from_nearby_places(): void
     {
         $this->mock(\App\Services\PlacesService::class, function ($m) {
             $m->shouldReceive('explore')->andReturn([
                 'airports' => [], 'hotels' => [],
-                'areas' => [['name' => 'Gion', 'lat' => 35.0036, 'lon' => 135.7756]],
+                'areas' => [['name' => 'Baixa', 'lat' => 38.7100, 'lon' => -9.1390]],
                 'landmarks' => [
-                    ['name' => 'Fushimi Inari Shrine', 'lat' => 34.9671, 'lon' => 135.7727],
-                    ['name' => 'Kinkaku-ji Temple', 'lat' => 35.0394, 'lon' => 135.7292],
-                    ['name' => 'Higashiyama', 'lat' => 34.9948, 'lon' => 135.7850], // already picked: skipped
+                    ['name' => 'Belém Tower', 'lat' => 38.6916, 'lon' => -9.2160],
+                    ['name' => 'Alfama Viewpoint', 'lat' => 38.7139, 'lon' => -9.1294],
+                    ['name' => 'Chiado Square', 'lat' => 38.7106, 'lon' => -9.1425], // overlaps the "Chiado" pick: skipped
                 ],
             ]);
-            $m->shouldReceive('geocodeDestination')->andReturn(['lat' => 35.0116, 'lon' => 135.7681]);
+            $m->shouldReceive('geocodeDestination')->andReturn(['lat' => 38.7223, 'lon' => -9.1393]);
         });
-        $user = User::factory()->create();
 
-        // 8 nights = 6 middle days, two areas picked
         $trip = app(\App\Actions\CreateTrip::class)($this->payload([
-            'arrival_date' => '2027-04-01', 'departure_date' => '2027-04-09', 'dest_lat' => 35.0116, 'dest_lon' => 135.7681,
-        ]), $user);
+            'destination' => 'Lisbon, Portugal', 'dest_lat' => 38.7223, 'dest_lon' => -9.1393,
+            'arrival_date' => '2027-04-01', 'departure_date' => '2027-04-07',
+            'areas' => [['name' => 'Chiado', 'lat' => 38.7106, 'lon' => -9.1425], ['name' => 'Bairro Alto', 'lat' => 38.7133, 'lon' => -9.1456]],
+        ]), User::factory()->create());
 
-        $titles = $trip->days()->orderBy('day_number')->pluck('title')->slice(1, 6)->values()->all();
-        $this->assertSame(['Higashiyama', 'Arashiyama', 'Gion', 'Fushimi Inari Shrine', 'Kinkaku-ji Temple'], array_slice($titles, 0, 5));
-        // 3 extras were offered for 4 empty days, one is a duplicate of a pick: the last day cycles back, never the same twice in a row
-        $this->assertNotSame($titles[4], $titles[5]);
+        // 5 middle days: two picks, then the nearby areas and landmarks (Chiado Square skipped), then it cycles
+        $titles = $trip->days()->orderBy('day_number')->pluck('title')->slice(1, 5)->values()->all();
+        $this->assertSame(['Chiado', 'Bairro Alto', 'Baixa', 'Belém Tower', 'Alfama Viewpoint'], $titles);
+    }
+
+    public function test_a_curated_destination_gets_a_different_popular_area_each_day(): void
+    {
+        // the case from the Hokkaido trip: two picks, five middle days (A, B, A, B, A before the fix)
+        $trip = app(\App\Actions\CreateTrip::class)($this->payload([
+            'destination' => 'Hokkaido, Japan', 'dest_lat' => 43.06, 'dest_lon' => 141.35,
+            'arrival_date' => '2027-02-01', 'departure_date' => '2027-02-07',
+            'areas' => [['name' => 'Hokkaido University General Museum', 'lat' => 43.0770, 'lon' => 141.3410],
+                        ['name' => 'Niseko', 'lat' => 42.8048, 'lon' => 140.6874]],
+        ]), User::factory()->create());
+
+        $titles = $trip->days()->orderBy('day_number')->pluck('title')->slice(1, 5)->values()->all();
+        $this->assertCount(5, array_unique($titles), 'no area repeats: ' . implode(' | ', $titles));
+        $this->assertSame(['Hokkaido University General Museum', 'Niseko'], array_slice($titles, 0, 2));
+        $this->assertContains('Otaru', $titles);
+    }
+
+    public function test_a_curated_area_that_overlaps_a_pick_is_not_added_again(): void
+    {
+        $trip = app(\App\Actions\CreateTrip::class)($this->payload([
+            'arrival_date' => '2027-04-01', 'departure_date' => '2027-04-06', // Kyoto, picks Higashiyama + Arashiyama
+        ]), User::factory()->create());
+
+        $titles = $trip->days()->orderBy('day_number')->pluck('title')->slice(1, 4)->values()->all();
+        $this->assertSame(['Higashiyama', 'Arashiyama'], array_slice($titles, 0, 2));
+        $this->assertNotContains('Higashiyama & Kiyomizu-dera', $titles);
+        $this->assertNotContains('Arashiyama', array_slice($titles, 2));
+        $this->assertCount(4, array_unique($titles));
     }
 }

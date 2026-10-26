@@ -109,6 +109,30 @@ class Destinations
         return null;
     }
 
+    /**
+     * Popular areas for a typed destination ("Kyoto, Japan"), most popular first — see config/destination_areas.php.
+     * Empty when the destination has no curated list.
+     *
+     * @return array<int, array{name: string, lat: float, lon: float}>
+     */
+    public static function popularAreas(string $text): array
+    {
+        $needle = Str::lower(trim($text));
+        if ($needle === '') {
+            return [];
+        }
+
+        foreach (config('destination_areas', []) as $entry) {
+            foreach ($entry['keys'] as $key) {
+                if (preg_match('/\b' . preg_quote($key, '/') . '\b/u', $needle)) {
+                    return $entry['areas'];
+                }
+            }
+        }
+
+        return [];
+    }
+
     /** Visa info (from the country-level list) for a template's country. */
     public static function visaForCountry(string $country): ?array
     {

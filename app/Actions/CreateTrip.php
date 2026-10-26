@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Trip;
 use App\Models\User;
+use App\Support\Destinations;
 use App\Support\FlightReference;
 use App\Support\OsmMap;
 use Carbon\CarbonPeriod;
@@ -145,27 +146,52 @@ class CreateTrip
 
     /**
      * One distinct area per middle day. The traveller's picks come first; when the trip has more days than picks,
-     * the rest are filled with nearby districts and landmarks they didn't pick, so a week doesn't cycle two
-     * places (A, B, A, B, A). With no lookup available it falls back to cycling the picks. Arrival and departure
-     * still use $areas, so their hotels don't change.
+     * the rest are filled with the destination's popular areas (config/destination_areas.php), then — for a
+     * destination with no list, or too short a list — nearby districts and landmarks from the places lookup. Anything
+     * that overlaps a pick is skipped ("Higashiyama" already covers "Higashiyama & Kiyomizu-dera"). With nothing
+     * to add it falls back to cycling the picks. Arrival and departure still use $areas, so their hotels don't change.
      *
      * @return Collection<int, array<string, mixed>>
      */
     private function areasForDays(Collection $areas, int $middleDays, array $data): Collection
     {
-        if ($middleDays <= $areas->count() || blank($data['dest_lat'] ?? null) || blank($data['dest_lon'] ?? null)) {
+        $missing = $middleDays - $areas->count();
+        if ($missing <= 0) {
             return $areas;
         }
 
-        $found = rescue(fn () => app(\App\Services\PlacesService::class)->explore((float) $data['dest_lat'], (float) $data['dest_lon']), null, false);
-        $taken = $areas->map(fn ($a) => mb_strtolower((string) $a['name']))->all();
+        $names = $areas->map(fn ($a) => mb_strtolower((string) $a['name']))->all();
+        $overlaps = function (array $p) use (&$names): bool {
+            $n = mb_strtolower((string) ($p['name'] ?? ''));
+            foreach ($names as $taken) {
+                if ($n === $taken || str_contains($n, $taken) || str_contains($taken, $n)) {
+                    return true;
+                }
+            }
 
-        $extra = collect(array_merge($found['areas'] ?? [], $found['landmarks'] ?? []))
-            ->filter(fn ($p) => filled($p['name'] ?? null) && filled($p['lat'] ?? null) && filled($p['lon'] ?? null))
-            ->reject(fn ($p) => in_array(mb_strtolower($p['name']), $taken, true))
-            ->unique(fn ($p) => mb_strtolower($p['name']))
-            ->take($middleDays - $areas->count())
-            ->map(fn ($p) => ['name' => $p['name'], 'lat' => $p['lat'], 'lon' => $p['lon']]);
+            return false;
+        };
+
+        $extra = collect();
+        $take = function (iterable $candidates) use (&$extra, &$names, $overlaps, $missing): void {
+            foreach ($candidates as $p) {
+                if ($extra->count() >= $missing) {
+                    return;
+                }
+                if (blank($p['name'] ?? null) || blank($p['lat'] ?? null) || blank($p['lon'] ?? null) || $overlaps($p)) {
+                    continue;
+                }
+                $extra->push(['name' => $p['name'], 'lat' => $p['lat'], 'lon' => $p['lon']]);
+                $names[] = mb_strtolower($p['name']);
+            }
+        };
+
+        $take(Destinations::popularAreas((string) ($data['destination'] ?? '')));
+
+        if ($extra->count() < $missing && filled($data['dest_lat'] ?? null) && filled($data['dest_lon'] ?? null)) {
+            $found = rescue(fn () => app(\App\Services\PlacesService::class)->explore((float) $data['dest_lat'], (float) $data['dest_lon']), null, false);
+            $take(array_merge($found['areas'] ?? [], $found['landmarks'] ?? []));
+        }
 
         return $areas->concat($extra)->values();
     }
