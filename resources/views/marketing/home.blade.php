@@ -66,7 +66,7 @@
   @media (min-width:900px){ .hp-link{display:block;} }
   .hero-orig .kicker{display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.18em; text-transform:uppercase; color:#9E4A6E;
     border:1px solid rgba(36,30,35,0.10); background:rgba(255,255,255,0.7); border-radius:999px; padding:7px 14px; margin-bottom:24px;}
-  .hero-orig h1{font-family:'Space Grotesk',sans-serif; font-weight:700 !important; font-size:clamp(34px, 5.6vw, 58px); line-height:1.05; letter-spacing:-0.025em;
+  .hero-orig h1{font-family:'Space Grotesk',sans-serif; font-weight:700 !important; font-size:clamp(34px, 5.6vw, 58px); line-height:1.12; letter-spacing:-0.025em;
     margin:0 auto 20px; max-width:15ch; color:#241E23;}
   .hero-orig .sub{font-size:clamp(16px,2.1vw,20px); color:#6B5860; max-width:58ch; margin:0 auto 30px; line-height:1.6;}
   .hero-orig .cta-row{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:18px;}
@@ -110,7 +110,7 @@
   /* ---------- section heads ---------- */
   .sec{padding:var(--space-section) 0;}
   .sec-head{margin-bottom:clamp(2.5rem, 1.5rem + 3vw, 4.5rem);}
-  .gtext{background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;}
+  .gtext{display:inline-block; padding-bottom:.12em; background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;}
 
   /* ---------- before / after ---------- */
   .versus{display:grid; grid-template-columns:1fr 1fr; border-top:.5px solid var(--hair); border-bottom:.5px solid var(--hair);}
@@ -270,9 +270,10 @@
     <div class="kicker">AI-drafted · group-editable · shareable</div>
     <h1 class="reveal">Turn planning into the best part of the trip — <span class="gtext">together</span>.</h1>
     <p class="sub reveal d1">
-      Tell Travel2gether where you're headed, when, and who's coming. Get a full day-by-day
-      itinerary back — meals, activities, cost tags, weather backups — that your whole group
-      taps through and shapes together.
+      Twelve tabs, one group chat, and still no plan. A trip with the people you love is worth
+      more than that. Tell Travel2gether where, when and who's coming — get a full day-by-day
+      itinerary with options for every slot, cost tags and weather backups that your whole
+      group taps through and shapes together.
     </p>
     <div class="cta-row reveal d2">
       <a class="hbtn hbtn-primary" href="{{ route('trips.start') }}">Plan my first trip — free</a>
@@ -467,7 +468,7 @@
           ['Weather', 'Rainy-day backups', 'Bad forecast? Outdoor stops get flagged with the indoor alternative and the cost difference.', '<path d="M7 17a5 5 0 1 1 1-9.9A6 6 0 0 1 19 9a4 4 0 0 1-1 8H7zM9 20l-1 2M13 20l-1 2M17 20l-1 2"/>'],
           ['Together', 'Share with roles', 'Send a link. Owners lock decisions, editors vote, viewers look — like a shared doc.', '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20a6 6 0 0 1 12 0M14 20a4.5 4.5 0 0 1 8 0"/>'],
           ['Honesty', 'Hiccups, written down', 'Every day spells out what could go wrong — the stall that closes early, the 45-minute queue.', '<path d="M12 3 2 21h20L12 3zM12 10v5M12 18v.5"/>'],
-          ['Reuse', 'Remix any trip', 'Found a sample you like? Copy it as your own starting point and change it from there.', '<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/>'],
+          ['Map + calendar', 'See it, then keep it', 'Every stop pinned on a trip map, and the whole plan one tap from your calendar.', '<path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11zM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>'],
         ];
       @endphp
       @foreach($benefits as $i => [$tag, $title, $body, $icon])
