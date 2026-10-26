@@ -151,6 +151,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:120,1')->name('trips.days.ai-status');
     Route::post('/t/{trip:slug}/days/{day}/suggest', [TripDayController::class, 'suggest'])
         ->middleware('throttle:ai-suggest')->name('trips.days.suggest');
+    Route::post('/t/{trip:slug}/days/{day}/clear', [TripDayController::class, 'clear'])
+        ->middleware('throttle:30,1')->name('trips.days.clear');
+    Route::post('/t/{trip:slug}/clear-days', [TripDayController::class, 'clearAll'])
+        ->middleware('throttle:10,1')->name('trips.days.clear-all');
     Route::get('/t/{trip:slug}/days/{day}/edit', [TripDayController::class, 'edit'])->name('trips.days.edit');
     Route::patch('/t/{trip:slug}/days/{day}', [TripDayController::class, 'update'])->name('trips.days.update');
 

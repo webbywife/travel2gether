@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ClearTripDays;
 use App\Http\Requests\UpdateTripDayRequest;
 use App\Models\Trip;
 use App\Models\TripDay;
@@ -128,6 +129,27 @@ class TripDayController extends Controller
                 default => 'The AI couldn\'t come up with suggestions just now — try again in a moment.',
             }], 503);
         }
+    }
+
+    /** "Clear day": back to blank slots (owner only; arrival/departure days are never cleared). */
+    public function clear(Trip $trip, TripDay $day, ClearTripDays $clear): RedirectResponse
+    {
+        $this->authorize('clearDays', $trip);
+        abort_unless($day->trip_id === $trip->id, 404);
+
+        return $clear($trip, $day)
+            ? back()->with('status', "Cleared {$day->title} — it's back to blank slots.")->withFragment((string) $day->day_number)
+            : back()->with('error', 'Arrival and departure days, and days still being drafted, can\'t be cleared.');
+    }
+
+    /** "Reset itinerary": clear every middle day at once. */
+    public function clearAll(Trip $trip, ClearTripDays $clear): RedirectResponse
+    {
+        $this->authorize('clearDays', $trip);
+
+        $n = $clear($trip);
+
+        return back()->with('status', $n ? "Reset {$n} " . \Illuminate\Support\Str::plural('day', $n) . ' to blank slots. Arrival and departure days were kept.' : 'There were no days to clear.');
     }
 
     /** "Draft all days": queue every untouched (skeleton) day at once so they run side by side instead of one click at a time. */

@@ -27,6 +27,12 @@ class TripPolicy
         return $trip->roleFor($user) === 'owner';
     }
 
+    /** Clearing days wipes everyone's stops and picks, so only the owner may do it. */
+    public function clearDays(User $user, Trip $trip): bool
+    {
+        return $trip->roleFor($user) === 'owner' && ! $trip->isSample();
+    }
+
     /** Anyone signed in may fork a trip they can view. */
     public function duplicate(User $user, Trip $trip): bool
     {

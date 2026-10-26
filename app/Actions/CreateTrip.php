@@ -313,14 +313,20 @@ class CreateTrip
             'hotel_lat' => $hotel['lat'], 'hotel_lon' => $hotel['lon'],
         ]));
 
-        foreach ([
+        foreach (self::blankSlots($name) as $stop) {
+            $day->stops()->create($stop);
+        }
+    }
+
+    /** The empty morning / lunch / afternoon / dinner slots a middle day starts with (also what "Clear day" goes back to). */
+    public static function blankSlots(string $name): array
+    {
+        return collect([
             ['09:00', "Morning in {$name}", 'The main sight or walk for this area, done before the crowds and the heat.'],
             ['12:30', "Lunch near {$name}", 'Something local — leave it open, or pin a spot with place search.'],
             ['14:30', "Afternoon in {$name}", 'A second sight, a market, or a slower wander.'],
             ['19:00', 'Dinner', 'Back near the hotel, or wherever the day ended up.'],
-        ] as $k => [$time, $title, $desc]) {
-            $day->stops()->create(['sort' => $k, 'time' => $time, 'title' => $title, 'description' => $desc, 'has_options' => false]);
-        }
+        ])->map(fn ($s, $k) => ['sort' => $k, 'time' => $s[0], 'title' => $s[1], 'description' => $s[2], 'has_options' => false])->all();
     }
 
     /**

@@ -615,6 +615,16 @@
       </form>
     @endif
   @endcan
+  @can('clearDays', $trip)
+    @if ($trip->days->count() > 2)
+      <form method="POST" action="{{ route('trips.days.clear-all', $trip) }}" style="margin:0 0 16px;"
+            onsubmit="return confirm('Reset the whole itinerary? Every day between arrival and departure goes back to blank slots, and all stops, options and picks on them are removed. This can\'t be undone.')">
+        @csrf
+        <button type="submit" class="print-link" style="cursor:pointer;">🧹 Reset itinerary</button>
+        <span class="ai-hint">Keeps your dates, areas, hotels and the arrival and departure days.</span>
+      </form>
+    @endif
+  @endcan
 
   @php $bookLinks = \App\Support\Affiliates::forTrip($trip); @endphp
   @if ($bookLinks)
@@ -650,6 +660,15 @@
         @endif
         @can('update', $trip)
           <a class="print-link" href="{{ route('trips.days.edit', [$trip, $day]) }}" style="margin-top:8px;">✏️ Edit day details</a>
+        @endcan
+        @can('clearDays', $trip)
+          @if(! $loop->first && ! $loop->last && ! in_array($day->ai_status, ['queued', 'running'], true))
+            <form method="POST" action="{{ route('trips.days.clear', [$trip, $day->id]) }}" style="display:inline-block; margin:8px 0 0 6px;"
+                  onsubmit="return confirm('Clear this day? Its stops, options and everyone\'s picks are removed, leaving blank slots. This can\'t be undone.')">
+              @csrf
+              <button type="submit" class="print-link" style="cursor:pointer;">🧹 Clear day</button>
+            </form>
+          @endif
         @endcan
 
         @if(in_array($day->ai_status, ['queued', 'running'], true))
