@@ -47,7 +47,19 @@
 {{-- Inside the homepage's live preview: no site header or ribbon (set before first paint). --}}
 <script>if (window.self !== window.top) document.documentElement.classList.add('in-frame');</script>
 <style>.in-frame body > .navbar, .in-frame .sample-ribbon{display:none !important;}</style>
-<meta name="description" content="{{ $trip->subhead ?? $trip->title }}">
+<meta name="description" content="@if($isSample){{ $trip->days->count() }}-day {{ \Illuminate\Support\Str::before($trip->destination, ',') }} itinerary you can copy: {{ $trip->subhead ?? $trip->title }}@else{{ $trip->subhead ?? $trip->title }}@endif">
+@if($isSample)
+@php
+    $ld = ["\x40context" => 'https://schema.org', '@type' => 'TouristTrip',
+        'name' => $trip->days->count() . '-day ' . \Illuminate\Support\Str::before($trip->destination, ',') . ' itinerary',
+        'description' => $trip->subhead ?? $trip->title, 'url' => route('trips.show', $trip),
+        'provider' => ['@type' => 'Organization', 'name' => 'Travel2gether', 'url' => url('/')],
+        'itinerary' => ['@type' => 'ItemList', 'numberOfItems' => $trip->days->count(),
+            'itemListElement' => $trip->days->values()->map(fn ($d, $i) => ['@type' => 'ListItem', 'position' => $i + 1,
+                'name' => 'Day ' . $d->day_number . ': ' . $d->title])->all()]];
+@endphp
+<script type="application/ld+json">{!! json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
+@endif
 <meta property="og:title" content="{{ $trip->title }}{{ $trip->tagline ? ' — '.$trip->tagline : '' }}">
 <meta property="og:description" content="{{ $trip->subhead ?? $trip->title }}">
 <meta property="og:type" content="website">

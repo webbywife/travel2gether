@@ -1,11 +1,16 @@
 @extends('layouts.site')
 
-@section('title', 'Travel2gether — turn planning into the best part of the trip, together')
+@section('title', 'Travel2gether — free travel itinerary planner for group trips')
+@section('meta_description', 'Plan a day-by-day travel itinerary with your group, free. Describe your trip and get a full itinerary with options for every time slot, a live budget and rain backups, then shape it together.')
 @push('head')
 <script type="application/ld+json">{!! json_encode([
     ["\x40context" => 'https://schema.org', '@type' => 'WebSite', 'name' => 'Travel2gether', 'url' => url('/')],
     ["\x40context" => 'https://schema.org', '@type' => 'Organization', 'name' => 'Travel2gether', 'url' => url('/'),
      'logo' => asset('android-chrome-512x512.png'), 'sameAs' => ['https://www.instagram.com/traveleyz', 'https://www.tiktok.com/@traveleyz']],
+    ["\x40context" => 'https://schema.org', '@type' => 'WebApplication', 'name' => 'Travel2gether', 'url' => url('/'),
+     'applicationCategory' => 'TravelApplication', 'operatingSystem' => 'Any',
+     'description' => 'A free travel itinerary planner for group trips: a day-by-day itinerary with options, a budget and rain backups that the whole group can shape together.',
+     'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'USD']],
 ], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) !!}</script>
 @endpush
 

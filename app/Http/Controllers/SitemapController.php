@@ -21,7 +21,7 @@ class SitemapController extends Controller
             $urls[] = [route('destinations.show', Destinations::slug($t)), '0.8'];
         }
         foreach (Trip::where('is_public', true)->whereNull('created_by')->get() as $trip) {
-            $urls[] = [route('trips.show', $trip), '0.8'];   // the sample itineraries
+            $urls[] = [route('trips.show', $trip), '0.8', $trip->updated_at?->toDateString()];   // the sample itineraries
         }
         if (Gallery::enabled()) {
             $urls[] = [route('gallery'), '0.6'];
@@ -33,8 +33,10 @@ class SitemapController extends Controller
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
             . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-        foreach ($urls as [$loc, $priority]) {
-            $xml .= '  <url><loc>' . e($loc) . '</loc><priority>' . $priority . '</priority></url>' . "\n";
+        foreach ($urls as $u) {
+            [$loc, $priority] = $u;
+            $lastmod = isset($u[2]) ? '<lastmod>' . $u[2] . '</lastmod>' : '';
+            $xml .= '  <url><loc>' . e($loc) . '</loc>' . $lastmod . '<priority>' . $priority . '</priority></url>' . "\n";
         }
         $xml .= '</urlset>' . "\n";
 

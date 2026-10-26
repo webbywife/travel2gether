@@ -37,7 +37,8 @@ class SeoTest extends TestCase
     {
         $this->get(route('login'))->assertSee('<meta name="robots" content="noindex">', false);
         $this->get(route('register'))->assertSee('<meta name="robots" content="noindex">', false);
-        $this->get('/')->assertDontSee('content="noindex"', false)->assertSee('"@type":"WebSite"', false);
+        $this->get('/')->assertDontSee('content="noindex"', false)->assertSee('"@type":"WebSite"', false)
+            ->assertSee('free travel itinerary planner', false)->assertSee('"@type":"WebApplication"', false);
     }
 
     public function test_sample_trips_get_a_search_friendly_title_and_canonical(): void
@@ -46,6 +47,8 @@ class SeoTest extends TestCase
 
         $this->get(route('trips.show', 'seoul-2026'))->assertOk()
             ->assertSee('-day Seoul itinerary', false)
+            ->assertSee('"@type":"TouristTrip"', false)
+            ->assertSee('-day Seoul itinerary you can copy', false)
             ->assertSee('<link rel="canonical" href="' . route('trips.show', 'seoul-2026') . '">', false)
             ->assertDontSee('content="noindex"', false);
     }
