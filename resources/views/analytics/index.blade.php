@@ -48,8 +48,8 @@
     <div class="stat"><div class="num">{{ $totalUsers }}</div><div class="lbl">users</div></div>
     <div class="stat"><div class="num">{{ $totalTrips }}</div><div class="lbl">trips</div></div>
     <div class="stat"><div class="num">{{ $totalSegments }}</div><div class="lbl">flight legs logged</div></div>
-    <div class="stat"><div class="num">{{ $resolvedAirlinePct }}%</div><div class="lbl">airlines recognized</div></div>
-    <div class="stat"><div class="num">{{ $resolvedAirportPct }}%</div><div class="lbl">airports recognized</div></div>
+    <div class="stat"><div class="num">{{ $resolvedAirlinePct }}%</div><div class="lbl">airlines recognized <span style="opacity:.7">(of {{ $typedAirline }} typed)</span></div></div>
+    <div class="stat"><div class="num">{{ $resolvedAirportPct }}%</div><div class="lbl">airports recognized <span style="opacity:.7">(of {{ $typedAirport }} typed)</span></div></div>
   </div>
 
   <h2>Do groups use it? · members' trips, excluding yours and the samples</h2>

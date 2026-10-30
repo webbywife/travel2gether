@@ -26,6 +26,22 @@ class FlightReference
     }
 
     /**
+     * Airline from a flight number's IATA prefix ("PR 426", "5J1234") — used
+     * when the Airline box was left blank, which is the usual case since it
+     * sits in the collapsed "more details" section.
+     *
+     * @return array{code:string,name:string}|null
+     */
+    public static function airlineFromFlightNo(?string $flightNo): ?array
+    {
+        if (! preg_match('/^\s*([A-Za-z0-9]{2})\s*-?\s*\d{1,4}[A-Za-z]?\s*$/', (string) $flightNo, $m)) {
+            return null;
+        }
+
+        return self::match($m[1], config('airlines', []), []);
+    }
+
+    /**
      * @param  array<int, array<string, string>>  $list
      * @param  array<int, string>  $looseFields  fields (besides "code") to loosely match
      */

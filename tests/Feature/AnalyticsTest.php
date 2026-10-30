@@ -61,6 +61,19 @@ class AnalyticsTest extends TestCase
             ->assertSee('KIX', false);
     }
 
+    public function test_airline_is_recognized_from_the_flight_number_when_the_box_is_blank(): void
+    {
+        $owner = User::factory()->create();
+        $trip = app(\App\Actions\CreateTrip::class)([
+            'destination' => 'Kyoto, Japan', 'arrival_date' => '2027-04-01', 'departure_date' => '2027-04-03',
+            'segments' => [['from' => 'MNL', 'to' => 'KIX', 'flight_no' => '5J 123'], ['from' => 'KIX', 'to' => 'MNL', 'flight_no' => 'XX 9']],
+            'areas' => [['name' => 'Gion']],
+        ], $owner);
+
+        $codes = $trip->tripSegments()->orderBy('sort')->pluck('airline_code')->all();
+        $this->assertSame(['5J', null], $codes);
+    }
+
     public function test_group_use_counts_members_trips_but_not_the_admins_or_samples(): void
     {
         config(['app.admin_emails' => ['admin@example.com']]);

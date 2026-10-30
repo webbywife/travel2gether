@@ -52,7 +52,12 @@ class AnalyticsController extends Controller
         // How many segments resolved to a known code vs. stayed free text —
         // tells us whether the curated lists are actually covering what
         // people type, or need more entries.
+        // Measured against the legs where something was typed — airline and
+        // airport boxes are optional, so counting blanks as "unrecognized"
+        // made the lists look broken when people simply skipped them.
         $totalSegments = TripSegment::count();
+        $typedAirline = TripSegment::where(fn ($q) => $q->where('airline_text', '!=', '')->orWhereNotNull('airline_code'))->count();
+        $typedAirport = TripSegment::where(fn ($q) => $q->where('from_text', '!=', '')->orWhereNotNull('from_code'))->count();
         $resolvedAirline = TripSegment::whereNotNull('airline_code')->count();
         $resolvedAirport = TripSegment::whereNotNull('from_code')->count();
 
@@ -76,8 +81,10 @@ class AnalyticsController extends Controller
             'totalUsers' => User::count(),
             'members' => User::withCount('ownedTrips')->orderBy('name')->get(),
             'totalSegments' => $totalSegments,
-            'resolvedAirlinePct' => $totalSegments ? round($resolvedAirline / $totalSegments * 100) : 0,
-            'resolvedAirportPct' => $totalSegments ? round($resolvedAirport / $totalSegments * 100) : 0,
+            'typedAirline' => $typedAirline,
+            'typedAirport' => $typedAirport,
+            'resolvedAirlinePct' => $typedAirline ? round($resolvedAirline / $typedAirline * 100) : 0,
+            'resolvedAirportPct' => $typedAirport ? round($resolvedAirport / $typedAirport * 100) : 0,
             'topAirlines' => $topAirlines,
             'topRoutes' => $topRoutes,
             'topDepartureAirports' => $topDepartureAirports,

@@ -141,12 +141,13 @@ class TripBuilderTest extends TestCase
 
         // flight legs are also written to trip_segments for analytics — airports
         // resolve against config/airports.php by code; "PAL" isn't a recognized
-        // airline code/name so it's kept as free text with no resolved code.
+        // airline code/name, so the carrier is resolved from the flight number's
+        // prefix instead, and the typed text is kept as-is.
         $segments = $trip->tripSegments()->orderBy('sort')->get();
         $this->assertSame(2, $segments->count());
         $this->assertSame('MNL', $segments[0]->from_code);
         $this->assertSame('KIX', $segments[0]->to_code);
-        $this->assertNull($segments[0]->airline_code);
+        $this->assertSame('PR', $segments[0]->airline_code);
         $this->assertSame('PAL', $segments[0]->airline_text);
         $this->assertTrue($segments[0]->date->isSameDay($trip->start_date));
         $this->assertTrue($segments[1]->date->isSameDay($trip->end_date));

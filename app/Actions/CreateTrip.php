@@ -127,7 +127,8 @@ class CreateTrip
 
             $from = FlightReference::airport($r['from'] ?? null);
             $to = FlightReference::airport($r['to'] ?? null);
-            $airline = FlightReference::airline($r['airline'] ?? null);
+            $airline = FlightReference::airline($r['airline'] ?? null)
+                ?? FlightReference::airlineFromFlightNo($r['flight_no'] ?? null);
 
             $trip->tripSegments()->create([
                 'sort' => $i,
